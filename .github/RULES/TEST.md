@@ -4,7 +4,7 @@
 
 ## 2. Organisation et Emplacement
 - Les fichiers de test doivent être placés dans le dossier `test/`, en reflétant exactement l'arborescence du dossier `lib/`.
-- **Convention de nommage :** Le nom du fichier de test doit correspondre au fichier source avec le suffixe `_test.dart` (exemple : pour `lib/models/dca_calculator.dart`, le test sera `test/models/dca_calculator_test.dart`).
+- **Convention de nommage :** Le nom du fichier de test doit correspondre au fichier source avec le suffixe `_test.dart` (exemple : pour `lib/models/financial_calculator.dart`, le test sera `test/models/financial_calculator_test.dart`).
 
 ## 3. Logique Métier à Couvrir (Unit Tests)
 Les tests unitaires doivent cibler en priorité absolue les fonctions pures et les calculs métier isolés de l'interface utilisateur.

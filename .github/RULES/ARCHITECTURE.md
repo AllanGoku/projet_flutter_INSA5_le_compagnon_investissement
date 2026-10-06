@@ -37,22 +37,28 @@ le_compagnon_investissement/
 |
 |-- lib/
 |   |-- models/                 # [M] Données & Fonctions pures de calcul
+|   |   |-- asset.dart          # Modèle d'actif (Action, ETF)
+|   |   |-- price_point.dart    # Point de donnée boursier (OHLCV)
+|   |   |-- portfolio_position.dart # Ligne du portefeuille fictif
+|   |   `-- financial_calculator.dart # Calculs financiers purs (Plus-value, DCA, etc.)
 |   |
 |   |-- views/                  # [V] Interface utilisateur & Widgets
-|   |   |-- screens/                     # Écrans principaux (Dashboard, Explore, Details, DCA)
-|   |   `-- widgets/                     # Composants réutilisables (Flip Card, Graphiques, Formulaire)
+|   |   |-- screens/                     # Écrans principaux (ex: dashboard_screen.dart)
+|   |   `-- widgets/                     # Composants réutilisables
 |   |
 |   |-- controllers/            # [C] Contrôleurs et gestion d'état
 |   |
 |   |-- services/               # E/S, Réseau & Stockage local
 |   |
 |   |-- utils/                  # Constantes, thèmes et formateurs monétaires
+|   |   |-- app_theme.dart      # Thème global (Material 3)
+|   |   `-- formatters.dart     # Formatage des montants et pourcentages
 |   |
 |   |-- images/                 # Images, logos, illustrations
 |   |
 |   `-- main.dart               # Point d'entrée de l'application
 |
 `-- test/                       # Tests unitaires et d'intégration (miroir de lib)
-    |-- models/
+    |-- models/                 # Ex: financial_calculator_test.dart
     |-- controllers/
     `-- services/
