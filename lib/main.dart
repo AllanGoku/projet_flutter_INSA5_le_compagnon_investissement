@@ -1,17 +1,40 @@
-// [AI-GENERATED] Issue #1, Agent, 2025-02-23
+// [AI-GENERATED] Issue #2, Agent, 2024-05-24
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:le_compagnon_investissement/utils/app_theme.dart';
 import 'package:le_compagnon_investissement/views/screens/dashboard_screen.dart';
 import 'package:le_compagnon_investissement/views/screens/login_screen.dart';
 import 'package:le_compagnon_investissement/views/screens/design_showcase_screen.dart';
 import 'package:le_compagnon_investissement/controllers/auth_controller.dart';
+import 'package:le_compagnon_investissement/controllers/data_controller.dart';
+import 'package:le_compagnon_investissement/services/api_service.dart';
+import 'package:le_compagnon_investissement/services/cache_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Chargement des variables d'environnement (.env)
+  try {
+    await dotenv.load(fileName: ".env", isOptional: true);
+  } catch (e) {
+    debugPrint("Avertissement: Impossible de charger le fichier .env ($e)");
+  }
+
+  // Initialisation du cache
+  final cacheService = CacheService();
+  await cacheService.initDB();
+
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthController()),
+        ChangeNotifierProvider(
+          create: (_) => DataController(
+            apiService: ApiService(),
+            cacheService: cacheService,
+          ),
+        ),
       ],
       child: const MyApp(),
     ),
