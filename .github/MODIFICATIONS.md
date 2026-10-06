@@ -51,3 +51,17 @@ Ce fichier documente les modifications apportées au projet "Le Compagnon d'Inve
 ### 4. Injection et Routage (`../lib/main.dart`)
 - **`main.dart`** : Ajout du `MultiProvider` et d'une logique de vérification au lancement.
   - *Pourquoi ?* : Assurer que l'application détecte si un compte est "maintenu connecté" pour router intelligemment soit vers le tableau de bord soit vers l'écran de connexion.
+
+## [Mise à jour du Thème et Ajout des Composants UI (Design)] - 2026-10-06
+
+### 1. Mise à jour du Thème Visuel (`../lib/utils/app_theme.dart`)
+- **`app_theme.dart`** : Enrichissement du thème avec de nouvelles couleurs, typographies (Google Fonts `Space Grotesk`), et styles de texte.
+  - *Pourquoi ?* : Pour moderniser l'interface et lui donner une identité visuelle forte et unique, orientée "investisseur" avec un design plus affirmé (utilisation de `google_fonts`).
+
+### 2. Création de Widgets Réutilisables (`../lib/views/widgets/`)
+- **`performance_text.dart`** : Création d'un widget pour afficher les pourcentages de performance.
+  - *Pourquoi ?* : Standardiser l'affichage des performances avec un code couleur automatique (vert pour positif, rouge pour négatif) et une mise en forme cohérente.
+- **`soft_card.dart`** : Création d'un composant de carte avec une esthétique "soft/neumorphique".
+  - *Pourquoi ?* : Fournir un conteneur visuellement agréable et cohérent avec le nouveau thème pour afficher les informations de manière élégante.
+- **`textured_button.dart`** : Création d'un bouton avec effet de texture.
+  - *Pourquoi ?* : Ajouter un élément d'interaction distinctif et qualitatif, en phase avec la nouvelle direction artistique de l'application.
