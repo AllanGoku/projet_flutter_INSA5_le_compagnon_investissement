@@ -48,10 +48,14 @@ le_compagnon_investissement/
 |   |   `-- widgets/            # Composants réutilisables (performance_text.dart, soft_card.dart, textured_button.dart)
 |   |
 |   |-- controllers/            # [C] Contrôleurs et gestion d'état
-|   |   `-- auth_controller.dart # Contrôleur d'authentification
+|   |   |-- auth_controller.dart # Contrôleur d'authentification
+|   |   |-- data_controller.dart # Contrôleur de données financières (API & Cache)
+|   |   `-- data_state.dart      # Enumération des états asynchrones
 |   |
 |   |-- services/               # E/S, Réseau & Stockage local
-|   |   `-- auth_service.dart   # Service gérant la persistance d'authentification
+|   |   |-- api_service.dart     # Service d'appel à l'API Alpha Vantage
+|   |   |-- auth_service.dart    # Service gérant la persistance d'authentification
+|   |   `-- cache_service.dart   # Service de cache local SQLite (sqflite)
 |   |
 |   |-- utils/                  # Constantes, thèmes et formateurs monétaires
 |   |   |-- app_theme.dart      # Thème global (Material 3, Google Fonts)

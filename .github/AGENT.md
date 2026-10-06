@@ -3,6 +3,7 @@
 ## Identité du projet
 Application mobile éducative en Flutter (compagnon d'investissement fictif). Aucune transaction financière réelle n'est autorisée.
 Le context du projet est également énoncé dans le fichier : `.github/CONTEXT.md`
+Un fichier html `.github/design_le_compagnon_d_investissement.html` est également disponible pour le design souhaité de l'application.
 
 ## Conventions de code (Flutter/Dart)
 Suivi les conventions dans le dossier suivant : `.github/RULES`:

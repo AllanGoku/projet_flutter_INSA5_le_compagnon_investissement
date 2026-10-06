@@ -65,3 +65,23 @@ Ce fichier documente les modifications apportées au projet "Le Compagnon d'Inve
   - *Pourquoi ?* : Fournir un conteneur visuellement agréable et cohérent avec le nouveau thème pour afficher les informations de manière élégante.
 - **`textured_button.dart`** : Création d'un bouton avec effet de texture.
   - *Pourquoi ?* : Ajouter un élément d'interaction distinctif et qualitatif, en phase avec la nouvelle direction artistique de l'application.
+
+## [Implémentation du Cœur de Données (Réseau & Cache) et Test API] - 2026-10-06
+
+### 1. Couche Réseau & Cache (`../lib/services/`)
+- **`api_service.dart`** : Service HTTP se connectant à l'API Alpha Vantage.
+  - *Pourquoi ?* : Permettre la récupération sécurisée des données de marché en temps réel et de l'historique de cours (OHLCV) en s'appuyant sur les clés API du fichier `.env`.
+- **`cache_service.dart`** : Service de stockage local SQLite basé sur `sqflite`.
+  - *Pourquoi ?* : Stocker de manière robuste les données et l'historique des actifs (sur au moins 7 jours) pour limiter les requêtes API et permettre le fonctionnement hors-connexion.
+
+### 2. Gestion de l'État Asynchrone (`../lib/controllers/`)
+- **`data_state.dart`** : Enumération des états asynchrones (`initial`, `loading`, `success`, `error`, `offline`).
+  - *Pourquoi ?* : Standardiser et expliciter la représentation des états de chargement pour l'interface utilisateur.
+- **`data_controller.dart`** : Contrôleur principal de données (`ChangeNotifier`).
+  - *Pourquoi ?* : Piloter la récupération des données et implémenter une stratégie de rafraîchissement espacé (10 min pour les données chaudes, 1h pour le reste) afin de respecter les quotas d'API.
+
+### 3. Ajustements de l'Application & Bac à Sable (`../lib/main.dart` & `../lib/views/screens/design_showcase_screen.dart`)
+- **`main.dart` & `pubspec.yaml`** : Déclaration de `.env` dans les `assets` et chargement sécurisé via `dotenv`. Injection de `DataController` dans le `MultiProvider`.
+  - *Pourquoi ?* : Éviter les erreurs de démarrage et distribuer l'état de données dans toute l'application.
+- **`design_showcase_screen.dart`** : Ajout d'une section interactive de test d'API Alpha Vantage avec saisie de symbole boursier.
+  - *Pourquoi ?* : Offrir un moyen simple et visuel de tester la connexion réseau et le comportement du cache directement depuis l'application.
