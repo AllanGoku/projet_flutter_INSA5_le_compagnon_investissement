@@ -29,3 +29,25 @@ Ce fichier documente les modifications apportées au projet "Le Compagnon d'Inve
 ### 5. Mise à jour de la documentation (`RULES`)
 - **`ARCHITECTURE.md`** et **`TEST.md`** : Mises à jour.
   - *Pourquoi ?* : Pour que la documentation corresponde exactement à l'arborescence réelle actuelle des fichiers, garantissant que l'architecture décrite soit fidèle au code (notamment la mention explicite de `financial_calculator.dart`).
+
+## [Implémentation de l'authentification locale] - 2025-02-23
+
+### 1. Ajout de la logique de validation (`../lib/utils/validators.dart`)
+- **`validators.dart`** : Création d'une classe de validation pour les formulaires avec validation en temps réel (email, mots de passe).
+  - *Pourquoi ?* : Assurer une saisie des données propre avant traitement, améliorer l'expérience utilisateur avec des retours instantanés (`AutovalidateMode.onUserInteraction`). Testé à 100%.
+
+### 2. Modèle Utilisateur et Service d'Authentification (`../lib/models` & `../lib/services`)
+- **`user_profile.dart`** : Modèle de profil utilisateur avec sérialisation JSON.
+  - *Pourquoi ?* : Représenter les données de compte pour la persistance locale.
+- **`auth_service.dart`** : Service gérant la persistance via `SharedPreferencesAsync` et `flutter_secure_storage`.
+  - *Pourquoi ?* : Mimer un backend d'authentification pour cette application éducative en enregistrant les paramètres de session et le mot de passe de manière sécurisée et asynchrone (respect du projet). Testé à 100%.
+
+### 3. Contrôleur et Vues d'authentification (`../lib/controllers` & `../lib/views`)
+- **`auth_controller.dart`** : Contrôleur gérant l'état d'authentification (`ChangeNotifier`).
+  - *Pourquoi ?* : Faire le lien de manière réactive entre les actions UI et le service `AuthService`.
+- **`login_screen.dart` & `register_screen.dart`** : Écrans de connexion et d'inscription.
+  - *Pourquoi ?* : Interface permettant à l'utilisateur de simuler son entrée dans l'app, avec option "Maintenir la connexion".
+
+### 4. Injection et Routage (`../lib/main.dart`)
+- **`main.dart`** : Ajout du `MultiProvider` et d'une logique de vérification au lancement.
+  - *Pourquoi ?* : Assurer que l'application détecte si un compte est "maintenu connecté" pour router intelligemment soit vers le tableau de bord soit vers l'écran de connexion.
