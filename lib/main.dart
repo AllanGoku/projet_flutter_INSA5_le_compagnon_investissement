@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:le_compagnon_investissement/utils/app_theme.dart';
 import 'package:le_compagnon_investissement/views/screens/dashboard_screen.dart';
 import 'package:le_compagnon_investissement/views/screens/login_screen.dart';
+import 'package:le_compagnon_investissement/views/screens/design_showcase_screen.dart';
 import 'package:le_compagnon_investissement/controllers/auth_controller.dart';
 
 void main() {
@@ -56,7 +57,37 @@ class _MyAppState extends State<MyApp> {
                 child: CircularProgressIndicator(),
               ),
             )
-          : (_isLoggedIn ? const DashboardScreen() : const LoginScreen()),
+          : DevHomeWrapper(
+              child: _isLoggedIn ? const DashboardScreen() : const LoginScreen(),
+            ),
+    );
+  }
+}
+
+/// [PROVISOIRE] Widget d'emballage pour afficher un bouton flottant permettant
+/// d'accéder à l'écran de présentation du nouveau design depuis n'importe où.
+class DevHomeWrapper extends StatelessWidget {
+  final Widget child;
+
+  const DevHomeWrapper({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: child,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const DesignShowcaseScreen(),
+            ),
+          );
+        },
+        backgroundColor: AppTheme.mint,
+        icon: const Icon(Icons.palette, color: Colors.white),
+        label: const Text('Voir Design', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+      ),
     );
   }
 }
