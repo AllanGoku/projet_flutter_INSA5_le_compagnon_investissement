@@ -45,7 +45,7 @@ class Asset {
   }) {
     final metaData = json['Meta Data'] as Map<String, dynamic>? ?? {};
     final symbol = metaData['2. Symbol'] as String? ?? '';
-    final timezone = metaData['6. Time Zone'] as String? ?? 'UTC';
+    final timezone = metaData['5. Time Zone'] as String? ?? metaData['6. Time Zone'] as String? ?? 'UTC';
 
     // Recherche dynamique de la clé Time Series (ex: "Time Series (5min)", "Time Series (Daily)", etc.)
     Map<String, dynamic>? timeSeriesMap;
