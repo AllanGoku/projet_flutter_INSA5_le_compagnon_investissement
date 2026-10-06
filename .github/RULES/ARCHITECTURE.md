@@ -40,19 +40,24 @@ le_compagnon_investissement/
 |   |   |-- asset.dart          # Modèle d'actif (Action, ETF)
 |   |   |-- price_point.dart    # Point de donnée boursier (OHLCV)
 |   |   |-- portfolio_position.dart # Ligne du portefeuille fictif
+|   |   |-- user_profile.dart   # Modèle de profil utilisateur
 |   |   `-- financial_calculator.dart # Calculs financiers purs (Plus-value, DCA, etc.)
 |   |
 |   |-- views/                  # [V] Interface utilisateur & Widgets
-|   |   |-- screens/                     # Écrans principaux (ex: dashboard_screen.dart)
-|   |   `-- widgets/                     # Composants réutilisables
+|   |   |-- screens/            # Écrans principaux (dashboard_screen.dart, login_screen.dart, register_screen.dart)
+|   |   `-- widgets/            # Composants réutilisables (performance_text.dart, soft_card.dart, textured_button.dart)
 |   |
 |   |-- controllers/            # [C] Contrôleurs et gestion d'état
+|   |   `-- auth_controller.dart # Contrôleur d'authentification
 |   |
 |   |-- services/               # E/S, Réseau & Stockage local
+|   |   `-- auth_service.dart   # Service gérant la persistance d'authentification
 |   |
 |   |-- utils/                  # Constantes, thèmes et formateurs monétaires
-|   |   |-- app_theme.dart      # Thème global (Material 3)
-|   |   `-- formatters.dart     # Formatage des montants et pourcentages
+|   |   |-- app_theme.dart      # Thème global (Material 3, Google Fonts)
+|   |   |-- formatters.dart     # Formatage des montants et pourcentages
+|   |   `-- validators.dart     # Validation des données de formulaire
+
 |   |
 |   |-- images/                 # Images, logos, illustrations
 |   |

@@ -12,7 +12,7 @@ et le fichier `.github/copilot-instructions.md`
 - ...
 
 ## Dépendances autorisées (Sécurité)
-- **Liste blanche :** `flutter`, `provider`, `http`, `fl_chart`, `shared_preferences` (en utilisant de préférence SharedPreferencesAsync ou SharedPreferencesWithCache), `flutter_secure_storage`.
+- **Liste blanche :** `flutter`, `provider`, `http`, `fl_chart`, `shared_preferences` (en utilisant de préférence SharedPreferencesAsync ou SharedPreferencesWithCache), `flutter_secure_storage`, `flutter_dotenv`, `flutter_confetti`, `animated_flip_counter`, `sqflite`, `path`.
 - **Verrouillage :** N'ajoutez AUCUNE nouvelle dépendance dans `pubspec.yaml` sans demander l'autorisation explicite.
 
 ## Règles de Sécurité
