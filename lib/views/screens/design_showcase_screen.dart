@@ -227,8 +227,7 @@ class _DesignShowcaseScreenState extends State<DesignShowcaseScreen> {
       case DataState.error:
         return Colors.red;
       case DataState.initial:
-      default:
-        return Colors.grey;
+      return Colors.grey;
     }
   }
 

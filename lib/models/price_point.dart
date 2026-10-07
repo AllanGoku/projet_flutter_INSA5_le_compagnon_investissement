@@ -1,4 +1,4 @@
-// [AI-GENERATED] Setup, Agent, 2025-02-23
+// [AI-GENERATED] Migration Twelve Data, Agent, 2025-02-23
 
 /// Modèle représentant un point de données boursier (OHLCV : Open, High, Low, Close, Volume).
 ///
@@ -20,14 +20,14 @@ class PricePoint {
     required this.volume,
   });
 
-  /// Parse les données brutes renvoyées par l'API Alpha Vantage (clés numérotées)
+  /// Parse les données brutes renvoyées par l'API Twelve Data.
   factory PricePoint.fromApiJson(Map<String, dynamic> json) {
     return PricePoint(
-      open: double.tryParse(json['1. open']?.toString() ?? '') ?? 0.0,
-      high: double.tryParse(json['2. high']?.toString() ?? '') ?? 0.0,
-      low: double.tryParse(json['3. low']?.toString() ?? '') ?? 0.0,
-      close: double.tryParse(json['4. close']?.toString() ?? '') ?? 0.0,
-      volume: int.tryParse(json['5. volume']?.toString() ?? '') ?? 0,
+      open: double.tryParse(json['open']?.toString() ?? '') ?? 0.0,
+      high: double.tryParse(json['high']?.toString() ?? '') ?? 0.0,
+      low: double.tryParse(json['low']?.toString() ?? '') ?? 0.0,
+      close: double.tryParse(json['close']?.toString() ?? '') ?? 0.0,
+      volume: int.tryParse(json['volume']?.toString() ?? '') ?? 0,
     );
   }
 

@@ -1,4 +1,4 @@
-// [AI-GENERATED] Setup, Agent, 2025-02-23
+// [AI-GENERATED] Migration Twelve Data, Agent, 2025-02-23
 import 'price_point.dart';
 
 /// Modèle représentant un actif financier (Action, ETF, etc.).
@@ -6,7 +6,7 @@ import 'price_point.dart';
 /// Ce modèle typé est utilisé pour représenter les données récupérées
 /// depuis l'API Alpha Vantage ou le stockage local. Il inclut les informations de base
 /// nécessaires à l'affichage et aux calculs, ainsi que l'historique complet
-/// OHLCV (PricePoint) pour l'affichage hors-connexion et les graphiques avancés.
+/// OHLCV (PricePoint) pour l'affichage hors-connexion et la variation en pourcentage.
 class Asset {
   final String symbol;
   final String name;
@@ -21,6 +21,9 @@ class Asset {
   /// Historique complet des cours (open, high, low, close, volume) associés aux horodatages.
   final Map<String, PricePoint> timeSeries;
 
+  /// Variation en pourcentage (%) optionnelle ou explicite de l'actif.
+  final double? changePercentage;
+
   Asset({
     required this.symbol,
     required this.name,
@@ -30,12 +33,31 @@ class Asset {
     required this.marketOpen,
     required this.timezone,
     required this.timeSeries,
+    this.changePercentage,
   });
 
-  /// Crée une instance [Asset] directement à partir de la réponse brute JSON de l'API Alpha Vantage.
+  /// Calcule la variation quotidienne/récente (%) de l'actif.
   ///
-  /// Extrait le symbole et le fuseau horaire depuis la section "Meta Data"
-  /// et repère automatiquement la clé "Time Series (...)" quelle que soit l'intervalle.
+  /// Si [changePercentage] est défini explicitement, l'utilise en priorité.
+  /// Sinon, si l'historique [timeSeries] contient au moins 2 points, calcule :
+  /// `((dernier_cours - cours_precedent) / cours_precedent) * 100`.
+  double get dailyChangePercentage {
+    if (changePercentage != null) return changePercentage!;
+    if (timeSeries.length >= 2) {
+      final points = timeSeries.values.toList();
+      final double latestPrice = points[0].close;
+      final double previousPrice = points[1].close;
+      if (previousPrice != 0.0) {
+        return ((latestPrice - previousPrice) / previousPrice) * 100;
+      }
+    }
+    return 0.0;
+  }
+
+  /// Crée une instance [Asset] directement à partir de la réponse brute JSON de l'API Twelve Data.
+  ///
+  /// Le JSON combiné contient 'time_series' (données de l'endpoint /time_series) 
+  /// et 'quote' (données de l'endpoint /quote).
   factory Asset.fromApiJson(
     Map<String, dynamic> json, {
     String name = '',
@@ -43,45 +65,43 @@ class Asset {
     String description = '',
     bool marketOpen = true,
   }) {
-    final metaData = json['Meta Data'] as Map<String, dynamic>? ?? {};
-    final symbol = metaData['2. Symbol'] as String? ?? '';
-    final timezone = metaData['5. Time Zone'] as String? ?? metaData['6. Time Zone'] as String? ?? 'UTC';
+    final timeSeriesMap = json['time_series'] as Map<String, dynamic>? ?? {};
+    final quoteMap = json['quote'] as Map<String, dynamic>? ?? {};
 
-    // Recherche dynamique de la clé Time Series (ex: "Time Series (5min)", "Time Series (Daily)", etc.)
-    Map<String, dynamic>? timeSeriesMap;
-    for (var entry in json.entries) {
-      if (entry.key.startsWith('Time Series')) {
-        timeSeriesMap = entry.value as Map<String, dynamic>?;
-        break;
-      }
-    }
+    final metaData = timeSeriesMap['meta'] as Map<String, dynamic>? ?? {};
+    final symbol = metaData['symbol'] as String? ?? quoteMap['symbol'] as String? ?? '';
+    final timezone = metaData['exchange_timezone'] as String? ?? quoteMap['exchange_timezone'] as String? ?? 'UTC';
 
     final Map<String, PricePoint> timeSeries = {};
-    double currentPrice = 0.0;
+    double currentPrice = double.tryParse(quoteMap['close']?.toString() ?? '') ?? 0.0;
+    double? computedChange = double.tryParse(quoteMap['percent_change']?.toString() ?? '');
 
-    if (timeSeriesMap != null && timeSeriesMap.isNotEmpty) {
-      timeSeriesMap.forEach((timestamp, data) {
-        if (data is Map<String, dynamic>) {
-          timeSeries[timestamp] = PricePoint.fromApiJson(data);
-        } else if (data is Map) {
-          timeSeries[timestamp] = PricePoint.fromApiJson(data.cast<String, dynamic>());
+    final valuesList = timeSeriesMap['values'] as List? ?? [];
+    for (var item in valuesList) {
+      if (item is Map<String, dynamic>) {
+        final timestamp = item['datetime'] as String? ?? '';
+        if (timestamp.isNotEmpty) {
+          timeSeries[timestamp] = PricePoint.fromApiJson(item);
         }
-      });
-
-      // Le premier élément renvoyé par l'API représente la donnée la plus récente
-      final latestPoint = timeSeries.values.first;
-      currentPrice = latestPoint.close;
+      } else if (item is Map) {
+        final itemMap = item.cast<String, dynamic>();
+        final timestamp = itemMap['datetime'] as String? ?? '';
+        if (timestamp.isNotEmpty) {
+          timeSeries[timestamp] = PricePoint.fromApiJson(itemMap);
+        }
+      }
     }
 
     return Asset(
       symbol: symbol,
-      name: name.isNotEmpty ? name : symbol,
+      name: name.isNotEmpty ? name : (quoteMap['name'] as String? ?? symbol),
       currentPrice: currentPrice,
       type: type,
       description: description,
       marketOpen: marketOpen,
       timezone: timezone,
       timeSeries: timeSeries,
+      changePercentage: computedChange,
     );
   }
 
@@ -109,12 +129,13 @@ class Asset {
       marketOpen: json['marketOpen'] as bool,
       timezone: json['timezone'] as String? ?? 'UTC',
       timeSeries: parsedTimeSeries,
+      changePercentage: (json['changePercentage'] as num?)?.toDouble(),
     );
   }
 
   /// Sérialise l'instance [Asset] en une map JSON standard pour la persistance locale.
   Map<String, dynamic> toJson() {
-    return {
+    final Map<String, dynamic> jsonMap = {
       'symbol': symbol,
       'name': name,
       'currentPrice': currentPrice,
@@ -124,5 +145,9 @@ class Asset {
       'timezone': timezone,
       'timeSeries': timeSeries.map((key, value) => MapEntry(key, value.toJson())),
     };
+    if (changePercentage != null) {
+      jsonMap['changePercentage'] = changePercentage;
+    }
+    return jsonMap;
   }
 }

@@ -1,4 +1,4 @@
-// [AI-GENERATED] Issue #2, Agent, 2024-05-24
+// [AI-GENERATED] Migration Twelve Data, Agent, 2025-02-23
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -18,7 +18,7 @@ void main() {
 
     setUpAll(() {
       TestWidgetsFlutterBinding.ensureInitialized();
-      dotenv.loadFromString(envString: 'ALPHA_VANTAGE_API_KEY=fake_test_key');
+      dotenv.loadFromString(envString: 'TWELVEDATA_API_KEY=fake_test_key');
 
       databaseFactory = buildDatabaseFactory(
         invokeMethod: (String method, [Object? arguments]) async {
@@ -89,23 +89,38 @@ void main() {
 
     test('loadAsset réussit et passe à l\'état success avec API', () async {
       final mockClient = MockClient((request) async {
-        return http.Response('''
-        {
-          "Meta Data": {
-            "2. Symbol": "AAPL",
-            "5. Time Zone": "US/Eastern"
-          },
-          "Time Series (Daily)": {
-            "2024-05-24": {
-              "1. open": "190.0",
-              "2. high": "191.0",
-              "3. low": "189.0",
-              "4. close": "189.5",
-              "5. volume": "10000"
-            }
+        if (request.url.path.contains('/time_series')) {
+          return http.Response('''
+          {
+            "meta": {
+              "symbol": "AAPL",
+              "exchange_timezone": "US/Eastern"
+            },
+            "values": [
+              {
+                "datetime": "2024-05-24",
+                "open": "190.0",
+                "high": "191.0",
+                "low": "189.0",
+                "close": "189.5",
+                "volume": "10000"
+              }
+            ],
+            "status": "ok"
           }
+          ''', 200);
+        } else if (request.url.path.contains('/quote')) {
+           return http.Response('''
+          {
+            "symbol": "AAPL",
+            "name": "Apple Inc",
+            "exchange_timezone": "US/Eastern",
+            "close": "189.5",
+            "percent_change": "0.5"
+          }
+          ''', 200);
         }
-        ''', 200);
+        return http.Response('Erreur', 404);
       });
 
       final apiService = ApiService(client: mockClient);

@@ -4,13 +4,13 @@ import 'package:le_compagnon_investissement/models/price_point.dart';
 
 void main() {
   group('PricePoint', () {
-    test('should parse from Alpha Vantage API JSON format', () {
+    test('should parse from Twelve Data API JSON format', () {
       final apiJson = {
-        '1. open': '222.6300',
-        '2. high': '222.6300',
-        '3. low': '222.4964',
-        '4. close': '222.4964',
-        '5. volume': '281',
+        'open': '222.6300',
+        'high': '222.6300',
+        'low': '222.4964',
+        'close': '222.4964',
+        'volume': '281',
       };
 
       final pricePoint = PricePoint.fromApiJson(apiJson);

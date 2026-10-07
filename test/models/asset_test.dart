@@ -5,31 +5,38 @@ import 'package:le_compagnon_investissement/models/portfolio_position.dart';
 
 void main() {
   group('Asset', () {
-    test('should parse directly from Alpha Vantage API JSON format', () {
+    test('should parse directly from Twelve Data API JSON format', () {
       final apiJson = {
-        "Meta Data": {
-          "1. Information": "Intraday (5min) open, high, low, close prices and volume",
-          "2. Symbol": "IBM",
-          "3. Last Refreshed": "2026-10-02 19:55:00",
-          "4. Interval": "5min",
-          "5. Output Size": "Compact",
-          "6. Time Zone": "US/Eastern"
-        },
-        "Time Series (5min)": {
-          "2026-10-02 19:55:00": {
-            "1. open": "222.6300",
-            "2. high": "222.6300",
-            "3. low": "222.4964",
-            "4. close": "222.4964",
-            "5. volume": "281"
+        "time_series": {
+          "meta": {
+            "symbol": "IBM",
+            "interval": "1wk",
+            "exchange_timezone": "US/Eastern"
           },
-          "2026-10-02 19:50:00": {
-            "1. open": "222.6300",
-            "2. high": "222.6300",
-            "3. low": "222.5886",
-            "4. close": "222.6000",
-            "5. volume": "293"
-          }
+          "values": [
+            {
+              "datetime": "2026-10-02 19:55:00",
+              "open": "222.6300",
+              "high": "222.6300",
+              "low": "222.4964",
+              "close": "222.4964",
+              "volume": "281"
+            },
+            {
+              "datetime": "2026-10-02 19:50:00",
+              "open": "222.6300",
+              "high": "222.6300",
+              "low": "222.5886",
+              "close": "222.6000",
+              "volume": "293"
+            }
+          ]
+        },
+        "quote": {
+          "symbol": "IBM",
+          "name": "International Business Machines",
+          "close": "222.4964",
+          "percent_change": "0.5"
         }
       };
 
