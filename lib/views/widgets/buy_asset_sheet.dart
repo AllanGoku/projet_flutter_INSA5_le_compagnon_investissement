@@ -171,13 +171,27 @@ class _BuyAssetSheetState extends State<BuyAssetSheet> {
                     'Prix unitaire :',
                     style: TextStyle(fontSize: 14, color: Colors.grey),
                   ),
-                  Text(
-                    Formatters.formatCurrency(widget.asset.currentPrice),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        Formatters.formatCurrency(widget.asset.currentPrice),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      if (widget.asset.originalCurrency != 'EUR') ...[
+                        Text(
+                          '(${widget.asset.originalPrice.toStringAsFixed(2)} ${widget.asset.originalCurrency})',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ]
+                    ],
                   ),
                 ],
               ),

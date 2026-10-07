@@ -11,6 +11,7 @@ void main() {
           "meta": {
             "symbol": "IBM",
             "interval": "1wk",
+            "currency": "USD",
             "exchange_timezone": "US/Eastern"
           },
           "values": [
@@ -45,9 +46,11 @@ void main() {
       expect(asset.symbol, 'IBM');
       expect(asset.name, 'International Business Machines');
       expect(asset.timezone, 'US/Eastern');
-      expect(asset.currentPrice, 222.4964);
+      
+      // La monnaie étant USD, une conversion x0.92 doit s'appliquer
+      expect(asset.currentPrice, closeTo(222.4964 * 0.92, 0.001));
       expect(asset.timeSeries.length, 2);
-      expect(asset.timeSeries['2026-10-02 19:55:00']?.close, 222.4964);
+      expect(asset.timeSeries['2026-10-02 19:55:00']?.close, closeTo(222.4964 * 0.92, 0.001));
       expect(asset.timeSeries['2026-10-02 19:50:00']?.volume, 293);
     });
 
@@ -60,6 +63,8 @@ void main() {
         'description': 'Tech company',
         'marketOpen': true,
         'timezone': 'America/New_York',
+        'originalCurrency': 'EUR',
+        'originalPrice': 150.0,
         'timeSeries': {
           '2025-02-23T10:00:00Z': {
             'open': 149.0,
@@ -102,6 +107,8 @@ void main() {
         'description': 'S&P 500 index ETF',
         'marketOpen': false,
         'timezone': 'America/New_York',
+        'originalCurrency': 'EUR',
+        'originalPrice': 400.0,
         'timeSeries': <String, dynamic>{},
       };
 

@@ -70,9 +70,9 @@ void main() {
 
       expect(asset.symbol, 'AAPL');
       expect(asset.timezone, 'America/New_York');
-      expect(asset.currentPrice, closeTo(189.5, 0.001));
+      expect(asset.currentPrice, closeTo(189.5 * 0.92, 0.001));
       expect(asset.timeSeries.length, 1);
-      expect(asset.timeSeries['2024-05-24']?.open, closeTo(190.0, 0.001));
+      expect(asset.timeSeries['2024-05-24']?.open, closeTo(190.0 * 0.92, 0.001));
       expect(asset.changePercentage, closeTo(0.79, 0.001));
     });
 

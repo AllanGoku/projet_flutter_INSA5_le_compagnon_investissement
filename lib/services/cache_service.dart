@@ -39,12 +39,16 @@ class CacheService {
       )
     ''');
 
-    // Migration pour s'assurer que la colonne changePercentage existe si la base a été créée précédemment
+    // Migration pour s'assurer que les nouvelles colonnes existent
     try {
       await _database!.execute('ALTER TABLE assets ADD COLUMN changePercentage REAL');
-    } catch (_) {
-      // La colonne existe déjà
-    }
+    } catch (_) {}
+    try {
+      await _database!.execute('ALTER TABLE assets ADD COLUMN originalCurrency TEXT');
+    } catch (_) {}
+    try {
+      await _database!.execute('ALTER TABLE assets ADD COLUMN originalPrice REAL');
+    } catch (_) {}
 
     // Pré-alimentation initiale supprimée (utilisation de l'API)
     if (!inMemory) {
@@ -72,7 +76,9 @@ class CacheService {
         timezone TEXT,
         timeSeries TEXT,
         lastUpdated INTEGER,
-        changePercentage REAL
+        changePercentage REAL,
+        originalCurrency TEXT,
+        originalPrice REAL
       )
     ''');
 
@@ -98,6 +104,8 @@ class CacheService {
       'timezone': asset.timezone,
       'timeSeries': jsonEncode(asset.toJson()['timeSeries']),
       'lastUpdated': lastUpdatedMillis ?? DateTime.now().millisecondsSinceEpoch,
+      'originalCurrency': asset.originalCurrency,
+      'originalPrice': asset.originalPrice,
     };
 
     if (asset.changePercentage != null) {
@@ -173,6 +181,8 @@ class CacheService {
           'timezone': pos.asset.timezone,
           'timeSeries': jsonEncode(pos.asset.toJson()['timeSeries']),
           'lastUpdated': DateTime.now().millisecondsSinceEpoch,
+          'originalCurrency': pos.asset.originalCurrency,
+          'originalPrice': pos.asset.originalPrice,
         };
         if (pos.asset.changePercentage != null) {
           assetMap['changePercentage'] = pos.asset.changePercentage;

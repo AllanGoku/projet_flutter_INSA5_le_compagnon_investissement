@@ -134,7 +134,7 @@ void main() {
 
       expect(controller.state, DataState.success);
       expect(controller.assets.containsKey('AAPL'), isTrue);
-      expect(controller.assets['AAPL']!.currentPrice, closeTo(189.5, 0.001));
+      expect(controller.assets['AAPL']!.currentPrice, closeTo(189.5 * 0.92, 0.001));
     });
 
     test('loadAsset passe en erreur si API échoue et pas de cache', () async {

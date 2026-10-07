@@ -134,6 +134,17 @@ class HeroAssetCard extends StatelessWidget {
                             color: Colors.white,
                           ),
                         ),
+                        if (asset.originalCurrency != 'EUR') ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            '(${asset.originalPrice.toStringAsFixed(2)} ${asset.originalCurrency})',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white.withValues(alpha: 0.7),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
 

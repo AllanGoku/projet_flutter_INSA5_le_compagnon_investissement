@@ -23,6 +23,12 @@ class Asset {
 
   /// Variation en pourcentage (%) optionnelle ou explicite de l'actif.
   final double? changePercentage;
+  
+  /// La devise d'origine de l'actif (ex: USD, EUR).
+  final String originalCurrency;
+  
+  /// Le prix dans la devise d'origine, avant conversion en Euros.
+  final double originalPrice;
 
   Asset({
     required this.symbol,
@@ -34,6 +40,8 @@ class Asset {
     required this.timezone,
     required this.timeSeries,
     this.changePercentage,
+    this.originalCurrency = 'EUR',
+    this.originalPrice = 0.0,
   });
 
   /// Calcule la variation quotidienne/récente (%) de l'actif.
@@ -71,23 +79,42 @@ class Asset {
     final metaData = timeSeriesMap['meta'] as Map<String, dynamic>? ?? {};
     final symbol = metaData['symbol'] as String? ?? quoteMap['symbol'] as String? ?? '';
     final timezone = metaData['exchange_timezone'] as String? ?? quoteMap['exchange_timezone'] as String? ?? 'UTC';
+    final originalCurrency = metaData['currency'] as String? ?? quoteMap['currency'] as String? ?? 'USD';
+
+    // Taux de conversion statique vers l'Euro (EUR) pour une utilisation éducative 
+    // afin d'économiser les requêtes API (1 appel = 1 crédit)
+    double conversionRate = 1.0;
+    if (originalCurrency == 'USD') {
+      conversionRate = 0.92;
+    } else if (originalCurrency == 'GBP') {
+      conversionRate = 1.17;
+    } else if (originalCurrency == 'CHF') {
+      conversionRate = 1.05;
+    } else if (originalCurrency == 'JPY') {
+      conversionRate = 0.0061;
+    } else if (originalCurrency == 'CNY') {
+      conversionRate = 0.13;
+    }
 
     final Map<String, PricePoint> timeSeries = {};
-    double currentPrice = double.tryParse(quoteMap['close']?.toString() ?? '') ?? 0.0;
+    double currentOriginalPrice = double.tryParse(quoteMap['close']?.toString() ?? '') ?? 0.0;
+    double currentPrice = currentOriginalPrice * conversionRate;
     double? computedChange = double.tryParse(quoteMap['percent_change']?.toString() ?? '');
 
     final valuesList = timeSeriesMap['values'] as List? ?? [];
     for (var item in valuesList) {
-      if (item is Map<String, dynamic>) {
-        final timestamp = item['datetime'] as String? ?? '';
-        if (timestamp.isNotEmpty) {
-          timeSeries[timestamp] = PricePoint.fromApiJson(item);
-        }
-      } else if (item is Map) {
-        final itemMap = item.cast<String, dynamic>();
+      if (item is Map<String, dynamic> || item is Map) {
+        final itemMap = item is Map<String, dynamic> ? item : item.cast<String, dynamic>();
         final timestamp = itemMap['datetime'] as String? ?? '';
         if (timestamp.isNotEmpty) {
-          timeSeries[timestamp] = PricePoint.fromApiJson(itemMap);
+          final originalPoint = PricePoint.fromApiJson(itemMap);
+          timeSeries[timestamp] = PricePoint(
+            open: originalPoint.open * conversionRate,
+            high: originalPoint.high * conversionRate,
+            low: originalPoint.low * conversionRate,
+            close: originalPoint.close * conversionRate,
+            volume: originalPoint.volume,
+          );
         }
       }
     }
@@ -102,6 +129,8 @@ class Asset {
       timezone: timezone,
       timeSeries: timeSeries,
       changePercentage: computedChange,
+      originalCurrency: originalCurrency,
+      originalPrice: currentOriginalPrice,
     );
   }
 
@@ -130,6 +159,8 @@ class Asset {
       timezone: json['timezone'] as String? ?? 'UTC',
       timeSeries: parsedTimeSeries,
       changePercentage: (json['changePercentage'] as num?)?.toDouble(),
+      originalCurrency: json['originalCurrency'] as String? ?? 'EUR',
+      originalPrice: (json['originalPrice'] as num?)?.toDouble() ?? (json['currentPrice'] as num).toDouble(),
     );
   }
 
@@ -144,6 +175,8 @@ class Asset {
       'marketOpen': marketOpen,
       'timezone': timezone,
       'timeSeries': timeSeries.map((key, value) => MapEntry(key, value.toJson())),
+      'originalCurrency': originalCurrency,
+      'originalPrice': originalPrice,
     };
     if (changePercentage != null) {
       jsonMap['changePercentage'] = changePercentage;
