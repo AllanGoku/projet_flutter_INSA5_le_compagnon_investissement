@@ -1,6 +1,8 @@
 // [AI-GENERATED] Phase 2, Agent, 2025-02-23
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_confetti/flutter_confetti.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../utils/app_theme.dart';
 
 /// Widget d'animation personnalisée simulant un paiement fictif par carte bancaire.
@@ -63,14 +65,59 @@ class _PurchaseAnimationState extends State<PurchaseAnimation> with SingleTicker
           });
           // Déclenchement de la pluie de confettis
           try {
-            Confetti.launch(
-              context,
-              options: const ConfettiOptions(
-                particleCount: 80,
-                spread: 70,
-                y: 0.5,
-              ),
+            const options = ConfettiOptions(
+              spread: 360,
+              ticks: 250,
+              gravity: 0.4,
+              decay: 0.94,
+              startVelocity: 15,
+              y: -0.1,
+              x: 0.5,
             );
+
+            void shoot() {
+              if (!mounted) return;
+              
+              Confetti.launch(context,
+                  options: options.copyWith(
+                    particleCount: 20,
+                  ),
+                  particleBuilder: (index) => Emoji(
+                      emoji: '💶',
+                      textStyle:
+                          GoogleFonts.notoColorEmoji()));
+              Confetti.launch(context,
+                  options: options.copyWith(
+                    particleCount: 15,
+                  ),
+                  particleBuilder: (index) => Emoji(
+                        emoji: '💵',
+                        textStyle:
+                            GoogleFonts.notoColorEmoji(),
+                      ));
+              Confetti.launch(context,
+                  options: options.copyWith(
+                    particleCount: 15,
+                  ),
+                  particleBuilder: (index) => Emoji(
+                        emoji: '💴',
+                        textStyle:
+                            GoogleFonts.notoColorEmoji(),
+                      ));
+              Confetti.launch(context,
+                  options: options.copyWith(
+                    particleCount: 15,
+                  ),
+                  particleBuilder: (index) => Emoji(
+                        emoji: '💷',
+                        textStyle:
+                            GoogleFonts.notoColorEmoji(),
+                      ));
+            }
+
+            Timer(Duration.zero, shoot);
+            Timer(const Duration(milliseconds: 200), shoot);
+            Timer(const Duration(milliseconds: 400), shoot);
           } catch (e) {
             debugPrint("Erreur lors du lancement des confettis: $e");
           }
