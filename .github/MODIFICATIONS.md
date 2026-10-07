@@ -6,7 +6,7 @@ Ce fichier documente les modifications apportées au projet "Le Compagnon d'Inve
 
 ### 1. Ajout des Modèles de Données (`../lib/models`)
 - **`asset.dart`** : Création du modèle `Asset` pour représenter un actif financier (Action, ETF).
-  - *Pourquoi ?* : Pour encapsuler la réponse brute de l'API (Alpha Vantage) et fournir un typage fort dans l'application, rendant la manipulation des actifs sécurisée.
+  - *Pourquoi ?* : Pour encapsuler la réponse brute de l'API (initialement Alpha Vantage, désormais Twelve Data) et fournir un typage fort dans l'application, rendant la manipulation des actifs sécurisée.
 - **`price_point.dart`** : Création du modèle `PricePoint` (OHLCV).
   - *Pourquoi ?* : Pour conserver l'historique détaillé des cours (Open, High, Low, Close, Volume) afin d'afficher des graphiques avancés et pour pouvoir fonctionner en mode hors-connexion.
 - **`portfolio_position.dart`** : Création du modèle `PortfolioPosition`.
@@ -69,7 +69,7 @@ Ce fichier documente les modifications apportées au projet "Le Compagnon d'Inve
 ## [Implémentation du Cœur de Données (Réseau & Cache) et Test API] - 2026-10-06
 
 ### 1. Couche Réseau & Cache (`../lib/services/`)
-- **`api_service.dart`** : Service HTTP se connectant à l'API Alpha Vantage.
+- **`api_service.dart`** : Service HTTP se connectant initialement à l'API Alpha Vantage, migré depuis vers Twelve Data.
   - *Pourquoi ?* : Permettre la récupération sécurisée des données de marché en temps réel et de l'historique de cours (OHLCV) en s'appuyant sur les clés API du fichier `.env`.
 - **`cache_service.dart`** : Service de stockage local SQLite basé sur `sqflite`.
   - *Pourquoi ?* : Stocker de manière robuste les données et l'historique des actifs (sur au moins 7 jours) pour limiter les requêtes API et permettre le fonctionnement hors-connexion.
@@ -83,5 +83,52 @@ Ce fichier documente les modifications apportées au projet "Le Compagnon d'Inve
 ### 3. Ajustements de l'Application & Bac à Sable (`../lib/main.dart` & `../lib/views/screens/design_showcase_screen.dart`)
 - **`main.dart` & `pubspec.yaml`** : Déclaration de `.env` dans les `assets` et chargement sécurisé via `dotenv`. Injection de `DataController` dans le `MultiProvider`.
   - *Pourquoi ?* : Éviter les erreurs de démarrage et distribuer l'état de données dans toute l'application.
-- **`design_showcase_screen.dart`** : Ajout d'une section interactive de test d'API Alpha Vantage avec saisie de symbole boursier.
+- **`design_showcase_screen.dart`** : Ajout d'une section interactive de test d'API Twelve Data avec saisie de symbole boursier.
   - *Pourquoi ?* : Offrir un moyen simple et visuel de tester la connexion réseau et le comportement du cache directement depuis l'application.
+
+## [Migration vers Twelve Data] - 2025-02-23
+
+### 1. Remplacement de l'API (`../lib/services/api_service.dart`)
+- **`api_service.dart`** : Migration complète de l'API Alpha Vantage vers l'API Twelve Data.
+  - *Pourquoi ?* : Limitations de l'API Alpha Vantage, adoption des endpoints `/time_series` et `/quote` de Twelve Data. Ajout d'une gestion précise des erreurs (ex: 429 Trop de requêtes).
+
+### 2. Modèles de données et Parsing (`../lib/models/asset.dart` & `../lib/models/price_point.dart`)
+- **`asset.dart` & `price_point.dart`** : Adaptation du parsing JSON pour correspondre à la structure de Twelve Data.
+  - *Pourquoi ?* : Intégration des métadonnées Twelve Data. Ajout du stockage de la devise originale (`originalCurrency`) et du prix brut (`originalPrice`), et implémentation d'un convertisseur statique interne vers l'Euro (EUR) pour limiter la consommation de l'API.
+
+### 3. Ajustement de l'UI et Optimisation des Requêtes (`../lib/views/screens/dashboard_screen.dart`)
+- **`dashboard_screen.dart`** : Restriction de l'affichage du Dashboard à 4 actifs majeurs (AAPL, MSFT, AMZN, IBM).
+  - *Pourquoi ?* : Respecter le quota très strict de l'API gratuite de Twelve Data (8 requêtes par minute). Affichage dynamique des bannières d'erreur réseau issues de Twelve Data. Ajout de la devise originale en gris sous les prix convertis.
+
+### 4. Mise à jour du Cache Local (`../lib/services/cache_service.dart`)
+- **`cache_service.dart`** : Migration de la structure SQLite avec `ALTER TABLE` pour ajouter `originalCurrency` et `originalPrice`.
+  - *Pourquoi ?* : Persister les nouvelles données de devise sans effacer le portefeuille existant.
+
+## [Phase 2 : Dashboard & Gestion de Portefeuille Fictif] - 2025-02-23
+
+### 1. Persistance Locale du Portefeuille (`../lib/services/cache_service.dart`)
+- **`cache_service.dart`** : Ajout de la table `portfolio` dans SQLite (`symbol`, `quantity`, `averagePurchasePrice`) et implémentation de `savePortfolioPositions` / `getPortfolioPositions`.
+  - *Pourquoi ?* : Assurer la persistance locale et la restauration des positions d'achat du portefeuille fictif hors-connexion.
+
+### 2. Contrôleur de Portefeuille Fictif (`../lib/controllers/portfolio_controller.dart`)
+- **`portfolio_controller.dart`** : Création du contrôleur de portefeuille (`ChangeNotifier`) avec gestion du Prix Moyen Pondéré d'Achat (PMPA).
+  - *Pourquoi ?* : Piloter l'état du portefeuille de manière réactive, réévaluer les métriques en temps réel (valeur totale, montant investi, plus-values et performance %) via `FinancialCalculator`.
+
+### 3. Modèle d'Actif Enrichi (`../lib/models/asset.dart`)
+- **`asset.dart`** : Ajout du getter `dailyChangePercentage` et du champ `changePercentage`.
+  - *Pourquoi ?* : Calculer dynamiquement la variation quotidienne exacte en % basée sur les cours reçus de l'API.
+
+### 4. Nouveaux Widgets d'Interface (`../lib/views/widgets/`)
+- **`flip_gain_counter.dart`** : Synthèse dynamique du portefeuille avec bascule animée entre pourcentages (%) et montants en euros (€) via `AnimatedFlipCounter`.
+- **`hero_asset_card.dart`** : Carte "Actif à la loupe" au style dégradé mettant en avant l'actif phare NVIDIA.
+- **`asset_grid_section.dart`** : Grille horizontale "À surveiller" avec cartes compactes, badges ETF et pilules de plus/moins-value réelles.
+- **`market_movers_section.dart`** : Liste verticale des "Market Movers" avec variations réelles de marché.
+- **`purchase_animation.dart`** : Animation de paiement sans-contact sur terminal TPE avec feux d'artifice de confettis (`flutter_confetti`).
+- **`buy_asset_sheet.dart`** : Modale d'achat fictif avec validation de quantité (`Validators`) et boutons raccourcis (+1, +5, +10).
+
+### 5. Restructuration du Tableau de Bord & Injection (`../lib/views/screens/dashboard_screen.dart` & `../lib/main.dart`)
+- **`dashboard_screen.dart`** : Assemblage des 3 sections et de l'en-tête, connexion à `DataController` pour charger en direct les vraies données API et intégration de la barre de navigation.
+- **`main.dart`** : Déclaration de `PortfolioController` dans le `MultiProvider` racine.
+
+### 6. Tests Unitaires & Widgets (`../test/`)
+- **`portfolio_controller_test.dart`**, **`buy_asset_sheet_test.dart`**, **`dashboard_screen_test.dart`** : Couverture complète des règles de calcul du PMPA, de la validation des formulaires et du rendu visuel (100% de succès sur `flutter test`).

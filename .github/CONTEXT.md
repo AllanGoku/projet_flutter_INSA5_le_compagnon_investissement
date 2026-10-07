@@ -18,7 +18,7 @@ Les principales fonctionnalités envisagées ;
 
 Les données externes nécessaires et les API envisagées ;
 * Informations financières : cours quotidiens, historiques et détails des actifs (actions/ETF).
-* API envisagée : Alpha Vantage.
+* API utilisée : Twelve Data.
 
 Les données qui seront conservées localement (Persistance et Cache) ;
 *	Données utilisateur : Portefeuille fictif (actions/ETF possédées et historique mensuel), profil de l'utilisateur, succès débloqués et préférences de suivi.
