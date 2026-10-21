@@ -13,7 +13,7 @@ L'application adopte une architecture **Modèle-Vue-Contrôleur (MVC)** adaptée
 
 2. **Couche 2 : Contrôle et Services (`lib/controllers/` & `lib/services/`)**
    - **Contrôleurs :** Gestion de l'état applicatif (`ChangeNotifier`), écoute des événements utilisateurs et pilotage des flux (`AuthController`, `DataController`, `PortfolioController`).
-   - **Services :** Client HTTP externe (`ApiService` pour Alpha Vantage), persistance sécurisée (`AuthService`) et gestionnaire de cache/persistance locale SQLite (`CacheService` pour `sqflite`).
+   - **Services :** Client HTTP externe (`ApiService` pour Twelve Data), persistance sécurisée (`AuthService`) et gestionnaire de cache/persistance locale SQLite (`CacheService` pour `sqflite`).
    - Gestion explicite des états de chargement (`Initial`, `Loading`, `Success/Data`, `Error`, `Offline`).
 
 3. **Couche 3 : Moteur Métier et Données (`lib/models/`)**
@@ -56,7 +56,7 @@ le_compagnon_investissement/
 |   |   `-- data_state.dart        # Enumération des états asynchrones
 |   |
 |   |-- services/                  # E/S, Réseau & Stockage local
-|   |   |-- api_service.dart       # Service d'appel à l'API Alpha Vantage
+|   |   |-- api_service.dart       # Service d'appel à l'API Twelve Data
 |   |   |-- auth_service.dart      # Service gérant la persistance d'authentification
 |   |   `-- cache_service.dart     # Service de cache local SQLite (sqflite)
 |   |

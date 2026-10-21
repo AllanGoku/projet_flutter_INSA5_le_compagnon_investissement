@@ -32,7 +32,7 @@ class ApiService {
     String description = '',
   }) async {
     final timeSeriesUri = Uri.parse(
-      '$_baseUrl/time_series?symbol=$symbol&interval=1week&apikey=$_apiKey'
+      '$_baseUrl/time_series?symbol=$symbol&interval=1day&start_date=2015-01-01&apikey=$_apiKey'
     );
     final quoteUri = Uri.parse(
       '$_baseUrl/quote?symbol=$symbol&apikey=$_apiKey'

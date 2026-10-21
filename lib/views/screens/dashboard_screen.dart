@@ -1,4 +1,4 @@
-// [AI-GENERATED] Phase 2, Agent, 2025-02-23
+// [AI-GENERATED] Phase 3, Agent, 2025-02-23
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/portfolio_controller.dart';
@@ -11,11 +11,13 @@ import '../widgets/hero_asset_card.dart';
 import '../widgets/asset_grid_section.dart';
 import '../widgets/market_movers_section.dart';
 import '../widgets/buy_asset_sheet.dart';
+import 'asset_detail_screen.dart';
+import 'search_screen.dart';
 
 /// Écran principal du tableau de bord (Accueil restructuré).
 ///
-/// Charge et affiche exclusivement les vraies données réelles issues de la base SQLite
-/// et de l'API Twelve Data, sans aucune donnée codée en dur.
+/// Intègre la navigation entre l'Accueil, la Recherche/Exploration (`SearchScreen`)
+/// et la consultation détaillée des actifs (`AssetDetailScreen`).
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -26,8 +28,7 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   int _currentNavIndex = 0;
 
-  // Liste limitée à 4 actifs pour respecter le quota gratuit (8 req/min) de Twelve Data
-  // (1 appel time_series + 1 appel quote par actif = 8 requêtes total)
+  // Liste d'actifs pour alimenter le tableau de bord
   static const _heroSymbol = 'AAPL';
   static const _watchListConfigs = [
     {'symbol': 'MSFT', 'name': 'Microsoft Corp.', 'type': 'Stock', 'desc': 'Logiciel & Cloud'},
@@ -35,7 +36,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     {'symbol': 'IBM', 'name': 'IBM Corp.', 'type': 'Stock', 'desc': 'Informatique & Services IT'},
   ];
 
-  // Liste vide pour ne pas dépasser le quota
   static const _marketMoversConfigs = <Map<String, String>>[];
 
   @override
@@ -46,17 +46,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
       context.read<PortfolioController>().loadPositions();
 
       final dataController = context.read<DataController>();
-      
+
       // 2. Chargement immédiat de l'ensemble des données déjà en cache dans SQLite
       await dataController.loadAllCachedAssets();
 
-      // 3. Récupération des cours réels du jour auprès de l'API Twelve Data
+      // 3. Récupération des cours réels du jour auprès de l'API
       dataController.loadAsset(
         _heroSymbol,
         isHot: true,
-        name: 'NVIDIA Corporation',
+        name: 'Apple Inc.',
         type: 'Stock',
-        description: 'Leader mondial des processeurs graphiques et des puces IA.',
+        description: 'Leader mondial des technologies grand public et des services informatiques.',
       );
 
       for (var item in _watchListConfigs) {
@@ -95,12 +95,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final dataController = context.watch<DataController>();
-    final Map<String, Asset> loadedAssets = dataController.assets;
+  void _openDetailScreen(Asset asset) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => AssetDetailScreen(asset: asset),
+      ),
+    );
+  }
 
-    // Récupération de l'actif vedette depuis le cache/API ou instance vide
+  Widget _buildHomeView(DataController dataController, Map<String, Asset> loadedAssets) {
+    // Récupération de l'actif vedette depuis le cache/API ou instance par défaut
     final Asset heroAsset = loadedAssets[_heroSymbol] ?? Asset(
       symbol: _heroSymbol,
       name: dataController.state == DataState.error 
@@ -146,94 +150,113 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
     }).toList();
 
-    return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
-      body: Consumer<PortfolioController>(
-        builder: (context, portfolio, child) {
-          return RefreshIndicator(
-            onRefresh: () async {
-              final portfolioController = context.read<PortfolioController>();
-              final dataCtrl = context.read<DataController>();
+    return Consumer<PortfolioController>(
+      builder: (context, portfolio, child) {
+        return RefreshIndicator(
+          onRefresh: () async {
+            final portfolioController = context.read<PortfolioController>();
+            final dataCtrl = context.read<DataController>();
 
-              await portfolioController.loadPositions();
-              await dataCtrl.refreshAll(
-                [_heroSymbol, ..._watchListConfigs.map((e) => e['symbol']!), ..._marketMoversConfigs.map((e) => e['symbol']!)],
-                force: true,
-              );
-            },
-            color: AppTheme.primaryColor,
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (dataController.state == DataState.error || dataController.state == DataState.offline)
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16, top: 16),
-                      decoration: BoxDecoration(
-                        color: dataController.state == DataState.error ? Colors.red.shade50 : Colors.orange.shade50,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: dataController.state == DataState.error ? Colors.red.shade200 : Colors.orange.shade200,
-                        )
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            dataController.state == DataState.error ? Icons.error_outline : Icons.wifi_off,
-                            color: dataController.state == DataState.error ? Colors.red : Colors.orange,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              dataController.errorMessage.isNotEmpty 
-                                  ? dataController.errorMessage 
-                                  : 'Problème de connexion aux données.',
-                              style: TextStyle(
-                                color: dataController.state == DataState.error ? Colors.red.shade900 : Colors.orange.shade900,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ),
-                        ],
+            await portfolioController.loadPositions();
+            await dataCtrl.refreshAll(
+              [_heroSymbol, ..._watchListConfigs.map((e) => e['symbol']!), ..._marketMoversConfigs.map((e) => e['symbol']!)],
+              force: true,
+            );
+          },
+          color: AppTheme.primaryColor,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (dataController.state == DataState.error || dataController.state == DataState.offline)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16, top: 16),
+                    decoration: BoxDecoration(
+                      color: dataController.state == DataState.error ? Colors.red.shade50 : Colors.orange.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: dataController.state == DataState.error ? Colors.red.shade200 : Colors.orange.shade200,
                       ),
                     ),
-
-                  // 1. En-tête Synthèse du Portefeuille (FlipGainCounter)
-                  FlipGainCounter(
-                    totalValue: portfolio.totalValue,
-                    capitalGain: portfolio.totalCapitalGain,
-                    performancePercentage: portfolio.totalPerformance,
+                    child: Row(
+                      children: [
+                        Icon(
+                          dataController.state == DataState.error ? Icons.error_outline : Icons.wifi_off,
+                          color: dataController.state == DataState.error ? Colors.red : Colors.orange,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            dataController.errorMessage.isNotEmpty 
+                                ? dataController.errorMessage 
+                                : 'Problème de connexion aux données.',
+                            style: TextStyle(
+                              color: dataController.state == DataState.error ? Colors.red.shade900 : Colors.orange.shade900,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 20),
 
-                  // 2. Section 1 : Hero Asset ("Actif à la loupe")
-                  HeroAssetCard(
+                // 1. En-tête Synthèse du Portefeuille (FlipGainCounter)
+                FlipGainCounter(
+                  totalValue: portfolio.totalValue,
+                  capitalGain: portfolio.totalCapitalGain,
+                  performancePercentage: portfolio.totalPerformance,
+                ),
+                const SizedBox(height: 20),
+
+                // 2. Section 1 : Hero Asset ("Actif à la loupe")
+                GestureDetector(
+                  onTap: () => _openDetailScreen(heroAsset),
+                  child: HeroAssetCard(
                     asset: heroAsset,
                     onBuyPressed: () => _openBuyModal(heroAsset),
                   ),
-                  const SizedBox(height: 24),
+                ),
+                const SizedBox(height: 24),
 
-                  // 3. Section 2 : À surveiller (Grille horizontale)
-                  AssetGridSection(
-                    assets: watchListAssets,
-                    onAssetSelected: (asset) => _openBuyModal(asset),
-                  ),
-                  const SizedBox(height: 24),
+                // 3. Section 2 : À surveiller (Grille horizontale)
+                AssetGridSection(
+                  assets: watchListAssets,
+                  onAssetSelected: (asset) => _openDetailScreen(asset),
+                ),
+                const SizedBox(height: 24),
 
-                  // 4. Section 3 : Market Movers (Top variations)
-                  MarketMoversSection(
-                    assets: marketMoversAssets,
-                    onAssetSelected: (asset) => _openBuyModal(asset),
-                  ),
-                  const SizedBox(height: 100), // Espace sous le défilement pour la barre de nav
-                ],
-              ),
+                // 4. Section 3 : Market Movers (Top variations)
+                MarketMoversSection(
+                  assets: marketMoversAssets,
+                  onAssetSelected: (asset) => _openDetailScreen(asset),
+                ),
+                const SizedBox(height: 100), // Espace pour la barre de nav
+              ],
             ),
-          );
-        },
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dataController = context.watch<DataController>();
+    final Map<String, Asset> loadedAssets = dataController.assets;
+
+    return Scaffold(
+      backgroundColor: AppTheme.backgroundColor,
+      body: IndexedStack(
+        index: _currentNavIndex,
+        children: [
+          _buildHomeView(dataController, loadedAssets),
+          const SearchScreen(),
+          const Center(child: Text('Écran Portefeuille (À venir)')),
+          const Center(child: Text('Écran Profil (À venir)')),
+        ],
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(

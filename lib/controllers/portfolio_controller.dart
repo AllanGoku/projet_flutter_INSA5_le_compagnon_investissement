@@ -99,7 +99,7 @@ class PortfolioController extends ChangeNotifier {
 
   /// Met à jour les cours des actifs contenus dans le portefeuille.
   ///
-  /// Utilisé lorsque [DataController] récupère de nouveaux cours depuis l'API Alpha Vantage
+  /// Utilisé lorsque [DataController] récupère de nouveaux cours depuis l'API Twelve Data.
   /// pour réévaluer la valeur courante du portefeuille sans altérer le PMPA d'achat.
   void updateAssetPrices(Map<String, Asset> updatedAssets) {
     bool hasChanged = false;

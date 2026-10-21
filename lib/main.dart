@@ -78,6 +78,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Le Compagnon d\'Investissement',
       theme: AppTheme.lightTheme,
       home: _isCheckingAuth

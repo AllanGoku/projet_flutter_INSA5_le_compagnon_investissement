@@ -8,7 +8,7 @@ import '../models/portfolio_position.dart';
 /// Service responsable de la persistance locale des actifs (actions/ETF)
 /// et des positions du portefeuille fictif.
 /// Utilise SQLite pour stocker de manière robuste les données et l'historique
-/// des cours afin de limiter les requêtes API (Alpha Vantage) et permettre 
+/// des cours afin de limiter les requêtes API (Twelve Data) et permettre
 /// un fonctionnement hors-connexion.
 class CacheService {
   Database? _database;
