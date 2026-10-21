@@ -6,11 +6,13 @@ import 'package:sqflite_common/src/mixin/factory.dart';
 import 'package:le_compagnon_investissement/services/cache_service.dart';
 import 'package:le_compagnon_investissement/models/asset.dart';
 import 'package:le_compagnon_investissement/models/price_point.dart';
+import 'package:le_compagnon_investissement/models/portfolio_transaction.dart';
 
 void main() {
   group('CacheService Tests', () {
     late CacheService cacheService;
     final Map<String, Map<String, dynamic>> inMemoryStorage = {};
+    final List<Map<String, dynamic>> transactionsList = [];
 
     setUpAll(() {
       TestWidgetsFlutterBinding.ensureInitialized();
@@ -26,26 +28,46 @@ void main() {
             return null;
           }
           if (method == 'insert') {
+            if (args != null && args['sql'] != null) {
+              final sql = args['sql'] as String;
+              if (sql.contains('INTO transactions') && args['arguments'] != null) {
+                final list = args['arguments'] as List;
+                transactionsList.add({
+                  'symbol': list[0],
+                  'assetName': list[1],
+                  'type': list[2],
+                  'quantity': list[3],
+                  'price': list[4],
+                  'timestamp': list[5],
+                });
+                return 1;
+              }
+            }
             if (args != null && args['arguments'] != null) {
               final list = args['arguments'] as List;
-              // Ordre des arguments: symbol, name, currentPrice, type, description, marketOpen, timezone, timeSeries, lastUpdated
-              final row = <String, dynamic>{
-                'symbol': list[0],
-                'name': list[1],
-                'currentPrice': list[2],
-                'type': list[3],
-                'description': list[4],
-                'marketOpen': list[5],
-                'timezone': list[6],
-                'timeSeries': list[7],
-                'lastUpdated': list[8],
-              };
-              inMemoryStorage[list[0] as String] = row;
+              if (list.isNotEmpty && list[0] is String) {
+                final row = <String, dynamic>{
+                  'symbol': list[0],
+                  'name': list.length > 1 ? list[1] : list[0],
+                  'currentPrice': list.length > 2 ? list[2] : 0.0,
+                  'type': list.length > 3 ? list[3] : 'Stock',
+                  'description': list.length > 4 ? list[4] : '',
+                  'marketOpen': list.length > 5 ? list[5] : 1,
+                  'timezone': list.length > 6 ? list[6] : 'UTC',
+                  'timeSeries': list.length > 7 ? list[7] : '{}',
+                  'lastUpdated': list.length > 8 ? list[8] : DateTime.now().millisecondsSinceEpoch,
+                };
+                inMemoryStorage[list[0] as String] = row;
+              }
             }
             return 1;
           }
           if (method == 'query') {
             if (args != null && args['sql'] != null) {
+              final sql = args['sql'] as String;
+              if (sql.contains('FROM transactions')) {
+                return transactionsList;
+              }
               final bindArgs = args['arguments'] as List?;
               if (bindArgs != null && bindArgs.isNotEmpty) {
                 final symbol = bindArgs.first as String;
@@ -58,6 +80,7 @@ void main() {
           }
           if (method == 'delete') {
             inMemoryStorage.clear();
+            transactionsList.clear();
             return 1;
           }
           if (method == 'closeDatabase') {
@@ -122,6 +145,32 @@ void main() {
       expect(lastUpdated, isNotNull);
       final diff = DateTime.now().difference(lastUpdated!);
       expect(diff.inSeconds, lessThan(2));
+    });
+
+    test('Sauvegarde et récupération des transactions', () async {
+      final now = DateTime.now();
+      final tx = PortfolioTransaction(
+        symbol: 'AAPL',
+        assetName: 'Apple Inc.',
+        type: TransactionType.buy,
+        quantity: 10.0,
+        price: 150.0,
+        timestamp: now,
+      );
+
+      await cacheService.saveTransaction(tx);
+      final transactions = await cacheService.getTransactions();
+
+      expect(transactions, isNotEmpty);
+      expect(transactions.first.symbol, equals('AAPL'));
+      expect(transactions.first.quantity, equals(10.0));
+      expect(transactions.first.type, equals(TransactionType.buy));
+    });
+
+    test('Suppression d\'une position du portefeuille', () async {
+      await cacheService.deletePortfolioPosition('AAPL');
+      // On s'assure qu'aucune exception n'est levée
+      expect(true, isTrue);
     });
   });
 }

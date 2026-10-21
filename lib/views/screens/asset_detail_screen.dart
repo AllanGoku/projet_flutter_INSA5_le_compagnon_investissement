@@ -33,12 +33,7 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
       builder: (context) => BuyAssetSheet(
         asset: widget.asset,
         onPurchaseSuccess: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Achat fictif de ${widget.asset.symbol} effectué avec succès !'),
-              backgroundColor: AppTheme.primaryColor,
-            ),
-          );
+          Navigator.of(context).pop('open_portfolio');
         },
       ),
     );

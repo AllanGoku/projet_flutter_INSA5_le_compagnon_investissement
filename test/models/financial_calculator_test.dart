@@ -127,5 +127,43 @@ void main() {
         expect(finalValue['finalValue'], 0.0);
       });
     });
+
+    group('calculateRealizedGain', () {
+      test('calcule correctement la plus-value réalisée lors d\'une revente positive', () {
+        final gain = FinancialCalculator.calculateRealizedGain(
+          sellPrice: 150.0,
+          averagePurchasePrice: 100.0,
+          quantity: 3.0,
+        );
+        expect(gain, closeTo(150.0, 0.001));
+      });
+
+      test('calcule correctement la moins-value réalisée', () {
+        final loss = FinancialCalculator.calculateRealizedGain(
+          sellPrice: 80.0,
+          averagePurchasePrice: 100.0,
+          quantity: 2.0,
+        );
+        expect(loss, closeTo(-40.0, 0.001));
+      });
+    });
+
+    group('calculateAllocationPercentage', () {
+      test('calcule le pourcentage d\'allocation d\'une position', () {
+        final percentage = FinancialCalculator.calculateAllocationPercentage(
+          positionValue: 300.0,
+          totalPortfolioValue: 1200.0,
+        );
+        expect(percentage, closeTo(25.0, 0.001));
+      });
+
+      test('retourne 0.0 si la valeur totale du portefeuille est nulle', () {
+        final percentage = FinancialCalculator.calculateAllocationPercentage(
+          positionValue: 100.0,
+          totalPortfolioValue: 0.0,
+        );
+        expect(percentage, 0.0);
+      });
+    });
   });
 }

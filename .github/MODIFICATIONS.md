@@ -132,3 +132,50 @@ Ce fichier documente les modifications apportées au projet "Le Compagnon d'Inve
 
 ### 6. Tests Unitaires & Widgets (`../test/`)
 - **`portfolio_controller_test.dart`**, **`buy_asset_sheet_test.dart`**, **`dashboard_screen_test.dart`** : Couverture complète des règles de calcul du PMPA, de la validation des formulaires et du rendu visuel (100% de succès sur `flutter test`).
+
+## [Phase 4 : Vue & Gestion dédiée du Portefeuille] - 2025-02-23
+
+### 1. Modèle de Transaction & Persistance (`../lib/models/portfolio_transaction.dart` & `../lib/services/cache_service.dart`)
+- **`portfolio_transaction.dart`** : Création du modèle `PortfolioTransaction` pour consigner le journal d'achats/reventes (symbole, type d'opération `buy`/`sell`, quantité, prix d'exécution, horodatage, plus-value réalisée).
+- **`cache_service.dart`** : Ajout de la table SQLite `transactions` et des méthodes `saveTransaction`, `getTransactions` et `deletePortfolioPosition`.
+  - *Pourquoi ?* : Assurer la traçabilité complète de toutes les opérations fictives et persister l'historique d'investisseur en local hors-connexion.
+
+### 2. Calculs Financiers Métier (`../lib/models/financial_calculator.dart`)
+- **`financial_calculator.dart`** : Ajout de `calculateRealizedGain` pour calculer la plus-value réalisée lors d'une vente `(prix_vente - PMPA) * quantité` et `calculateAllocationPercentage` pour la répartition en pourcentages du portefeuille.
+  - *Pourquoi ?* : Isoler la logique financière dans des fonctions pures testables sans dépendance graphique.
+
+### 3. Contrôleur de Portefeuille Enrichi (`../lib/controllers/portfolio_controller.dart`)
+- **`portfolio_controller.dart`** : Implémentation de la revente d'unités entières `sellAsset(asset, quantity)`.
+  - *Pourquoi ?* : Garantir les règles de gestion strictes (pas de fractions d'unité, contrôle de quantité possédée, conservation du PMPA lors d'une vente partielle, suppression de la ligne en cas de revente totale) et comptabiliser le cumul des plus-values réalisées (`totalRealizedGain`).
+
+### 4. Nouveaux Composants UI (`../lib/views/widgets/`)
+- **`portfolio_allocation_chart.dart`** : Graphique Donut (PieChart via `fl_chart`) visualisant la répartition des actifs avec légende dynamique colorée.
+- **`portfolio_position_card.dart`** : Cartes synthétiques des positions détenues affichant le PMPA, le cours actuel, la valeur globale, la plus/moins-value latente (€ et %) et le bouton d'action "Vendre".
+- **`sell_asset_sheet.dart`** : Modale de revente partielle/totale avec saisie par entiers, Slider interactif, raccourci "Tout vendre", prévisualisation du gain estimé et validation.
+- **`transaction_history_section.dart`** : Journal chronologique des opérations avec badges d'Achat/Vente et détails des prix d'exécution.
+
+### 5. Écran Dédié du Portefeuille & Intégration (`../lib/views/screens/portfolio_screen.dart` & `dashboard_screen.dart`)
+- **`portfolio_screen.dart`** : Écran complet réunissant le bandeau de synthèse globale, le donut chart, la liste des positions et l'historique.
+- **`dashboard_screen.dart`** : Intégration de `PortfolioScreen` dans l'onglet dédié de la barre de navigation inférieure.
+
+### 6. Validation & Tests TDD (`../test/`)
+- **`portfolio_transaction_test.dart`**, **`financial_calculator_test.dart`**, **`cache_service_test.dart`**, **`portfolio_controller_test.dart`**, **`portfolio_allocation_chart_test.dart`**, **`portfolio_position_card_test.dart`**, **`sell_asset_sheet_test.dart`**, **`transaction_history_section_test.dart`**, **`portfolio_screen_test.dart`** : Couverture complète TDD avec 100% de réussite sur la suite `flutter test` (92 tests réussis).
+
+## [Système de Liquidités & Animation des Compteurs] - 2025-02-23
+
+### 1. Portefeuille de Liquidités (`../lib/controllers/portfolio_controller.dart` & `cache_service.dart`)
+- **`cache_service.dart`** : Ajout de la table SQLite `settings` pour conserver le solde de liquidités disponible de l'utilisateur (`saveCashBalance`, `getCashBalance`).
+- **`portfolio_controller.dart`** : Initialisation du solde de départ à **1 000,00 €**.
+  - Débit automatique lors des achats fictifs d'actifs avec contrôle de solde (`cost <= cashBalance`).
+  - Crédit automatique lors des reventes d'actifs (`cashBalance += saleProceeds`).
+  - Sécurisation du contrôle des unités entières via test de tolérance `(quantity - quantity.round()).abs() < 0.0001`.
+
+### 2. Composants UI & Animation des Chiffres (`../lib/views/widgets/`)
+- **`cash_balance_card.dart`** : Création d'un composant dédié affichant le solde de liquidités avec compteur animé **`AnimatedFlipCounter`** (chiffres roulant de manière très fluide vers le haut ou vers le bas lors des crédits/débits).
+- **`flip_gain_counter.dart`** : Intégration de la pilule de liquidités avec compteur animé sur le bandeau du tableau de bord.
+- **`buy_asset_sheet.dart`** & **`sell_asset_sheet.dart`** : Affichage du solde disponible et du montant crédité/débité, avec gestion sécurisée des exceptions via `try / catch` et SnackBar de retour utilisateur.
+
+### 3. Écran Dédié du Portefeuille (`../lib/views/screens/portfolio_screen.dart`)
+- **`portfolio_screen.dart`** : Intégration de `CashBalanceCard` et recalcul du Patrimoine Total = `Valeur des Actifs + Liquidités`.
+
+

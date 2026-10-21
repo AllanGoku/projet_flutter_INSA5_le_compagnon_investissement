@@ -13,6 +13,7 @@ import '../widgets/market_movers_section.dart';
 import '../widgets/buy_asset_sheet.dart';
 import 'asset_detail_screen.dart';
 import 'search_screen.dart';
+import 'portfolio_screen.dart';
 
 /// Écran principal du tableau de bord (Accueil restructuré).
 ///
@@ -89,18 +90,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
       builder: (context) => BuyAssetSheet(
         asset: asset,
         onPurchaseSuccess: () {
-          setState(() {});
+          setState(() {
+            _currentNavIndex = 2; // Redirection vers l'onglet Portefeuille
+          });
         },
       ),
     );
   }
 
-  void _openDetailScreen(Asset asset) {
-    Navigator.of(context).push(
+  void _openDetailScreen(Asset asset) async {
+    final result = await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => AssetDetailScreen(asset: asset),
       ),
     );
+    if (result == 'open_portfolio') {
+      setState(() {
+        _currentNavIndex = 2; // Redirection vers l'onglet Portefeuille
+      });
+    }
   }
 
   Widget _buildHomeView(DataController dataController, Map<String, Asset> loadedAssets) {
@@ -208,6 +216,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   totalValue: portfolio.totalValue,
                   capitalGain: portfolio.totalCapitalGain,
                   performancePercentage: portfolio.totalPerformance,
+                  cashBalance: portfolio.cashBalance,
                 ),
                 const SizedBox(height: 20),
 
@@ -254,7 +263,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: [
           _buildHomeView(dataController, loadedAssets),
           const SearchScreen(),
-          const Center(child: Text('Écran Portefeuille (À venir)')),
+          const PortfolioScreen(),
           const Center(child: Text('Écran Profil (À venir)')),
         ],
       ),

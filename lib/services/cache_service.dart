@@ -4,6 +4,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/asset.dart';
 import '../models/portfolio_position.dart';
+import '../models/portfolio_transaction.dart';
 
 /// Service responsable de la persistance locale des actifs (actions/ETF)
 /// et des positions du portefeuille fictif.
@@ -39,7 +40,29 @@ class CacheService {
       )
     ''');
 
-    // Migration pour s'assurer que les nouvelles colonnes existent
+    // S'assurer que la table transactions existe
+    await _database!.execute('''
+      CREATE TABLE IF NOT EXISTS transactions(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        symbol TEXT,
+        assetName TEXT,
+        type TEXT,
+        quantity REAL,
+        price REAL,
+        timestamp INTEGER,
+        realizedGain REAL
+      )
+    ''');
+
+    // S'assurer que la table settings existe pour les paramètres globaux (ex: solde de liquidités)
+    await _database!.execute('''
+      CREATE TABLE IF NOT EXISTS settings(
+        key TEXT PRIMARY KEY,
+        value REAL
+      )
+    ''');
+
+    // Migrations de structure pour s'assurer que les nouvelles colonnes existent sur les bases préexistantes
     try {
       await _database!.execute('ALTER TABLE assets ADD COLUMN changePercentage REAL');
     } catch (_) {}
@@ -48,6 +71,9 @@ class CacheService {
     } catch (_) {}
     try {
       await _database!.execute('ALTER TABLE assets ADD COLUMN originalPrice REAL');
+    } catch (_) {}
+    try {
+      await _database!.execute('ALTER TABLE transactions ADD COLUMN realizedGain REAL');
     } catch (_) {}
 
     // Pré-alimentation initiale supprimée (utilisation de l'API)
@@ -87,6 +113,26 @@ class CacheService {
         symbol TEXT PRIMARY KEY,
         quantity REAL,
         averagePurchasePrice REAL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE transactions(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        symbol TEXT,
+        assetName TEXT,
+        type TEXT,
+        quantity REAL,
+        price REAL,
+        timestamp INTEGER,
+        realizedGain REAL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE settings(
+        key TEXT PRIMARY KEY,
+        value REAL
       )
     ''');
   }
@@ -268,6 +314,62 @@ class CacheService {
     final database = await db;
     await database.delete('assets');
     await database.delete('portfolio');
+    await database.delete('transactions');
+  }
+
+  /// Sauvegarde une transaction (achat ou revente) dans la table SQLite `transactions`.
+  Future<void> saveTransaction(PortfolioTransaction transaction) async {
+    final database = await db;
+    await database.insert(
+      'transactions',
+      transaction.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  /// Récupère toutes les transactions enregistrées en SQLite, triées de la plus récente à la plus ancienne.
+  Future<List<PortfolioTransaction>> getTransactions() async {
+    final database = await db;
+    final List<Map<String, dynamic>> maps = await database.query(
+      'transactions',
+      orderBy: 'timestamp DESC',
+    );
+    return maps.map((map) => PortfolioTransaction.fromMap(map)).toList();
+  }
+
+  /// Supprime la position d'un actif du portefeuille dans SQLite (utilisé lors d'une revente totale).
+  Future<void> deletePortfolioPosition(String symbol) async {
+    final database = await db;
+    await database.delete(
+      'portfolio',
+      where: 'symbol = ?',
+      whereArgs: [symbol],
+    );
+  }
+
+  /// Sauvegarde le solde de liquidités disponible en Euros (€) dans la table `settings`.
+  Future<void> saveCashBalance(double balance) async {
+    final database = await db;
+    await database.insert(
+      'settings',
+      {'key': 'cashBalance', 'value': balance},
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  /// Récupère le solde de liquidités disponible en Euros (€).
+  /// Retourne un solde initial par défaut de 1 000,00 € si aucun solde n'a été enregistré.
+  Future<double> getCashBalance() async {
+    final database = await db;
+    final List<Map<String, dynamic>> maps = await database.query(
+      'settings',
+      where: 'key = ?',
+      whereArgs: ['cashBalance'],
+    );
+    if (maps.isNotEmpty && maps.first['value'] != null) {
+      return (maps.first['value'] as num).toDouble();
+    }
+    return 1000.0;
   }
 
   /// Ferme la connexion à la base de données (utile pour les tests).

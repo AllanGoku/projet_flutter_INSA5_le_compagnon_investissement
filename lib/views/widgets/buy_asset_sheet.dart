@@ -10,8 +10,8 @@ import 'purchase_animation.dart';
 /// Feuille modale (`ModalBottomSheet`) d'achat d'actif fictif.
 ///
 /// Permet à l'utilisateur de saisir la quantité souhaitée avec validation,
-/// de bénéficier de boutons raccourcis (+1, +5, +10), d'observer le coût total
-/// réestimé en temps réel et de déclencher l'animation de paiement.
+/// de vérifier le solde de liquidités disponible en temps réel,
+/// de bénéficier de boutons raccourcis (+1, +5, +10) et de déclencher l'animation de paiement.
 class BuyAssetSheet extends StatefulWidget {
   final Asset asset;
   final VoidCallback? onPurchaseSuccess;
@@ -62,13 +62,25 @@ class _BuyAssetSheetState extends State<BuyAssetSheet> {
     if (_formKey.currentState?.validate() ?? false) {
       if (_quantity <= 0) return;
 
-      // Exécution de l'achat dans le contrôleur de portefeuille
-      final portfolioController = context.read<PortfolioController>();
-      await portfolioController.buyAsset(widget.asset, _quantity);
+      try {
+        final portfolioController = context.read<PortfolioController>();
+        await portfolioController.buyAsset(widget.asset, _quantity);
 
-      setState(() {
-        _showAnimation = true;
-      });
+        setState(() {
+          _showAnimation = true;
+        });
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                e.toString().replaceAll('StateError: ', '').replaceAll('ArgumentError: ', ''),
+              ),
+              backgroundColor: AppTheme.lossColor,
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -87,7 +99,9 @@ class _BuyAssetSheetState extends State<BuyAssetSheet> {
       );
     }
 
+    final double availableCash = context.watch<PortfolioController>().cashBalance;
     final double totalCost = _quantity * widget.asset.currentPrice;
+    final bool hasEnoughCash = totalCost <= availableCash;
 
     return Padding(
       padding: EdgeInsets.only(
@@ -161,7 +175,51 @@ class _BuyAssetSheetState extends State<BuyAssetSheet> {
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
+
+              // Rappel des liquidités disponibles
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: hasEnoughCash ? AppTheme.mint.withOpacity(0.12) : Colors.red.shade50,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: hasEnoughCash ? AppTheme.mint.withOpacity(0.3) : Colors.red.shade200,
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.account_balance_wallet_outlined,
+                          size: 18,
+                          color: hasEnoughCash ? AppTheme.primaryColor : Colors.red.shade700,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Liquidités disponibles :',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: hasEnoughCash ? AppTheme.primaryColor : Colors.red.shade900,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      Formatters.formatCurrency(availableCash),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: hasEnoughCash ? AppTheme.primaryColor : Colors.red.shade900,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
 
               // Prix unitaire actuel
               Row(
@@ -200,9 +258,9 @@ class _BuyAssetSheetState extends State<BuyAssetSheet> {
               // Champ de saisie de la quantité
               TextFormField(
                 controller: _quantityController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: TextInputType.number,
                 decoration: InputDecoration(
-                  labelText: 'Quantité d\'actifs',
+                  labelText: 'Quantité d\'unités (Entier)',
                   hintText: 'Ex: 1, 5, 10',
                   prefixIcon: const Icon(Icons.numbers_rounded, color: AppTheme.mint),
                   border: OutlineInputBorder(
@@ -216,6 +274,14 @@ class _BuyAssetSheetState extends State<BuyAssetSheet> {
                   final val = double.tryParse(value.replaceAll(',', '.'));
                   if (val == null || val <= 0) {
                     return 'La quantité doit être supérieure à 0.';
+                  }
+                  if ((val - val.round()).abs() > 0.0001) {
+                    return 'Veuillez saisir un nombre entier d\'unités (pas de fractions).';
+                  }
+                  final cost = val * widget.asset.currentPrice;
+                  final available = context.read<PortfolioController>().cashBalance;
+                  if (cost > available) {
+                    return 'Solde insuffisant (${Formatters.formatCurrency(available)} disponible).';
                   }
                   return null;
                 },
@@ -259,10 +325,10 @@ class _BuyAssetSheetState extends State<BuyAssetSheet> {
                     ),
                     Text(
                       Formatters.formatCurrency(totalCost),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
-                        color: AppTheme.primaryColor,
+                        color: hasEnoughCash ? AppTheme.primaryColor : Colors.red.shade700,
                       ),
                     ),
                   ],
@@ -277,16 +343,16 @@ class _BuyAssetSheetState extends State<BuyAssetSheet> {
                   key: const Key('confirm_buy_button'),
                   onPressed: _submitPurchase,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryColor,
+                    backgroundColor: hasEnoughCash ? AppTheme.primaryColor : Colors.grey.shade400,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  child: const Text(
-                    'Confirmer l\'achat fictif',
-                    style: TextStyle(
+                  child: Text(
+                    hasEnoughCash ? 'Confirmer l\'achat fictif' : 'Solde de liquidités insuffisant',
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),

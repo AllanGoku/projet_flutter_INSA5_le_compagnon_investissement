@@ -1,47 +1,76 @@
-// [AI-GENERATED] Phase 2, Agent, 2025-02-23
+// [AI-GENERATED] Phase 4, Agent, 2025-02-23
 import 'package:flutter/foundation.dart';
 import '../models/asset.dart';
 import '../models/portfolio_position.dart';
+import '../models/portfolio_transaction.dart';
 import '../models/financial_calculator.dart';
 import '../services/cache_service.dart';
 
-/// Contrôleur gérant l'état applicatif du portefeuille fictif.
+/// Contrôleur gérant l'état applicatif du portefeuille fictif et du solde de liquidités.
 ///
 /// Implémente `ChangeNotifier` dans le cadre de l'architecture MVC pour notifier les vues
-/// lors de tout changement d'état (achat d'actif, mise à jour des cours, chargement).
-/// Assure le calcul en temps réel des métriques financières (valeur totale, montant investi,
-/// plus-values et performance %) en s'appuyant sur [FinancialCalculator].
+/// lors de tout changement d'état (achat d'actif, revente, mise à jour des cours, variation du solde).
+/// Assure la gestion du solde de liquidités (débit à l'achat, crédit à la revente) et le calcul
+/// en temps réel des métriques financières en s'appuyant sur [FinancialCalculator].
 class PortfolioController extends ChangeNotifier {
   final CacheService cacheService;
 
   List<PortfolioPosition> _positions = [];
+  List<PortfolioTransaction> _transactions = [];
+  double _totalRealizedGain = 0.0;
+  double _cashBalance = 1000.0;
   bool _isLoading = false;
 
   PortfolioController({
     required this.cacheService,
     List<PortfolioPosition>? initialPositions,
+    List<PortfolioTransaction>? initialTransactions,
+    double? initialCashBalance,
   }) {
     if (initialPositions != null) {
       _positions = List.from(initialPositions);
+    }
+    if (initialTransactions != null) {
+      _transactions = List.from(initialTransactions);
+      _calculateRealizedGainFromTransactions();
+    }
+    if (initialCashBalance != null) {
+      _cashBalance = initialCashBalance;
     }
   }
 
   /// Liste immuable des positions actuellement détenues dans le portefeuille.
   List<PortfolioPosition> get positions => List.unmodifiable(_positions);
 
+  /// Liste immuable du journal des transactions effectuées.
+  List<PortfolioTransaction> get transactions => List.unmodifiable(_transactions);
+
+  /// Cumul total des plus-values réalisées lors des reventes d'actifs (€).
+  double get totalRealizedGain => _totalRealizedGain;
+
+  /// Solde de liquidités disponibles en Euros (€).
+  double get cashBalance => _cashBalance;
+
   /// Indique si les données du portefeuille sont en cours de chargement depuis SQLite.
   bool get isLoading => _isLoading;
 
-  /// Charge de façon asynchrone les positions du portefeuille depuis le stockage local SQLite.
-  ///
-  /// Cette méthode doit être appelée lors de l'initialisation de l'écran principal
-  /// pour restaurer les achats de l'utilisateur.
+  /// Recalcule le cumul des plus-values réalisées à partir de la liste des transactions de revente.
+  void _calculateRealizedGainFromTransactions() {
+    _totalRealizedGain = _transactions
+        .where((t) => t.isSell && t.realizedGain != null)
+        .fold(0.0, (sum, t) => sum + (t.realizedGain ?? 0.0));
+  }
+
+  /// Charge de façon asynchrone les positions, transactions et liquidités depuis le stockage local SQLite.
   Future<void> loadPositions() async {
     _isLoading = true;
     notifyListeners();
 
     try {
       _positions = await cacheService.getPortfolioPositions();
+      _transactions = await cacheService.getTransactions();
+      _cashBalance = await cacheService.getCashBalance();
+      _calculateRealizedGainFromTransactions();
     } catch (e) {
       debugPrint("Erreur lors du chargement du portefeuille: $e");
     } finally {
@@ -52,23 +81,30 @@ class PortfolioController extends ChangeNotifier {
 
   /// Exécute un achat d'actif fictif avec la [quantity] spécifiée.
   ///
-  /// **Algorithme du Prix Moyen Pondéré d'Achat (PMPA) :**
-  /// Lorsqu'un actif est déjà présent dans le portefeuille, la nouvelle quantité est cumulée
-  /// (`q_totale = q1 + q2`) et le PMPA est recalculé selon la formule :
-  /// `PMPA = ((q1 * p1) + (q2 * p2)) / (q1 + q2)`
-  /// où `p1` est l'ancien PMPA et `p2` est le cours d'achat actuel de l'actif [asset.currentPrice].
-  ///
-  /// Ce calcul garantit la conservation exacte de la valeur d'achat historique globale.
-  /// Les modifications sont immédiatement sauvegardées en SQLite via [CacheService].
+  /// **Contraintes & Contrôles :**
+  /// - Unités entières uniquement (`(quantity - quantity.round()).abs() < 0.0001`).
+  /// - Contrôle de solde de liquidités : `quantity * asset.currentPrice <= _cashBalance`.
+  /// - Débit du solde de liquidités et enregistrement en SQLite.
   Future<void> buyAsset(Asset asset, double quantity) async {
-    if (quantity <= 0.0) return;
+    if (quantity <= 0.0) {
+      throw ArgumentError('La quantité à acheter doit être supérieure à zéro.');
+    }
+    if ((quantity - quantity.round()).abs() > 0.0001) {
+      throw ArgumentError('L\'achat se fait uniquement par unités entières (pas de fractions).');
+    }
+
+    final double totalCost = quantity * asset.currentPrice;
+    if (totalCost > _cashBalance) {
+      throw StateError(
+        'Solde de liquidités insuffisant (${_cashBalance.toStringAsFixed(2)} € disponible vs ${totalCost.toStringAsFixed(2)} € requis).',
+      );
+    }
 
     final index = _positions.indexWhere(
       (pos) => pos.asset.symbol.toUpperCase() == asset.symbol.toUpperCase(),
     );
 
     if (index != -1) {
-      // Actif déjà détenu : cumul de quantité et recalcul du PMPA
       final existingPos = _positions[index];
       final double q1 = existingPos.quantity;
       final double p1 = existingPos.averagePurchasePrice;
@@ -79,12 +115,11 @@ class PortfolioController extends ChangeNotifier {
       final double newPmpa = ((q1 * p1) + (q2 * p2)) / newQuantity;
 
       _positions[index] = PortfolioPosition(
-        asset: asset, // Mise à jour avec la dernière version de l'actif
+        asset: asset,
         quantity: newQuantity,
         averagePurchasePrice: newPmpa,
       );
     } else {
-      // Nouvel actif : création d'une nouvelle ligne dans le portefeuille
       _positions.add(PortfolioPosition(
         asset: asset,
         quantity: quantity,
@@ -92,15 +127,103 @@ class PortfolioController extends ChangeNotifier {
       ));
     }
 
-    // Persistance automatique dans SQLite
+    // Débit du solde de liquidités
+    _cashBalance -= totalCost;
+    await cacheService.saveCashBalance(_cashBalance);
+
+    // Création et enregistrement de la transaction d'achat
+    final transaction = PortfolioTransaction(
+      symbol: asset.symbol,
+      assetName: asset.name,
+      type: TransactionType.buy,
+      quantity: quantity,
+      price: asset.currentPrice,
+      timestamp: DateTime.now(),
+    );
+    await cacheService.saveTransaction(transaction);
+    _transactions.insert(0, transaction);
+
+    // Persistance automatique des positions dans SQLite
     await cacheService.savePortfolioPositions(_positions);
     notifyListeners();
   }
 
-  /// Met à jour les cours des actifs contenus dans le portefeuille.
+  /// Exécute la revente partielle ou totale d'un actif fictif.
   ///
-  /// Utilisé lorsque [DataController] récupère de nouveaux cours depuis l'API Twelve Data.
-  /// pour réévaluer la valeur courante du portefeuille sans altérer le PMPA d'achat.
+  /// **Contraintes & Algorithme :**
+  /// - Unités entières uniquement (`(quantity - quantity.round()).abs() < 0.0001`).
+  /// - La quantité vendue ne doit pas dépasser la quantité possédée.
+  /// - Crédit automatique du solde de liquidités : `_cashBalance += quantity * asset.currentPrice`.
+  /// - Enregistrement d'une [PortfolioTransaction] de type `sell`.
+  Future<void> sellAsset(Asset asset, double quantity) async {
+    if (quantity <= 0.0) {
+      throw ArgumentError('La quantité à vendre doit être supérieure à zéro.');
+    }
+    if ((quantity - quantity.round()).abs() > 0.0001) {
+      throw ArgumentError('La revente se fait uniquement par unités entières (pas de fractions).');
+    }
+
+    final index = _positions.indexWhere(
+      (pos) => pos.asset.symbol.toUpperCase() == asset.symbol.toUpperCase(),
+    );
+
+    if (index == -1) {
+      throw StateError('L\'actif ${asset.symbol} n\'est pas détenu dans le portefeuille.');
+    }
+
+    final existingPos = _positions[index];
+    if (quantity > existingPos.quantity) {
+      throw ArgumentError(
+        'Quantité à vendre ($quantity) supérieure à la quantité possédée (${existingPos.quantity}).',
+      );
+    }
+
+    // Calcul de la plus-value réalisée et du produit de la vente
+    final double realizedGain = FinancialCalculator.calculateRealizedGain(
+      sellPrice: asset.currentPrice,
+      averagePurchasePrice: existingPos.averagePurchasePrice,
+      quantity: quantity,
+    );
+    final double saleProceeds = quantity * asset.currentPrice;
+
+    _totalRealizedGain += realizedGain;
+
+    if (quantity >= existingPos.quantity) {
+      // Revente totale : suppression de la ligne du portefeuille
+      _positions.removeAt(index);
+      await cacheService.deletePortfolioPosition(asset.symbol);
+    } else {
+      // Revente partielle : mise à jour de la quantité, conservation du PMPA
+      final double newQuantity = existingPos.quantity - quantity;
+      _positions[index] = PortfolioPosition(
+        asset: asset,
+        quantity: newQuantity,
+        averagePurchasePrice: existingPos.averagePurchasePrice,
+      );
+      await cacheService.savePortfolioPositions(_positions);
+    }
+
+    // Crédit du solde de liquidités
+    _cashBalance += saleProceeds;
+    await cacheService.saveCashBalance(_cashBalance);
+
+    // Enregistrement de la transaction de revente dans l'historique
+    final transaction = PortfolioTransaction(
+      symbol: asset.symbol,
+      assetName: asset.name,
+      type: TransactionType.sell,
+      quantity: quantity,
+      price: asset.currentPrice,
+      timestamp: DateTime.now(),
+      realizedGain: realizedGain,
+    );
+    await cacheService.saveTransaction(transaction);
+    _transactions.insert(0, transaction);
+
+    notifyListeners();
+  }
+
+  /// Met à jour les cours des actifs contenus dans le portefeuille.
   void updateAssetPrices(Map<String, Asset> updatedAssets) {
     bool hasChanged = false;
 
@@ -122,10 +245,7 @@ class PortfolioController extends ChangeNotifier {
     }
   }
 
-  /// Valeur totale courante du portefeuille fictif (€).
-  ///
-  /// Calcule la somme de `quantité * prix_actuel` pour toutes les positions.
-  /// Retourne 0.0 si le portefeuille est vide.
+  /// Valeur totale courante des actifs détenus (€).
   double get totalValue {
     if (_positions.isEmpty) return 0.0;
     final mapPositions = _positions.map((pos) => {
@@ -136,10 +256,7 @@ class PortfolioController extends ChangeNotifier {
     return FinancialCalculator.calculatePortfolioValue(mapPositions);
   }
 
-  /// Montant total engagé / investi dans le portefeuille (€).
-  ///
-  /// Calcule la somme de `quantité * prix_achat_moyen` pour toutes les positions.
-  /// Retourne 0.0 si le portefeuille est vide.
+  /// Montant total engagé / investi dans les actifs (€).
   double get totalInvested {
     if (_positions.isEmpty) return 0.0;
     final mapPositions = _positions.map((pos) => {
@@ -150,9 +267,7 @@ class PortfolioController extends ChangeNotifier {
     return FinancialCalculator.calculateTotalInvested(mapPositions);
   }
 
-  /// Plus-value ou moins-value globale absolue (€).
-  ///
-  /// Différence entre la valeur actuelle et le montant total investi.
+  /// Plus-value ou moins-value latente globale absolue (€).
   double get totalCapitalGain {
     if (_positions.isEmpty) return 0.0;
     return FinancialCalculator.calculateCapitalGain(
@@ -162,9 +277,6 @@ class PortfolioController extends ChangeNotifier {
   }
 
   /// Performance globale du portefeuille en pourcentage (%).
-  ///
-  /// Calculée par `((totalValue - totalInvested) / totalInvested) * 100`.
-  /// Retourne 0.0 si le montant investi est nul ou si le portefeuille est vide.
   double get totalPerformance {
     if (_positions.isEmpty) return 0.0;
     return FinancialCalculator.calculatePerformance(

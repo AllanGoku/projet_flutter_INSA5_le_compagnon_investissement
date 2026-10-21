@@ -4,15 +4,16 @@ import 'package:animated_flip_counter/animated_flip_counter.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/formatters.dart';
 
-/// Widget d'en-tête affichant la synthèse globale du portefeuille fictif.
+/// Widget d'en-tête affichant la synthèse globale du portefeuille fictif et des liquidités.
 ///
 /// Intègre [AnimatedFlipCounter] pour basculer de manière très fluide et animée
-/// entre l'affichage de la plus/moins-value en pourcentage (%) et en euros (€) lors
-/// d'un appui tactile sur la pilule de performance.
+/// entre l'affichage de la plus/moins-value en pourcentage (%) et en euros (€)
+/// et pour animer le compteur des liquidités disponibles.
 class FlipGainCounter extends StatefulWidget {
   final double totalValue;
   final double capitalGain;
   final double performancePercentage;
+  final double cashBalance;
   final String userName;
 
   const FlipGainCounter({
@@ -20,6 +21,7 @@ class FlipGainCounter extends StatefulWidget {
     required this.totalValue,
     required this.capitalGain,
     required this.performancePercentage,
+    this.cashBalance = 1000.0,
     this.userName = 'Novice',
   });
 
@@ -59,7 +61,7 @@ class _FlipGainCounterState extends State<FlipGainCounter> {
         top: 48,
         left: 20,
         right: 20,
-        bottom: 28,
+        bottom: 24,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -122,7 +124,7 @@ class _FlipGainCounterState extends State<FlipGainCounter> {
 
           // Valeur totale et pilule de gain animée
           Text(
-            'Valeur Totale',
+            'Valeur des Actifs',
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w500,
@@ -180,6 +182,48 @@ class _FlipGainCounterState extends State<FlipGainCounter> {
                         duration: const Duration(milliseconds: 300),
                       ),
                     ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Badge Liquidités disponibles avec compteur animé
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.7),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.white.withOpacity(0.8)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.account_balance_wallet_outlined,
+                  size: 15,
+                  color: AppTheme.primaryColor,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Liquidités : ',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade700,
+                  ),
+                ),
+                AnimatedFlipCounter(
+                  value: widget.cashBalance,
+                  suffix: ' €',
+                  fractionDigits: 2,
+                  thousandSeparator: ' ',
+                  duration: const Duration(milliseconds: 500),
+                  textStyle: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primaryColor,
                   ),
                 ),
               ],

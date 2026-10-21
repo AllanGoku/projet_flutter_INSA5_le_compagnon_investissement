@@ -95,4 +95,27 @@ class FinancialCalculator {
       'finalValue': finalValue,
     };
   }
+
+  /// Calcule la plus-value ou moins-value réalisée lors de la revente d'un actif.
+  ///
+  /// Utilise la formule : `(sellPrice - averagePurchasePrice) * quantity`
+  static double calculateRealizedGain({
+    required double sellPrice,
+    required double averagePurchasePrice,
+    required double quantity,
+  }) {
+    return (sellPrice - averagePurchasePrice) * quantity;
+  }
+
+  /// Calcule le pourcentage de répartition (allocation) d'une position par rapport à la valeur globale du portefeuille.
+  ///
+  /// Utilise la formule : `(positionValue / totalPortfolioValue) * 100`
+  /// Retourne 0.0 si [totalPortfolioValue] est inférieur ou égal à 0.
+  static double calculateAllocationPercentage({
+    required double positionValue,
+    required double totalPortfolioValue,
+  }) {
+    if (totalPortfolioValue <= 0.0) return 0.0;
+    return (positionValue / totalPortfolioValue) * 100;
+  }
 }
