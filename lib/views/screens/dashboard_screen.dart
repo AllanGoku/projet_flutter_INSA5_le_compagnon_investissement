@@ -262,7 +262,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         index: _currentNavIndex,
         children: [
           _buildHomeView(dataController, loadedAssets),
-          const SearchScreen(),
+          SearchScreen(
+            onNavigateToPortfolio: () {
+              setState(() {
+                _currentNavIndex = 2;
+              });
+            },
+          ),
           const PortfolioScreen(),
           const Center(child: Text('Écran Profil (À venir)')),
         ],

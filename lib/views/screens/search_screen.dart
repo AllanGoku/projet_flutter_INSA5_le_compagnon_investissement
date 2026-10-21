@@ -12,8 +12,14 @@ import 'asset_detail_screen.dart';
 ///
 /// Permet de filtrer la liste des actifs réels disponibles (en cache SQLite et API)
 /// par mot-clé (symbole ou nom) ainsi que par catégories ("Tous", "Actions", "ETF").
+/// Transmet [onNavigateToPortfolio] lors de la validation d'un achat pour basculer vers l'onglet Portefeuille.
 class SearchScreen extends StatefulWidget {
-  const SearchScreen({super.key});
+  final VoidCallback? onNavigateToPortfolio;
+
+  const SearchScreen({
+    super.key,
+    this.onNavigateToPortfolio,
+  });
 
   @override
   State<SearchScreen> createState() => _SearchScreenState();
@@ -49,12 +55,17 @@ class _SearchScreenState extends State<SearchScreen> {
     });
   }
 
-  void _openDetailScreen(Asset asset) {
-    Navigator.of(context).push(
+  void _openDetailScreen(Asset asset) async {
+    final result = await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => AssetDetailScreen(asset: asset),
       ),
     );
+    if (result == 'open_portfolio') {
+      if (widget.onNavigateToPortfolio != null) {
+        widget.onNavigateToPortfolio!();
+      }
+    }
   }
 
   void _openBuyModal(Asset asset) {
@@ -65,12 +76,9 @@ class _SearchScreenState extends State<SearchScreen> {
       builder: (context) => BuyAssetSheet(
         asset: asset,
         onPurchaseSuccess: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Achat fictif de ${asset.symbol} effectué avec succès !'),
-              backgroundColor: AppTheme.primaryColor,
-            ),
-          );
+          if (widget.onNavigateToPortfolio != null) {
+            widget.onNavigateToPortfolio!();
+          }
         },
       ),
     );
