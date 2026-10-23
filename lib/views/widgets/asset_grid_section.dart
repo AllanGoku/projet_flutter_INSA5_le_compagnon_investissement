@@ -7,15 +7,17 @@ import '../../utils/formatters.dart';
 /// Section 2 du tableau de bord ("À surveiller") sous forme de liste défilante horizontale.
 ///
 /// Affiche une collection de cartes compactes d'actifs avec une distinction visuelle
-/// marquée pour les ETF (Fond indiciel coté) ainsi que le badge réel de plus-value/moins-value (%).
+/// marquée pour les ETF (Fond indiciel coté), le badge de variation (%) et le bouton d'achat direct `+`.
 class AssetGridSection extends StatelessWidget {
   final List<Asset> assets;
   final Function(Asset asset) onAssetSelected;
+  final Function(Asset asset)? onBuyPressed;
 
   const AssetGridSection({
     super.key,
     required this.assets,
     required this.onAssetSelected,
+    this.onBuyPressed,
   });
 
   @override
@@ -151,7 +153,7 @@ class AssetGridSection extends StatelessWidget {
                             ),
                           ),
 
-                          // Ligne 4 : Prix & Bouton d'ajout d'achat
+                          // Ligne 4 : Prix & Bouton d'ajout d'achat `+`
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -188,17 +190,27 @@ class AssetGridSection extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(width: 6),
-                              Container(
-                                width: 28,
-                                height: 28,
-                                decoration: BoxDecoration(
-                                  color: AppTheme.mint.withOpacity(0.15),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.add_rounded,
-                                  size: 18,
-                                  color: AppTheme.primaryColor,
+                              GestureDetector(
+                                key: Key('buy_btn_${asset.symbol}'),
+                                onTap: () {
+                                  if (onBuyPressed != null) {
+                                    onBuyPressed!(asset);
+                                  } else {
+                                    onAssetSelected(asset);
+                                  }
+                                },
+                                child: Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.mint.withOpacity(0.2),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.add_rounded,
+                                    size: 20,
+                                    color: AppTheme.primaryColor,
+                                  ),
                                 ),
                               ),
                             ],

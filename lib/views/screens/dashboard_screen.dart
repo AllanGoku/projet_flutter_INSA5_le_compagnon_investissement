@@ -221,12 +221,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(height: 20),
 
                 // 2. Section 1 : Hero Asset ("Actif à la loupe")
-                GestureDetector(
+                HeroAssetCard(
+                  asset: heroAsset,
                   onTap: () => _openDetailScreen(heroAsset),
-                  child: HeroAssetCard(
-                    asset: heroAsset,
-                    onBuyPressed: () => _openBuyModal(heroAsset),
-                  ),
+                  onBuyPressed: () => _openBuyModal(heroAsset),
                 ),
                 const SizedBox(height: 24),
 
@@ -234,6 +232,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 AssetGridSection(
                   assets: watchListAssets,
                   onAssetSelected: (asset) => _openDetailScreen(asset),
+                  onBuyPressed: (asset) => _openBuyModal(asset),
                 ),
                 const SizedBox(height: 24),
 
