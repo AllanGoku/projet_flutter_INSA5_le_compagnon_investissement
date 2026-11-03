@@ -73,6 +73,12 @@ class AuthService {
     await _prefs.setBool(_keepLoggedInKey, false);
   }
 
+  /// Met à jour le profil de l'utilisateur.
+  Future<void> updateUser(UserProfile user) async {
+    final String userJson = jsonEncode(user.toJson());
+    await _prefs.setString(_userKey, userJson);
+  }
+
   /// Récupère le profil de l'utilisateur actuellement enregistré.
   Future<UserProfile?> getCurrentUser() async {
     final String? userJson = await _prefs.getString(_userKey);

@@ -9,9 +9,12 @@ import 'package:le_compagnon_investissement/views/widgets/asset_grid_section.dar
 import 'package:le_compagnon_investissement/views/widgets/market_movers_section.dart';
 import 'package:le_compagnon_investissement/controllers/portfolio_controller.dart';
 import 'package:le_compagnon_investissement/controllers/data_controller.dart';
+import 'package:le_compagnon_investissement/controllers/auth_controller.dart';
 import 'package:le_compagnon_investissement/models/portfolio_position.dart';
 import 'package:le_compagnon_investissement/services/cache_service.dart';
 import 'package:le_compagnon_investissement/services/api_service.dart';
+import 'package:le_compagnon_investissement/services/auth_service.dart';
+import 'package:le_compagnon_investissement/models/user_profile.dart';
 
 class FakeCacheService extends CacheService {
   @override
@@ -24,9 +27,25 @@ class FakeCacheService extends CacheService {
   Future<List<PortfolioPosition>> getPortfolioPositions() async => [];
 }
 
+class FakeAuthService implements AuthService {
+  @override
+  Future<UserProfile?> getCurrentUser() async => null;
+  @override
+  Future<bool> isKeepLoggedIn() async => false;
+  @override
+  Future<UserProfile> login(String e, String p, bool k) async => throw Exception();
+  @override
+  Future<void> logout() async {}
+  @override
+  Future<void> register(UserProfile u, String p) async {}
+  @override
+  Future<void> updateUser(UserProfile u) async {}
+}
+
 void main() {
   late PortfolioController portfolioController;
   late DataController dataController;
+  late AuthController authController;
 
   setUp(() {
     final cacheService = FakeCacheService();
@@ -35,6 +54,7 @@ void main() {
       apiService: ApiService(),
       cacheService: cacheService,
     );
+    authController = AuthController(authService: FakeAuthService());
   });
 
   Widget buildTestableWidget(Widget child) {
@@ -43,6 +63,7 @@ void main() {
         providers: [
           ChangeNotifierProvider<PortfolioController>.value(value: portfolioController),
           ChangeNotifierProvider<DataController>.value(value: dataController),
+          ChangeNotifierProvider<AuthController>.value(value: authController),
         ],
         child: child,
       ),

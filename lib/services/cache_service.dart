@@ -309,12 +309,20 @@ class CacheService {
     return null;
   }
   
-  /// Vide la base de données pour réinitialiser le cache.
+  /// Vide la base de données pour réinitialiser le cache (assets compris).
   Future<void> clearCache() async {
     final database = await db;
     await database.delete('assets');
     await database.delete('portfolio');
     await database.delete('transactions');
+  }
+
+  /// Vide uniquement le portefeuille et l'historique de transactions (réinitialisation de compte).
+  Future<void> clearPortfolioAndTransactions() async {
+    final database = await db;
+    await database.delete('portfolio');
+    await database.delete('transactions');
+    await saveCashBalance(1000.0);
   }
 
   /// Sauvegarde une transaction (achat ou revente) dans la table SQLite `transactions`.

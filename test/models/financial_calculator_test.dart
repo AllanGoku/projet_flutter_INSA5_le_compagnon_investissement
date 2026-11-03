@@ -165,5 +165,39 @@ void main() {
         expect(percentage, 0.0);
       });
     });
+
+    group('Phase 5: Gamification & XP', () {
+      test('calculateSaleXp: gain basé sur la performance et durée', () {
+        // 10% sur 5 jours -> 50
+        expect(FinancialCalculator.calculateSaleXp(performancePercentage: 10.0, holdingDuration: const Duration(days: 5)), 50);
+        // < 1 jour = 1 jour -> 15% * 1 -> 15
+        expect(FinancialCalculator.calculateSaleXp(performancePercentage: 15.0, holdingDuration: const Duration(hours: 5)), 15);
+        // Perte ou 0% -> 10 minimum
+        expect(FinancialCalculator.calculateSaleXp(performancePercentage: -5.0, holdingDuration: const Duration(days: 10)), 10);
+      });
+
+      test('calculateStreakBonus: retourne le bon bonus', () {
+        expect(FinancialCalculator.calculateStreakBonus(1), 20);
+        expect(FinancialCalculator.calculateStreakBonus(7), 50);
+        expect(FinancialCalculator.calculateStreakBonus(14), 50);
+        expect(FinancialCalculator.calculateStreakBonus(30), 200);
+        expect(FinancialCalculator.calculateStreakBonus(60), 200);
+      });
+
+      test('calculateLevel: un niveau tous les 1000 XP', () {
+        expect(FinancialCalculator.calculateLevel(-50), 1);
+        expect(FinancialCalculator.calculateLevel(0), 1);
+        expect(FinancialCalculator.calculateLevel(999), 1);
+        expect(FinancialCalculator.calculateLevel(1000), 2);
+        expect(FinancialCalculator.calculateLevel(2500), 3);
+      });
+
+      test('getTitleForLevel: retourne un titre approprié', () {
+        expect(FinancialCalculator.getTitleForLevel(1), 'Novice');
+        expect(FinancialCalculator.getTitleForLevel(5), 'Débutant');
+        expect(FinancialCalculator.getTitleForLevel(10), 'Apprenti');
+        expect(FinancialCalculator.getTitleForLevel(100), 'Maître de Wall Street');
+      });
+    });
   });
 }

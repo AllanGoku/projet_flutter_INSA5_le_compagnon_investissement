@@ -1,4 +1,4 @@
-// [AI-GENERATED] Setup, Agent, 2025-02-23
+// [AI-GENERATED] Issue #5, Agent, 2025-02-23
 
 /// Classe utilitaire contenant exclusivement des fonctions pures pour les calculs financiers.
 ///
@@ -117,5 +117,56 @@ class FinancialCalculator {
   }) {
     if (totalPortfolioValue <= 0.0) return 0.0;
     return (positionValue / totalPortfolioValue) * 100;
+  }
+
+  // --- Phase 5: Fonctions de Gamification et XP ---
+
+  /// Calcule le gain d'XP suite à une revente d'actif.
+  ///
+  /// L'XP gagné est indexé sur la performance relative (en %) multipliée par la durée de détention.
+  /// Si l'investissement est en perte (performance <= 0), retourne un minimum forfaitaire pour encourager l'action.
+  static int calculateSaleXp({
+    required double performancePercentage,
+    required Duration holdingDuration,
+  }) {
+    if (performancePercentage <= 0.0) return 10;
+    
+    // Au minimum 1 jour de détention pour le calcul
+    final int days = holdingDuration.inDays < 1 ? 1 : holdingDuration.inDays;
+    
+    // L'XP = Performance (%) * Nombre de jours.
+    // Cela valorise le "Long-Term Investing".
+    return (performancePercentage * days).round();
+  }
+
+  /// Calcule le bonus d'XP quotidien basé sur la série de connexions (streak).
+  ///
+  /// 20 XP par jour.
+  /// Bonus de 50 XP au 7ème jour (7j).
+  /// Bonus de 200 XP au 30ème jour (30j).
+  static int calculateStreakBonus(int streakCount) {
+    if (streakCount > 0 && streakCount % 30 == 0) return 200;
+    if (streakCount > 0 && streakCount % 7 == 0) return 50;
+    return 20;
+  }
+
+  /// Détermine le niveau en fonction de l'XP total.
+  ///
+  /// Progression linéaire pour rester simple et prévisible: 1 niveau tous les 1000 XP.
+  static int calculateLevel(int xp) {
+    if (xp < 0) return 1;
+    return (xp ~/ 1000) + 1;
+  }
+
+  /// Retourne un titre honorifique pédagogique basé sur le niveau.
+  static String getTitleForLevel(int level) {
+    if (level < 5) return "Novice";
+    if (level < 10) return "Débutant";
+    if (level < 20) return "Apprenti";
+    if (level < 30) return "Initié";
+    if (level < 50) return "Investisseur Averti";
+    if (level < 75) return "Expert";
+    if (level < 100) return "Stratège";
+    return "Maître de Wall Street";
   }
 }

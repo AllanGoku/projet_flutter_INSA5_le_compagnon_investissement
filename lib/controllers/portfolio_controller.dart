@@ -79,6 +79,18 @@ class PortfolioController extends ChangeNotifier {
     }
   }
 
+  /// Réinitialise complètement le portefeuille (positions, transactions, cash initial).
+  Future<void> resetPortfolio() async {
+    _positions.clear();
+    _transactions.clear();
+    _totalRealizedGain = 0.0;
+    _cashBalance = 1000.0;
+    
+    await cacheService.clearPortfolioAndTransactions();
+    
+    notifyListeners();
+  }
+
   /// Exécute un achat d'actif fictif avec la [quantity] spécifiée.
   ///
   /// **Contraintes & Contrôles :**
@@ -155,7 +167,10 @@ class PortfolioController extends ChangeNotifier {
   /// - La quantité vendue ne doit pas dépasser la quantité possédée.
   /// - Crédit automatique du solde de liquidités : `_cashBalance += quantity * asset.currentPrice`.
   /// - Enregistrement d'une [PortfolioTransaction] de type `sell`.
-  Future<void> sellAsset(Asset asset, double quantity) async {
+  /// 
+  /// Retourne un `Map` contenant les détails de la vente, notamment `realizedGain`, 
+  /// `performancePercentage` et `holdingDuration` pour permettre le calcul de l'XP.
+  Future<Map<String, dynamic>> sellAsset(Asset asset, double quantity) async {
     if (quantity <= 0.0) {
       throw ArgumentError('La quantité à vendre doit être supérieure à zéro.');
     }
@@ -177,6 +192,24 @@ class PortfolioController extends ChangeNotifier {
         'Quantité à vendre ($quantity) supérieure à la quantité possédée (${existingPos.quantity}).',
       );
     }
+
+    // Calcul de la performance et durée pour l'XP
+    final double performancePercentage = FinancialCalculator.calculatePerformance(
+      initialValue: existingPos.averagePurchasePrice * quantity,
+      currentValue: asset.currentPrice * quantity,
+    );
+
+    // Détermination de la durée de détention basée sur la plus ancienne transaction d'achat pour cet actif
+    final pastBuyTransactions = _transactions.where(
+      (t) => t.isBuy && t.symbol.toUpperCase() == asset.symbol.toUpperCase()
+    ).toList();
+    
+    DateTime firstBuyDate = DateTime.now();
+    if (pastBuyTransactions.isNotEmpty) {
+      // Les transactions sont triées de la plus récente à la plus ancienne (DESC), la plus ancienne est à la fin
+      firstBuyDate = pastBuyTransactions.last.timestamp;
+    }
+    final Duration holdingDuration = DateTime.now().difference(firstBuyDate);
 
     // Calcul de la plus-value réalisée et du produit de la vente
     final double realizedGain = FinancialCalculator.calculateRealizedGain(
@@ -221,6 +254,12 @@ class PortfolioController extends ChangeNotifier {
     _transactions.insert(0, transaction);
 
     notifyListeners();
+    
+    return {
+      'realizedGain': realizedGain,
+      'performancePercentage': performancePercentage,
+      'holdingDuration': holdingDuration,
+    };
   }
 
   /// Met à jour les cours des actifs contenus dans le portefeuille.

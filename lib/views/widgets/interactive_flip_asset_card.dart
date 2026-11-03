@@ -8,10 +8,10 @@ import 'market_term_help_button.dart';
 
 /// Carte d'actif avec animation de retournement 3D (Flip Card) au tap.
 ///
-/// Recto : Vue synthétique de l'actif (nom, symbole, prix, variation %).
-/// Verso : Métriques clés approfondies et bouton d'action "Voir les détails".
-/// Séparation UX : Un tap n'importe où sur la carte déclenche le retournement 3D
-/// sans déclencher la procédure d'achat fictif.
+/// Recto : Vue synthétique de l'actif (nom, symbole, prix, variation %, bouton d'achat `+`).
+/// Verso : Métriques clés approfondies et boutons d'action "Voir les détails" & "Acheter".
+/// Séparation UX : Un tap sur la carte déclenche le retournement 3D, tandis qu'un tap
+/// sur le bouton `+` déclenche directement l'achat fictif.
 class InteractiveFlipAssetCard extends StatefulWidget {
   final Asset asset;
 
@@ -169,42 +169,78 @@ class _InteractiveFlipAssetCardState extends State<InteractiveFlipAssetCard>
           ),
           const SizedBox(height: 8),
 
-          // Prix & Variation %
+          // Prix & Variation % & Bouton d'achat `+`
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                Formatters.formatCurrency(widget.asset.currentPrice),
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.black87,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: changeColor.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      isPositive ? Icons.trending_up : Icons.trending_down,
-                      size: 16,
-                      color: changeColor,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      Formatters.formatPercentage(change),
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: changeColor,
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        Formatters.formatCurrency(widget.asset.currentPrice),
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.black87,
+                        ),
                       ),
                     ),
                   ],
                 ),
+              ),
+              const SizedBox(width: 8),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: changeColor.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          isPositive ? Icons.trending_up : Icons.trending_down,
+                          size: 16,
+                          color: changeColor,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          Formatters.formatPercentage(change),
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: changeColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (widget.onBuyPressed != null) ...[
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      key: Key('front_buy_btn_${widget.asset.symbol}'),
+                      onTap: widget.onBuyPressed,
+                      child: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: AppTheme.mint.withOpacity(0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.add_rounded,
+                          size: 20,
+                          color: AppTheme.primaryColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ],
           ),

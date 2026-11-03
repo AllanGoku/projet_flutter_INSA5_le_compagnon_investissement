@@ -8,7 +8,8 @@ import '../../utils/formatters.dart';
 /// Composant graphique boursier interactif basé sur `fl_chart`.
 ///
 /// Affiche la courbe historique d'un actif avec sélection de périodes (7J, 1M, 1A, MAX),
-/// infobulle tactile au survol/toucher et dégradé sous la courbe adapté à la hausse/baisse.
+/// graduation strictement limitée et unique pour les bornes MIN/MAX en X (dates) et en Y (cours),
+/// et survol tactile dynamique affichant la date exacte et le cours sélectionné.
 class AssetHistoricalChart extends StatefulWidget {
   /// Map des séries temporelles (horodatage -> PricePoint).
   final Map<String, PricePoint> timeSeries;
@@ -19,7 +20,7 @@ class AssetHistoricalChart extends StatefulWidget {
   const AssetHistoricalChart({
     super.key,
     required this.timeSeries,
-    this.height = 240.0,
+    this.height = 260.0,
   });
 
   @override
@@ -28,12 +29,12 @@ class AssetHistoricalChart extends StatefulWidget {
 
 class _AssetHistoricalChartState extends State<AssetHistoricalChart> {
   String _selectedPeriod = '7J';
+  int? _touchedIndex;
 
   /// Filtre les points de données chronologiques selon la période sélectionnée.
   List<MapEntry<String, PricePoint>> _getFilteredPoints() {
     if (widget.timeSeries.isEmpty) return [];
 
-    // Tri chronologique croissant par date (du plus ancien au plus récent)
     final sortedEntries = widget.timeSeries.entries.toList()
       ..sort((a, b) => a.key.compareTo(b.key));
 
@@ -58,6 +59,41 @@ class _AssetHistoricalChartState extends State<AssetHistoricalChart> {
 
     if (count <= limit) return sortedEntries;
     return sortedEntries.sublist(count - limit);
+  }
+
+  /// Formate une chaîne de date au format court pour l'axe X (ex: 23/02 ou 23/02/25).
+  String _formatShortDate(String dateStr) {
+    try {
+      final dt = DateTime.parse(dateStr);
+      final day = dt.day.toString().padLeft(2, '0');
+      final month = dt.month.toString().padLeft(2, '0');
+      if (_selectedPeriod == '1A' || _selectedPeriod == 'MAX') {
+        final year = dt.year.toString().substring(2);
+        return '$day/$month/$year';
+      }
+      return '$day/$month';
+    } catch (_) {
+      if (dateStr.contains('-') && dateStr.length >= 10) {
+        final parts = dateStr.split('-');
+        if (parts.length >= 3) {
+          return '${parts[2].substring(0, 2)}/${parts[1]}';
+        }
+      }
+      return dateStr;
+    }
+  }
+
+  /// Formate une chaîne de date au format complet (ex: 23/02/2025).
+  String _formatFullDate(String dateStr) {
+    try {
+      final dt = DateTime.parse(dateStr);
+      final day = dt.day.toString().padLeft(2, '0');
+      final month = dt.month.toString().padLeft(2, '0');
+      final year = dt.year;
+      return '$day/$month/$year';
+    } catch (_) {
+      return dateStr;
+    }
   }
 
   @override
@@ -103,15 +139,23 @@ class _AssetHistoricalChartState extends State<AssetHistoricalChart> {
     final bool isPositive = lastPrice >= firstPrice;
     final Color trendColor = isPositive ? AppTheme.gainColor : AppTheme.lossColor;
 
-    // Calcul des min/max Y pour une courbe bien équilibrée
-    double minY = spots.map((s) => s.y).reduce((a, b) => a < b ? a : b);
-    double maxY = spots.map((s) => s.y).reduce((a, b) => a > b ? a : b);
+    // Point actif (touché par l'utilisateur ou le dernier point par défaut)
+    final int activeIndex = (_touchedIndex != null && _touchedIndex! >= 0 && _touchedIndex! < spots.length)
+        ? _touchedIndex!
+        : (spots.length - 1);
+    final String activeDate = _formatFullDate(dates[activeIndex]);
+    final String activePrice = Formatters.formatCurrency(spots[activeIndex].y);
 
-    // Marge visuelle en haut et en bas de la courbe
-    final double deltaY = (maxY - minY).abs();
-    final double paddingY = deltaY == 0 ? 1.0 : deltaY * 0.08;
-    minY -= paddingY;
-    maxY += paddingY;
+    // Calcul des bornes Y strictement réelles
+    final double rawMinY = spots.map((s) => s.y).reduce((a, b) => a < b ? a : b);
+    final double rawMaxY = spots.map((s) => s.y).reduce((a, b) => a > b ? a : b);
+
+    final double deltaY = (rawMaxY - rawMinY).abs();
+    final double paddingY = deltaY == 0 ? (rawMaxY > 0 ? rawMaxY * 0.1 : 1.0) : deltaY * 0.08;
+
+    final double minY = (rawMinY - paddingY).clamp(0.0, double.infinity);
+    final double maxY = rawMaxY + paddingY;
+    final double yRange = (maxY - minY) == 0 ? 1.0 : (maxY - minY);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -128,7 +172,7 @@ class _AssetHistoricalChartState extends State<AssetHistoricalChart> {
       ),
       child: Column(
         children: [
-          // Boutons de sélection de la période (7J, 1M, 1A, MAX)
+          // 1. Boutons de sélection de la période (7J, 1M, 1A, MAX)
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: ['7J', '1M', '1A', 'MAX'].map((period) {
@@ -156,6 +200,7 @@ class _AssetHistoricalChartState extends State<AssetHistoricalChart> {
                     if (selected) {
                       setState(() {
                         _selectedPeriod = period;
+                        _touchedIndex = null;
                       });
                     }
                   },
@@ -163,11 +208,48 @@ class _AssetHistoricalChartState extends State<AssetHistoricalChart> {
               );
             }).toList(),
           ),
+          const SizedBox(height: 14),
+
+          // 2. Bandeau d'information du point sélectionné (Date & Valeur)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppTheme.backgroundColor,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.calendar_today_rounded, size: 14, color: Colors.grey.shade600),
+                    const SizedBox(width: 6),
+                    Text(
+                      activeDate,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey.shade800,
+                      ),
+                    ),
+                  ],
+                ),
+                Text(
+                  activePrice,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: trendColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 16),
 
-          // Zone du graphique fl_chart
+          // 3. Zone du graphique fl_chart affichant le prix MIN/MAX unique (Y) et la date MIN/MAX unique (X)
           SizedBox(
-            height: widget.height - 70,
+            height: widget.height - 110,
             child: LineChart(
               LineChartData(
                 minX: 0,
@@ -182,21 +264,116 @@ class _AssetHistoricalChartState extends State<AssetHistoricalChart> {
                     strokeWidth: 1,
                   ),
                 ),
-                titlesData: const FlTitlesData(
-                  leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                titlesData: FlTitlesData(
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 58,
+                      interval: yRange,
+                      getTitlesWidget: (value, meta) {
+                        // fl_chart appelle getTitlesWidget exactement deux fois : pour meta.min et meta.max
+                        if ((value - meta.min).abs() < 0.001) {
+                          return SideTitleWidget(
+                            meta: meta,
+                            fitInside: SideTitleFitInsideData.fromTitleMeta(meta),
+                            child: Text(
+                              Formatters.formatCurrency(rawMinY),
+                              style: TextStyle(
+                                fontSize: 9,
+                                color: Colors.grey.shade600,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              textAlign: TextAlign.right,
+                            ),
+                          );
+                        }
+
+                        if ((value - meta.max).abs() < 0.001) {
+                          return SideTitleWidget(
+                            meta: meta,
+                            fitInside: SideTitleFitInsideData.fromTitleMeta(meta),
+                            child: Text(
+                              Formatters.formatCurrency(rawMaxY),
+                              style: TextStyle(
+                                fontSize: 9,
+                                color: Colors.grey.shade600,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              textAlign: TextAlign.right,
+                            ),
+                          );
+                        }
+
+                        return const SizedBox.shrink();
+                      },
+                    ),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 22,
+                      interval: 1.0,
+                      getTitlesWidget: (value, meta) {
+                        final index = value.round();
+                        if ((value - index).abs() > 0.01) {
+                          return const SizedBox.shrink();
+                        }
+                        final int total = dates.length;
+                        if (index < 0 || index >= total) {
+                          return const SizedBox.shrink();
+                        }
+
+                        // Affiche STRICTEMENT et UNIQUEMENT la date min (index 0) et la date max (index total - 1)
+                        if (index != 0 && index != total - 1) {
+                          return const SizedBox.shrink();
+                        }
+
+                        final Alignment alignment = (index == 0) ? Alignment.topLeft : Alignment.topRight;
+
+                        return SideTitleWidget(
+                          meta: meta,
+                          fitInside: SideTitleFitInsideData.fromTitleMeta(meta),
+                          child: Align(
+                            alignment: alignment,
+                            child: Text(
+                              _formatShortDate(dates[index]),
+                              style: TextStyle(
+                                fontSize: 9,
+                                color: Colors.grey.shade600,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                 ),
                 borderData: FlBorderData(show: false),
                 lineTouchData: LineTouchData(
                   enabled: true,
+                  touchCallback: (FlTouchEvent event, LineTouchResponse? touchResponse) {
+                    if (event is FlPanEndEvent || event is FlTapUpEvent) {
+                      setState(() {
+                        _touchedIndex = null;
+                      });
+                    } else if (touchResponse != null &&
+                        touchResponse.lineBarSpots != null &&
+                        touchResponse.lineBarSpots!.isNotEmpty) {
+                      final index = touchResponse.lineBarSpots!.first.spotIndex;
+                      setState(() {
+                        _touchedIndex = index;
+                      });
+                    }
+                  },
                   touchTooltipData: LineTouchTooltipData(
                     getTooltipItems: (touchedSpots) {
                       return touchedSpots.map((spot) {
                         final index = spot.x.toInt();
                         final dateStr = (index >= 0 && index < dates.length)
-                            ? dates[index]
+                            ? _formatFullDate(dates[index])
                             : '';
                         final formattedPrice = Formatters.formatCurrency(spot.y);
                         return LineTooltipItem(
@@ -204,7 +381,7 @@ class _AssetHistoricalChartState extends State<AssetHistoricalChart> {
                           const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
-                            fontSize: 12,
+                            fontSize: 11,
                           ),
                         );
                       }).toList();

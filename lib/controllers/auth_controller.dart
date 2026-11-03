@@ -1,13 +1,13 @@
-// [AI-GENERATED] Issue #1, Agent, 2025-02-23
+// [AI-GENERATED] Issue #5, Agent, 2025-02-23
 
 import 'package:flutter/material.dart';
 import '../models/user_profile.dart';
 import '../services/auth_service.dart';
+import '../models/financial_calculator.dart';
 
-/// Contrôleur gérant l'état de l'authentification.
+/// Contrôleur gérant l'état de l'authentification et du profil utilisateur.
 ///
-/// Utilise le pattern ChangeNotifier pour notifier les vues des changements d'état
-/// (chargement en cours, succès de la connexion, ou affichage d'une erreur).
+/// Gère la connexion, la déconnexion, ainsi que la progression de l'utilisateur (XP, Niveaux).
 class AuthController extends ChangeNotifier {
   final AuthService _authService;
 
@@ -28,7 +28,10 @@ class AuthController extends ChangeNotifier {
       final bool keep = await _authService.isKeepLoggedIn();
       if (keep) {
         _currentUser = await _authService.getCurrentUser();
-        return _currentUser != null;
+        if (_currentUser != null) {
+          await _processLoginStreak();
+          return true;
+        }
       }
       return false;
     } catch (e) {
@@ -59,6 +62,7 @@ class AuthController extends ChangeNotifier {
     _error = null;
     try {
       _currentUser = await _authService.login(email, password, keepLoggedIn);
+      await _processLoginStreak();
       return true;
     } catch (e) {
       _error = e.toString().replaceAll('Exception: ', '');
@@ -66,6 +70,100 @@ class AuthController extends ChangeNotifier {
     } finally {
       _setLoading(false);
     }
+  }
+
+  /// Gère la série de connexions quotidiennes et attribue l'XP correspondant.
+  Future<void> _processLoginStreak() async {
+    if (_currentUser == null) return;
+    
+    final now = DateTime.now();
+    final lastLogin = _currentUser!.lastLoginDate;
+    
+    int newStreak = _currentUser!.streak;
+    int xpGained = 0;
+    
+    if (lastLogin == null) {
+      // Première connexion
+      newStreak = 1;
+      xpGained = FinancialCalculator.calculateStreakBonus(newStreak);
+    } else {
+      final difference = DateTime(now.year, now.month, now.day)
+          .difference(DateTime(lastLogin.year, lastLogin.month, lastLogin.day))
+          .inDays;
+          
+      if (difference == 1) {
+        // Connexion consécutive
+        newStreak += 1;
+        xpGained = FinancialCalculator.calculateStreakBonus(newStreak);
+      } else if (difference > 1) {
+        // Série brisée
+        newStreak = 1;
+        xpGained = FinancialCalculator.calculateStreakBonus(newStreak);
+      }
+      // Si difference == 0, déjà connecté aujourd'hui, pas de bonus
+    }
+    
+    if (xpGained > 0 || lastLogin == null || newStreak != _currentUser!.streak) {
+      await addXp(xpGained, newStreak: newStreak, newLoginDate: now);
+    }
+  }
+
+  /// Ajoute de l'XP à l'utilisateur et met à jour ses records et son niveau.
+  Future<void> addXp(int amount, {int? newStreak, DateTime? newLoginDate}) async {
+    if (_currentUser == null || amount < 0 && newStreak == null && newLoginDate == null) return;
+    
+    final int newXp = (_currentUser!.xp + amount).clamp(0, double.maxFinite.toInt());
+    final int newLevel = FinancialCalculator.calculateLevel(newXp);
+    
+    final int highestXp = newXp > _currentUser!.highestXpReached ? newXp : _currentUser!.highestXpReached;
+    final int highestLevel = newLevel > _currentUser!.highestLevelReached ? newLevel : _currentUser!.highestLevelReached;
+    
+    final updatedUser = _currentUser!.copyWith(
+      xp: newXp,
+      level: newLevel,
+      highestXpReached: highestXp,
+      highestLevelReached: highestLevel,
+      streak: newStreak ?? _currentUser!.streak,
+      lastLoginDate: newLoginDate ?? _currentUser!.lastLoginDate,
+    );
+    
+    await _authService.updateUser(updatedUser);
+    _currentUser = updatedUser;
+    notifyListeners();
+  }
+
+  /// Met à jour le record de la valeur du portefeuille si la nouvelle valeur est plus élevée.
+  Future<void> updateHighestPortfolioValue(double value) async {
+    if (_currentUser == null) return;
+    if (value > _currentUser!.highestPortfolioValueReached) {
+      final updatedUser = _currentUser!.copyWith(highestPortfolioValueReached: value);
+      await _authService.updateUser(updatedUser);
+      _currentUser = updatedUser;
+      // On ne notifie pas forcément pour ne pas surcharger, sauf si affiché
+      notifyListeners();
+    }
+  }
+
+  /// Bascule l'affichage des conseils pédagogiques.
+  Future<void> toggleShowTips(bool show) async {
+    if (_currentUser == null) return;
+    final updatedUser = _currentUser!.copyWith(showTips: show);
+    await _authService.updateUser(updatedUser);
+    _currentUser = updatedUser;
+    notifyListeners();
+  }
+
+  /// Réinitialise le compte utilisateur (XP, Niveau) en gardant les records et le streak.
+  Future<void> resetAccount() async {
+    if (_currentUser == null) return;
+    final updatedUser = _currentUser!.copyWith(
+      xp: 0,
+      level: 1,
+      // On garde highestLevelReached, highestXpReached, highestPortfolioValueReached, streak
+    );
+    await _authService.updateUser(updatedUser);
+    _currentUser = updatedUser;
+    notifyListeners();
   }
 
   /// Déconnecte l'utilisateur.

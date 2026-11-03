@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/portfolio_controller.dart';
 import '../../controllers/data_controller.dart';
+import '../../controllers/auth_controller.dart';
 import '../../controllers/data_state.dart';
 import '../../models/asset.dart';
 import '../../utils/app_theme.dart';
@@ -11,9 +12,11 @@ import '../widgets/hero_asset_card.dart';
 import '../widgets/asset_grid_section.dart';
 import '../widgets/market_movers_section.dart';
 import '../widgets/buy_asset_sheet.dart';
+import '../widgets/contextual_tip_card.dart';
 import 'asset_detail_screen.dart';
 import 'search_screen.dart';
 import 'portfolio_screen.dart';
+import 'profile_screen.dart';
 
 /// Écran principal du tableau de bord (Accueil restructuré).
 ///
@@ -158,8 +161,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
     }).toList();
 
-    return Consumer<PortfolioController>(
-      builder: (context, portfolio, child) {
+    return Consumer2<PortfolioController, AuthController>(
+      builder: (context, portfolio, auth, child) {
+        final user = auth.currentUser;
         return RefreshIndicator(
           onRefresh: () async {
             final portfolioController = context.read<PortfolioController>();
@@ -217,7 +221,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   capitalGain: portfolio.totalCapitalGain,
                   performancePercentage: portfolio.totalPerformance,
                   cashBalance: portfolio.cashBalance,
+                  user: user,
+                  onProfileTap: () {
+                    setState(() {
+                      _currentNavIndex = 3;
+                    });
+                  },
                 ),
+                
+                // Mise à jour discrète du record du portefeuille
+                Builder(
+                  builder: (context) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      context.read<AuthController>().updateHighestPortfolioValue(
+                        portfolio.totalValue + portfolio.cashBalance
+                      );
+                    });
+                    return const SizedBox.shrink();
+                  },
+                ),
+
+                // Astuces contextuelles
+                const ContextualTipCard(),
+
                 const SizedBox(height: 20),
 
                 // 2. Section 1 : Hero Asset ("Actif à la loupe")
@@ -269,7 +295,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             },
           ),
           const PortfolioScreen(),
-          const Center(child: Text('Écran Profil (À venir)')),
+          const ProfileScreen(),
         ],
       ),
       bottomNavigationBar: Container(

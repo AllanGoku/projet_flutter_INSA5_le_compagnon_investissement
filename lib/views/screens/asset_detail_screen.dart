@@ -519,15 +519,15 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
                 const SizedBox(height: 24),
               ],
 
-              // 7. Espace sous défilement pour le bouton fixe d'achat
-              const SizedBox(height: 80),
+              // 7. Espace sous défilement
+              const SizedBox(height: 24),
             ],
           ),
         ),
       ),
 
-      // Bouton d'achat fixe en bas de l'écran
-      bottomSheet: Container(
+      // Bouton d'achat fixe en bas de l'écran (navigation bar)
+      bottomNavigationBar: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,

@@ -1,6 +1,7 @@
-// [AI-GENERATED] Phase 2, Agent, 2025-02-23
+// [AI-GENERATED] Issue #5, Agent, 2025-02-23
 import 'package:flutter/material.dart';
 import 'package:animated_flip_counter/animated_flip_counter.dart';
+import '../../models/user_profile.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/formatters.dart';
 
@@ -15,6 +16,8 @@ class FlipGainCounter extends StatefulWidget {
   final double performancePercentage;
   final double cashBalance;
   final String userName;
+  final UserProfile? user;
+  final VoidCallback? onProfileTap;
 
   const FlipGainCounter({
     super.key,
@@ -23,6 +26,8 @@ class FlipGainCounter extends StatefulWidget {
     required this.performancePercentage,
     this.cashBalance = 1000.0,
     this.userName = 'Novice',
+    this.user,
+    this.onProfileTap,
   });
 
   @override
@@ -32,6 +37,28 @@ class FlipGainCounter extends StatefulWidget {
 class _FlipGainCounterState extends State<FlipGainCounter> {
   /// Indique si la pilule de gain affiche le pourcentage (true) ou le montant en euros (false).
   bool _showPercentage = true;
+
+  String get _initials {
+    if (widget.user != null) {
+      final first = widget.user!.firstName.trim();
+      final last = widget.user!.lastName.trim();
+      String result = '';
+      if (first.isNotEmpty) result += first[0].toUpperCase();
+      if (last.isNotEmpty) result += last[0].toUpperCase();
+      if (result.isNotEmpty) return result;
+    }
+    if (widget.userName.isNotEmpty) {
+      return widget.userName[0].toUpperCase();
+    }
+    return 'N';
+  }
+
+  String get _displayName {
+    if (widget.user != null && widget.user!.firstName.trim().isNotEmpty) {
+      return widget.user!.firstName.trim();
+    }
+    return widget.userName;
+  }
 
   void _toggleDisplay() {
     setState(() {
@@ -74,7 +101,7 @@ class _FlipGainCounterState extends State<FlipGainCounter> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Bonjour, ${widget.userName}',
+                    'Bonjour, $_displayName',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
@@ -92,28 +119,18 @@ class _FlipGainCounterState extends State<FlipGainCounter> {
                   ),
                 ],
               ),
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                  border: Border.all(color: Colors.blue.shade50, width: 1.5),
-                ),
-                child: Center(
+              InkWell(
+                onTap: widget.onProfileTap,
+                borderRadius: BorderRadius.circular(21),
+                child: CircleAvatar(
+                  radius: 21,
+                  backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
                   child: Text(
-                    widget.userName.isNotEmpty ? widget.userName[0].toUpperCase() : 'N',
+                    _initials,
                     style: const TextStyle(
-                      fontSize: 18,
+                      fontSize: 15,
                       fontWeight: FontWeight.bold,
-                      color: AppTheme.azure,
+                      color: AppTheme.primaryColor,
                     ),
                   ),
                 ),

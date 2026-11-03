@@ -273,69 +273,85 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Valeur Actifs',
-                    style: TextStyle(fontSize: 11, color: Colors.white70),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    Formatters.formatCurrency(portfolio.totalValue),
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Valeur Actifs',
+                      style: TextStyle(fontSize: 11, color: Colors.white70),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 2),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        Formatters.formatCurrency(portfolio.totalValue),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const Text(
-                    'Gain Latent',
-                    style: TextStyle(fontSize: 11, color: Colors.white70),
-                  ),
-                  const SizedBox(height: 2),
-                  Row(
-                    children: [
-                      PerformanceText(
-                        value: portfolio.totalCapitalGain,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Text(
+                      'Gain Latent',
+                      style: TextStyle(fontSize: 11, color: Colors.white70),
+                    ),
+                    const SizedBox(height: 2),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          PerformanceText(
+                            value: portfolio.totalCapitalGain,
+                            isCurrency: true,
+                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            ' (',
+                            style: TextStyle(fontSize: 11, color: Colors.white.withOpacity(0.7)),
+                          ),
+                          PerformanceText(
+                            value: portfolio.totalPerformance,
+                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            ')',
+                            style: TextStyle(fontSize: 11, color: Colors.white.withOpacity(0.7)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    const Text(
+                      'Gain Réalisé',
+                      style: TextStyle(fontSize: 11, color: Colors.white70),
+                    ),
+                    const SizedBox(height: 2),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: PerformanceText(
+                        value: portfolio.totalRealizedGain,
                         isCurrency: true,
                         style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                       ),
-                      Text(
-                        ' (',
-                        style: TextStyle(fontSize: 11, color: Colors.white.withOpacity(0.7)),
-                      ),
-                      PerformanceText(
-                        value: portfolio.totalPerformance,
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        ')',
-                        style: TextStyle(fontSize: 11, color: Colors.white.withOpacity(0.7)),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  const Text(
-                    'Gain Réalisé',
-                    style: TextStyle(fontSize: 11, color: Colors.white70),
-                  ),
-                  const SizedBox(height: 2),
-                  PerformanceText(
-                    value: portfolio.totalRealizedGain,
-                    isCurrency: true,
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

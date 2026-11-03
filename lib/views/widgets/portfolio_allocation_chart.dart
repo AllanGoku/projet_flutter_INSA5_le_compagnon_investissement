@@ -88,12 +88,12 @@ class PortfolioAllocationChart extends StatelessWidget {
               children: [
                 // Graphique Donut (fl_chart)
                 SizedBox(
-                  height: 130,
-                  width: 130,
+                  height: 120,
+                  width: 120,
                   child: PieChart(
                     PieChartData(
                       sectionsSpace: 3,
-                      centerSpaceRadius: 32,
+                      centerSpaceRadius: 28,
                       startDegreeOffset: -90,
                       sections: List.generate(positions.length, (index) {
                         final pos = positions[index];
@@ -108,7 +108,7 @@ class PortfolioAllocationChart extends StatelessWidget {
                           color: color,
                           value: positionVal,
                           title: '${percentage.toStringAsFixed(0)}%',
-                          radius: 24,
+                          radius: 22,
                           titleStyle: const TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
@@ -119,9 +119,9 @@ class PortfolioAllocationChart extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 20),
+                const SizedBox(width: 12),
 
-                // Légende des actifs
+                // Légende des actifs sécurisée contre les débordements (RenderFlex overflow)
                 Expanded(
                   child: Column(
                     children: List.generate(positions.length, (index) {
@@ -138,33 +138,43 @@ class PortfolioAllocationChart extends StatelessWidget {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Row(
-                              children: [
-                                Container(
-                                  width: 10,
-                                  height: 10,
-                                  decoration: BoxDecoration(
-                                    color: color,
-                                    shape: BoxShape.circle,
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      color: color,
+                                      shape: BoxShape.circle,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  pos.asset.symbol,
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black87,
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      pos.asset.symbol,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                            Text(
-                              '${percentage.toStringAsFixed(1)}% (${Formatters.formatCurrency(positionVal)})',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.grey.shade700,
+                            const SizedBox(width: 4),
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                '${percentage.toStringAsFixed(1)}% (${Formatters.formatCurrency(positionVal)})',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey.shade700,
+                                ),
                               ),
                             ),
                           ],

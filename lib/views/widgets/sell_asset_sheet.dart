@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/portfolio_position.dart';
 import '../../controllers/portfolio_controller.dart';
+import '../../controllers/auth_controller.dart';
 import '../../models/financial_calculator.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/formatters.dart';
@@ -73,7 +74,16 @@ class _SellAssetSheetState extends State<SellAssetSheet> {
 
       try {
         final portfolioController = context.read<PortfolioController>();
-        await portfolioController.sellAsset(widget.position.asset, parsed);
+        final authController = context.read<AuthController>();
+        
+        final result = await portfolioController.sellAsset(widget.position.asset, parsed);
+        
+        final xpGained = FinancialCalculator.calculateSaleXp(
+          performancePercentage: result['performancePercentage'] as double,
+          holdingDuration: result['holdingDuration'] as Duration,
+        );
+        
+        await authController.addXp(xpGained);
 
         if (mounted) {
           Navigator.of(context).maybePop();
@@ -118,12 +128,18 @@ class _SellAssetSheetState extends State<SellAssetSheet> {
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
       child: Container(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.only(
+          left: 24,
+          right: 24,
+          top: 24,
+          bottom: 24 + MediaQuery.of(context).padding.bottom,
+        ),
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
         ),
         child: SafeArea(
+          top: false,
           child: Form(
             key: _formKey,
             child: Column(

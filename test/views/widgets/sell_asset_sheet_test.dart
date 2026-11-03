@@ -2,7 +2,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:le_compagnon_investissement/models/user_profile.dart';
+import 'package:le_compagnon_investissement/controllers/auth_controller.dart';
 import 'package:le_compagnon_investissement/controllers/portfolio_controller.dart';
+import 'package:le_compagnon_investissement/services/auth_service.dart';
 import 'package:le_compagnon_investissement/services/cache_service.dart';
 import 'package:le_compagnon_investissement/models/asset.dart';
 import 'package:le_compagnon_investissement/models/portfolio_position.dart';
@@ -38,6 +41,21 @@ class FakeCacheService extends CacheService {
   Future<double> getCashBalance() async => 1000.0;
 }
 
+class FakeAuthService implements AuthService {
+  @override
+  Future<UserProfile?> getCurrentUser() async => null;
+  @override
+  Future<bool> isKeepLoggedIn() async => false;
+  @override
+  Future<UserProfile> login(String e, String p, bool k) async => throw Exception();
+  @override
+  Future<void> logout() async {}
+  @override
+  Future<void> register(UserProfile u, String p) async {}
+  @override
+  Future<void> updateUser(UserProfile u) async {}
+}
+
 void main() {
   final assetNvda = Asset(
     symbol: 'NVDA',
@@ -65,8 +83,11 @@ void main() {
       );
 
       await tester.pumpWidget(
-        ChangeNotifierProvider<PortfolioController>.value(
-          value: portfolioController,
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<PortfolioController>.value(value: portfolioController),
+            ChangeNotifierProvider<AuthController>(create: (_) => AuthController(authService: FakeAuthService())),
+          ],
           child: MaterialApp(
             home: Scaffold(
               body: SellAssetSheet(position: position),
@@ -95,8 +116,11 @@ void main() {
       );
 
       await tester.pumpWidget(
-        ChangeNotifierProvider<PortfolioController>.value(
-          value: portfolioController,
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<PortfolioController>.value(value: portfolioController),
+            ChangeNotifierProvider<AuthController>(create: (_) => AuthController(authService: FakeAuthService())),
+          ],
           child: MaterialApp(
             home: Scaffold(
               body: SellAssetSheet(position: position),
@@ -122,8 +146,11 @@ void main() {
       );
 
       await tester.pumpWidget(
-        ChangeNotifierProvider<PortfolioController>.value(
-          value: portfolioController,
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<PortfolioController>.value(value: portfolioController),
+            ChangeNotifierProvider<AuthController>(create: (_) => AuthController(authService: FakeAuthService())),
+          ],
           child: MaterialApp(
             home: Scaffold(
               body: SellAssetSheet(
