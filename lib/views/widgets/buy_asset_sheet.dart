@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/asset.dart';
 import '../../controllers/portfolio_controller.dart';
+import '../../controllers/auth_controller.dart';
+import '../../models/financial_calculator.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/formatters.dart';
 import 'purchase_animation.dart';
@@ -64,7 +66,10 @@ class _BuyAssetSheetState extends State<BuyAssetSheet> {
 
       try {
         final portfolioController = context.read<PortfolioController>();
+        final authController = context.read<AuthController>();
+
         await portfolioController.buyAsset(widget.asset, _quantity);
+        await authController.addXp(FinancialCalculator.calculateBuyXp());
 
         setState(() {
           _showAnimation = true;

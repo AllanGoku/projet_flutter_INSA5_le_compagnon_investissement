@@ -154,11 +154,11 @@ class _PurchaseAnimationState extends State<PurchaseAnimation> with SingleTicker
           children: [
             const SizedBox(height: 12),
             Text(
-              _isContactlessDone ? 'Achat Fictif Confirmé !' : 'Paiement en cours...',
-              style: const TextStyle(
+              _isContactlessDone ? 'Achat Fictif Confirmé ! (+50 XP)' : 'Paiement en cours...',
+              style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Colors.black87,
+                color: _isContactlessDone ? AppTheme.primaryColor : Colors.black87,
               ),
             ),
             const SizedBox(height: 6),

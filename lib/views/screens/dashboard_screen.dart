@@ -228,7 +228,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     });
                   },
                 ),
-                
+
                 // Mise à jour discrète du record du portefeuille
                 Builder(
                   builder: (context) {

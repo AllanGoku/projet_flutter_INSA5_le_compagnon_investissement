@@ -167,6 +167,10 @@ void main() {
     });
 
     group('Phase 5: Gamification & XP', () {
+      test('calculateBuyXp: forfait +50 XP par achat', () {
+        expect(FinancialCalculator.calculateBuyXp(), 50);
+      });
+
       test('calculateSaleXp: gain basé sur la performance et durée', () {
         // 10% sur 5 jours -> 50
         expect(FinancialCalculator.calculateSaleXp(performancePercentage: 10.0, holdingDuration: const Duration(days: 5)), 50);

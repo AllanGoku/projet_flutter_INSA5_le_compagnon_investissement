@@ -18,7 +18,7 @@ L'application adopte une architecture **Modèle-Vue-Contrôleur (MVC)** adaptée
 
 3. **Couche 3 : Moteur Métier et Données (`lib/models/`)**
    - Modèles de données typés avec sérialisation JSON (`fromJson` / `toJson`).
-   - Fonctions pures et calculs financiers isolés dans `FinancialCalculator` (PMPA, plus-value latente/réalisée, allocation %, DCA, performance %).
+   - Fonctions pures et calculs financiers isolés dans `FinancialCalculator` (PMPA, plus-value latente/réalisée, allocation %, DCA, performance %, calculs d'XP, niveaux, streaks).
 
 ---
 
@@ -43,15 +43,15 @@ le_compagnon_investissement/
 |   |   |-- price_point.dart       # Point de donnée boursier (OHLCV)
 |   |   |-- portfolio_position.dart# Ligne du portefeuille fictif (PMPA, quantité)
 |   |   |-- portfolio_transaction.dart# Transaction d'achat ou de revente
-|   |   |-- user_profile.dart      # Modèle de profil utilisateur
-|   |   `-- financial_calculator.dart # Calculs financiers purs (Plus-value, PMPA, DCA, etc.)
+|   |   |-- user_profile.dart      # Modèle de profil utilisateur (XP, niveaux, records)
+|   |   `-- financial_calculator.dart # Calculs financiers purs (Plus-value, PMPA, DCA, XP, Niveaux)
 |   |
 |   |-- views/                     # [V] Interface utilisateur & Widgets
-|   |   |-- screens/               # Écrans principaux (dashboard_screen.dart, search_screen.dart, asset_detail_screen.dart, portfolio_screen.dart, login_screen.dart, register_screen.dart, design_showcase_screen.dart)
-|   |   `-- widgets/               # Composants réutilisables (flip_gain_counter.dart, hero_asset_card.dart, asset_grid_section.dart, market_movers_section.dart, buy_asset_sheet.dart, sell_asset_sheet.dart, portfolio_allocation_chart.dart, portfolio_position_card.dart, transaction_history_section.dart, transaction_detail_sheet.dart, cash_balance_card.dart, purchase_animation.dart, performance_text.dart, soft_card.dart, textured_button.dart)
+|   |   |-- screens/               # Écrans principaux (dashboard_screen.dart, search_screen.dart, asset_detail_screen.dart, portfolio_screen.dart, profile_screen.dart, login_screen.dart, register_screen.dart, design_showcase_screen.dart)
+|   |   `-- widgets/               # Composants réutilisables (flip_gain_counter.dart, hero_asset_card.dart, asset_grid_section.dart, market_movers_section.dart, buy_asset_sheet.dart, sell_asset_sheet.dart, portfolio_allocation_chart.dart, portfolio_position_card.dart, transaction_history_section.dart, transaction_detail_sheet.dart, cash_balance_card.dart, contextual_tip_card.dart, purchase_animation.dart, performance_text.dart, soft_card.dart, textured_button.dart)
 |   |
 |   |-- controllers/               # [C] Contrôleurs et gestion d'état
-|   |   |-- auth_controller.dart   # Contrôleur d'authentification
+|   |   |-- auth_controller.dart   # Contrôleur d'authentification, profil & XP
 |   |   |-- data_controller.dart   # Contrôleur de données financières (API & Cache)
 |   |   |-- portfolio_controller.dart # Contrôleur du portefeuille fictif & liquidités (PMPA, solde, SQLite)
 |   |   `-- data_state.dart        # Enumération des états asynchrones
@@ -71,9 +71,9 @@ le_compagnon_investissement/
 |   `-- main.dart                  # Point d'entrée de l'application
 |
 `-- test/                          # Tests unitaires et d'intégration (miroir de lib)
-    |-- models/                    # Ex: financial_calculator_test.dart, portfolio_transaction_test.dart, asset_test.dart
-    |-- controllers/               # Ex: data_controller_test.dart, portfolio_controller_test.dart
+    |-- models/                    # Ex: financial_calculator_test.dart, user_profile_test.dart, portfolio_transaction_test.dart, asset_test.dart
+    |-- controllers/               # Ex: data_controller_test.dart, portfolio_controller_test.dart, auth_controller_test.dart
     |-- services/                  # Ex: api_service_test.dart, cache_service_test.dart, auth_service_test.dart
     |-- utils/                     # Ex: validators_test.dart
-    `-- views/                     # Ex: sell_asset_sheet_test.dart, portfolio_screen_test.dart, buy_asset_sheet_test.dart, dashboard_screen_test.dart
+    `-- views/                     # Ex: sell_asset_sheet_test.dart, profile_screen_test.dart, contextual_tip_card_test.dart, portfolio_screen_test.dart, buy_asset_sheet_test.dart, dashboard_screen_test.dart
 ```

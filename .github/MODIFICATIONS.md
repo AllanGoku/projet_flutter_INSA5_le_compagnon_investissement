@@ -178,4 +178,36 @@ Ce fichier documente les modifications apportées au projet "Le Compagnon d'Inve
 ### 3. Écran Dédié du Portefeuille (`../lib/views/screens/portfolio_screen.dart`)
 - **`portfolio_screen.dart`** : Intégration de `CashBalanceCard` et recalcul du Patrimoine Total = `Valeur des Actifs + Liquidités`.
 
+## [Phase 5 : Profil Utilisateur, Niveaux d'XP & Conseils Contextuels] - 2025-02-23
+
+### 1. Modèle Utilisateur Enrichi & Progression (`../lib/models/user_profile.dart`)
+- **`user_profile.dart`** : Ajout des attributs d'expérience (`xp`), de niveau (`level`), de série de connexions (`streak`), de date de dernière connexion (`lastLoginDate`), de préference d'astuces (`showTips`), ainsi que des 3 records personnels (`highestLevelReached`, `highestXpReached`, `highestPortfolioValueReached`). Ajout de la méthode `copyWith`.
+  - *Pourquoi ?* : Permettre le suivi complet du système de gamification et de la progression de l'investisseur fictif.
+
+### 2. Calculs Métier de Gamification & XP (`../lib/models/financial_calculator.dart`)
+- **`financial_calculator.dart`** : Ajout des fonctions pures `calculateBuyXp` (+50 XP forfaitaires par achat d'actif réussi), `calculateSaleXp` (calcul de l'XP indexé sur la performance relative et multiplié par la durée de détention), `calculateStreakBonus` (+20/j, 7j: +50 XP, 30j: +200 XP), `calculateLevel` (1 niveau tous les 1000 XP), et `getTitleForLevel` (titres honorifiques tels que *Novice*, *Initié*, *Maître de Wall Street*).
+  - *Pourquoi ?* : Encourager l'action et valoriser le *Long-Term Investing* en récompensant la durée de conservation des actifs tout en isolant les règles de progression dans des fonctions testables sans dépendance graphique.
+
+### 3. Gestion d'État & Persistance (`../lib/controllers/` & `../lib/services/`)
+- **`auth_controller.dart`** : Prise en charge automatique du streak quotidien lors du `login` ou `checkKeepLoggedIn`, gain d'XP via `addXp`, mise à jour du record de solde de portefeuille, toggle des astuces, et réinitialisation du compte (`resetAccount`) en conservant la trace des 3 records personnels.
+- **`portfolio_controller.dart` & `cache_service.dart`** : Adaptation de `sellAsset` pour retourner les métriques de durée et performance requises au calcul de l'XP. Ajout de `resetPortfolio` et de la méthode `clearPortfolioAndTransactions` dans SQLite.
+- **`buy_asset_sheet.dart` & `purchase_animation.dart`** : Déclenchement de l'attribution de `+50 XP` lors de chaque achat d'actif réussi et affichage du message visuel de confirmation `Achat Fictif Confirmé ! (+50 XP)`.
+
+### 4. Nouveaux Composants & Écran de Profil (`../lib/views/`)
+- **`contextual_tip_card.dart`** : Carte dynamique d'astuces financières affichée sur la page d'accueil (`DashboardScreen`) avec option de fermer ou masquer définitivement via les préférences.
+- **`profile_screen.dart`** : Nouvel écran de profil utilisateur comprenant :
+  - Informations personnelles en **lecture seule** (Email, Pays).
+  - Avatar avec initiales dynamiques et jauge de progression vers le niveau suivant avec titre honorifique.
+  - Cartes des 3 records personnels (Niveau max, XP max, Valeur max de portefeuille).
+  - Commutateur de préférences pour activer/désactiver les conseils.
+  - Boutons de réinitialisation de compte et de déconnexion avec modales de confirmation.
+- **`flip_gain_counter.dart`** : Harmonisation du badge d'avatar de profil sur le bandeau de la page d'accueil avec affichage des initiales réelles et navigation tactile directe vers l'onglet Profil.
+
+### 5. Correction des Débordements & Optimisations UI (`../lib/views/`)
+- **`interactive_flip_asset_card.dart`**, **`asset_historical_chart.dart`**, **`buy_asset_sheet.dart`**, **`sell_asset_sheet.dart`**, **`profile_screen.dart`** : Correction des débordements visuels de mise en page (layout overflow fixes), ajustements des contraintes de défilement, et wrapping `Material` autour du `SwitchListTile`.
+
+### 6. Validation par les Tests Unitaires & Widgets (`../test/`)
+- **`user_profile_test.dart`**, **`auth_controller_test.dart`**, **`contextual_tip_card_test.dart`**, **`profile_screen_test.dart`**, **`flip_gain_counter_test.dart`** : Rédaction et mise à jour des suites de tests unitaires et de widgets avec **100% de succès sur `flutter test` (111 tests validés)**.
+
+
 

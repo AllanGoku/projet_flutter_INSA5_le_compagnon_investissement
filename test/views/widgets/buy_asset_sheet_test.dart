@@ -7,7 +7,25 @@ import 'package:le_compagnon_investissement/models/asset.dart';
 import 'package:le_compagnon_investissement/models/portfolio_position.dart';
 import 'package:le_compagnon_investissement/models/portfolio_transaction.dart';
 import 'package:le_compagnon_investissement/controllers/portfolio_controller.dart';
+import 'package:le_compagnon_investissement/controllers/auth_controller.dart';
+import 'package:le_compagnon_investissement/models/user_profile.dart';
+import 'package:le_compagnon_investissement/services/auth_service.dart';
 import 'package:le_compagnon_investissement/services/cache_service.dart';
+
+class FakeAuthService implements AuthService {
+  @override
+  Future<UserProfile?> getCurrentUser() async => null;
+  @override
+  Future<bool> isKeepLoggedIn() async => false;
+  @override
+  Future<UserProfile> login(String e, String p, bool k) async => throw Exception();
+  @override
+  Future<void> logout() async {}
+  @override
+  Future<void> register(UserProfile u, String p) async {}
+  @override
+  Future<void> updateUser(UserProfile u) async {}
+}
 
 class FakeCacheService extends CacheService {
   @override
@@ -29,6 +47,7 @@ class FakeCacheService extends CacheService {
 void main() {
   late Asset testAsset;
   late PortfolioController portfolioController;
+  late AuthController authController;
 
   setUp(() {
     testAsset = Asset(
@@ -43,6 +62,7 @@ void main() {
     );
 
     portfolioController = PortfolioController(cacheService: FakeCacheService());
+    authController = AuthController(authService: FakeAuthService());
   });
 
   Widget buildTestWidget(Widget child) {
@@ -52,6 +72,9 @@ void main() {
           providers: [
             ChangeNotifierProvider<PortfolioController>.value(
               value: portfolioController,
+            ),
+            ChangeNotifierProvider<AuthController>.value(
+              value: authController,
             ),
           ],
           child: child,

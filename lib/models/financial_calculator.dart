@@ -121,6 +121,13 @@ class FinancialCalculator {
 
   // --- Phase 5: Fonctions de Gamification et XP ---
 
+  /// Calcule le gain d'XP attribué lors de l'achat d'un actif.
+  ///
+  /// Forfait de +50 XP par achat d'actif réussi pour valoriser le passage à l'action.
+  static int calculateBuyXp() {
+    return 50;
+  }
+
   /// Calcule le gain d'XP suite à une revente d'actif.
   ///
   /// L'XP gagné est indexé sur la performance relative (en %) multipliée par la durée de détention.
