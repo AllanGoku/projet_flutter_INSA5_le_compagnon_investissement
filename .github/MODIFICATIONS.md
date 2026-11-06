@@ -206,8 +206,29 @@ Ce fichier documente les modifications apportées au projet "Le Compagnon d'Inve
 ### 5. Correction des Débordements & Optimisations UI (`../lib/views/`)
 - **`interactive_flip_asset_card.dart`**, **`asset_historical_chart.dart`**, **`buy_asset_sheet.dart`**, **`sell_asset_sheet.dart`**, **`profile_screen.dart`** : Correction des débordements visuels de mise en page (layout overflow fixes), ajustements des contraintes de défilement, et wrapping `Material` autour du `SwitchListTile`.
 
-### 6. Validation par les Tests Unitaires & Widgets (`../test/`)
-- **`user_profile_test.dart`**, **`auth_controller_test.dart`**, **`contextual_tip_card_test.dart`**, **`profile_screen_test.dart`**, **`flip_gain_counter_test.dart`** : Rédaction et mise à jour des suites de tests unitaires et de widgets avec **100% de succès sur `flutter test` (111 tests validés)**.
+### 6. Implémentation du Simulateur DCA & Intérêts Composés (`Phase 6`)
+- **`financial_calculator.dart`** : 
+  - Implémentation de `simulateDcaCompound` pour calculer les intérêts composés.
+  - Implémentation de `simulateDcaProjection` introduisant une projection probabiliste (scénarios Optimiste, Neutre, Pessimiste) basée sur la volatilité.
+  - Implémentation de `calculateAssetAnnualizedReturn` pour calculer dynamiquement le rendement annualisé (CAGR) selon les données réelles de l'actif (historique, plus bas 52 semaines, etc.).
+- **`dca_simulator_screen.dart`** :
+  - Création de l'écran du simulateur avec champs de saisie (montant, durée).
+  - Ajout d'une option de "Taux personnalisé" avec un curseur interactif.
+  - Intégration d'un graphique de projection (Cône des scénarios) en utilisant `fl_chart`.
+  - Intégration de la modale d'achat direct (`BuyAssetSheet`).
+  - Correctifs appliqués contre les débordements de texte (overflow).
+- **`dashboard_screen.dart`** & **`asset_detail_screen.dart`** : Ajout des boutons et cartes d'accès rapide au simulateur DCA.
+- **`market_term_help_button.dart`** : Ajout des définitions pour les termes "DCA" et "Taux de rendement".
+
+### 7. Verrouillage de l'Orientation et Corrections Transversales
+- **`main.dart`** : 
+  - Application du blocage d'orientation en mode portrait uniquement via `SystemChrome.setPreferredOrientations`.
+  - Fiabilisation du chargement initial (garantie de fermeture du loader) et correction du problème de redirection à la déconnexion (`Navigator.pushAndRemoveUntil`).
+- **`sell_asset_sheet.dart`** & **`buy_asset_sheet.dart`** : Ajout de `SingleChildScrollView` avec `BouncingScrollPhysics` pour éviter l'écrasement de la modale lors de l'ouverture du clavier virtuel.
+
+### 8. Validation par les Tests Unitaires & Widgets (`../test/`)
+- Mises à jour des suites de tests existantes et création de **`dca_simulator_screen_test.dart`**.
+- L'ensemble du projet valide à **100% de succès sur `flutter test` (125 tests validés)**.
 
 
 
