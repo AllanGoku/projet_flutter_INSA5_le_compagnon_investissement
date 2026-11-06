@@ -1,4 +1,4 @@
-// [AI-GENERATED] Phase 3, Agent, 2025-02-23
+// [AI-GENERATED] Phase 3 & 6, Agent, 2025-02-23
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/portfolio_controller.dart';
@@ -14,6 +14,7 @@ import '../widgets/market_movers_section.dart';
 import '../widgets/buy_asset_sheet.dart';
 import '../widgets/contextual_tip_card.dart';
 import 'asset_detail_screen.dart';
+import 'dca_simulator_screen.dart';
 import 'search_screen.dart';
 import 'portfolio_screen.dart';
 import 'profile_screen.dart';
@@ -244,6 +245,95 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 // Astuces contextuelles
                 const ContextualTipCard(),
 
+                const SizedBox(height: 16),
+
+                // Carte d'accès rapide au Simulateur DCA
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppTheme.primaryColor,
+                          AppTheme.primaryColor.withValues(alpha: 0.85),
+                        ],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppTheme.primaryColor.withValues(alpha: 0.2),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        key: const Key('dashboard_dca_simulator_button'),
+                        borderRadius: BorderRadius.circular(20),
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const DcaSimulatorScreen(),
+                            ),
+                          );
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: const Icon(
+                                  Icons.calculate_rounded,
+                                  color: Colors.white,
+                                  size: 24,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: const [
+                                    Text(
+                                      'Simulateur DCA & Intérêts Composés',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    SizedBox(height: 2),
+                                    Text(
+                                      'Simule l\'investissement mensuel et projette tes gains',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.white70,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
                 const SizedBox(height: 20),
 
                 // 2. Section 1 : Hero Asset ("Actif à la loupe")
@@ -303,7 +393,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, -4),
             ),
@@ -318,7 +408,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           },
           backgroundColor: Colors.white,
           elevation: 0,
-          indicatorColor: AppTheme.mint.withOpacity(0.2),
+          indicatorColor: AppTheme.mint.withValues(alpha: 0.2),
           destinations: const [
             NavigationDestination(
               icon: Icon(Icons.home_outlined),

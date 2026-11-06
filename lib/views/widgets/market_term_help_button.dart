@@ -68,6 +68,10 @@ class MarketTermHelpButton extends StatelessWidget {
         'Prix Moyen Pondéré d\'Achat. C\'est la moyenne des prix auxquels vous avez acheté vos différentes unités d\'un même actif dans votre portefeuille.',
     'Variation %':
         'La variation en pourcentage indique l\'évolution du prix de l\'actif (hausse ou baisse) par rapport à son cours de clôture de la journée précédente.',
+    'DCA':
+        'Le DCA (Dollar-Cost Averaging ou Investissement Programmé) consiste à investir un montant fixe à intervalles réguliers (ex: chaque mois). Cela permet de lisser le prix d\'achat moyen et d\'éliminer le stress lié au timing du marché.',
+    'Taux de rendement':
+        'Le Taux de Rendement Annuel estimé (%) représente la progression moyenne de l\'actif sur un an. Pour un actif sélectionné, il est calculé automatiquement d\'après la formule du Taux de Croissance Annuel Composé (CAGR) basé sur l\'historique réels des prix. En mode sur-mesure, vous pouvez l\'ajuster librement.',
   };
 
   /// Affiche la modale explicative pédagogique.

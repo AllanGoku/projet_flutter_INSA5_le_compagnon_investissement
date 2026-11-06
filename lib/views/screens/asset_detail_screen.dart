@@ -1,4 +1,4 @@
-// [AI-GENERATED] Phase 3, Agent, 2025-02-23
+// [AI-GENERATED] Phase 3 & 6, Agent, 2025-02-23
 import 'package:flutter/material.dart';
 import '../../models/asset.dart';
 import '../../utils/app_theme.dart';
@@ -6,6 +6,7 @@ import '../../utils/formatters.dart';
 import '../widgets/asset_historical_chart.dart';
 import '../widgets/market_term_help_button.dart';
 import '../widgets/buy_asset_sheet.dart';
+import 'dca_simulator_screen.dart';
 
 /// Écran complet de détail et d'analyse pédagogique d'un actif financier.
 ///
@@ -35,6 +36,14 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
         onPurchaseSuccess: () {
           Navigator.of(context).pop('open_portfolio');
         },
+      ),
+    );
+  }
+
+  void _openDcaSimulator() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => DcaSimulatorScreen(initialAsset: widget.asset),
       ),
     );
   }
@@ -526,7 +535,7 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
         ),
       ),
 
-      // Bouton d'achat fixe en bas de l'écran (navigation bar)
+      // Barre d'actions fixes en bas de l'écran (Simuler DCA & Acheter)
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -540,25 +549,48 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
           ],
         ),
         child: SafeArea(
-          child: SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              key: const Key('buy_asset_detail_button'),
-              onPressed: _openBuyModal,
-              icon: const Icon(Icons.shopping_bag_outlined),
-              label: const Text(
-                'Acheter cet actif (Fictif)',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryColor,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+          child: Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  key: const Key('dca_simulate_detail_button'),
+                  onPressed: _openDcaSimulator,
+                  icon: const Icon(Icons.calculate_outlined, color: AppTheme.primaryColor),
+                  label: const Text(
+                    'Simuler DCA',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.primaryColor),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: const BorderSide(color: AppTheme.primaryColor, width: 1.5),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
                 ),
               ),
-            ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 1,
+                child: ElevatedButton.icon(
+                  key: const Key('buy_asset_detail_button'),
+                  onPressed: _openBuyModal,
+                  icon: const Icon(Icons.shopping_bag_outlined),
+                  label: const Text(
+                    'Acheter',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),

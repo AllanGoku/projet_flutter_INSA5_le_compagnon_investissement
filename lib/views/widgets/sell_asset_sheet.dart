@@ -142,10 +142,12 @@ class _SellAssetSheetState extends State<SellAssetSheet> {
           top: false,
           child: Form(
             key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                 // Poignée de glissement
                 Center(
                   child: Container(
@@ -219,7 +221,7 @@ class _SellAssetSheetState extends State<SellAssetSheet> {
                           Text('Possédé', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
                           const SizedBox(height: 2),
                           Text(
-                            '${maxIntegerUnits} un.',
+                            '$maxIntegerUnits un.',
                             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                           ),
                         ],
@@ -323,7 +325,7 @@ class _SellAssetSheetState extends State<SellAssetSheet> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.red.shade50.withOpacity(0.5),
+                    color: Colors.red.shade50.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: Colors.red.shade100),
                   ),
@@ -332,9 +334,11 @@ class _SellAssetSheetState extends State<SellAssetSheet> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
-                            'Liquidités créditées',
-                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87),
+                          const Expanded(
+                            child: Text(
+                              'Liquidités créditées',
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87),
+                            ),
                           ),
                           Text(
                             '+ ${Formatters.formatCurrency(estimatedSaleValue)}',
@@ -346,24 +350,33 @@ class _SellAssetSheetState extends State<SellAssetSheet> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
-                            'Plus-value réalisée estimée',
-                            style: TextStyle(fontSize: 14, color: Colors.black87),
+                          const Expanded(
+                            child: Text(
+                              'Plus-value réalisée estimée',
+                              style: TextStyle(fontSize: 14, color: Colors.black87),
+                            ),
                           ),
-                          Row(
-                            children: [
-                              PerformanceText(
-                                value: estimatedRealizedGain,
-                                isCurrency: true,
-                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                              ),
-                              Text(' (', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
-                              PerformanceText(
-                                value: gainPercentage,
-                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                              ),
-                              Text(')', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
-                            ],
+                          Flexible(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Flexible(
+                                  child: PerformanceText(
+                                    value: estimatedRealizedGain,
+                                    isCurrency: true,
+                                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                                Text(' (', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                                Flexible(
+                                  child: PerformanceText(
+                                    value: gainPercentage,
+                                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                                Text(')', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                              ],
+                            ),
                           ),
                         ],
                       ),
@@ -400,6 +413,7 @@ class _SellAssetSheetState extends State<SellAssetSheet> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

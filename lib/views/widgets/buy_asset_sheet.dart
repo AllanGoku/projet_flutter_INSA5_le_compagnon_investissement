@@ -117,7 +117,7 @@ class _BuyAssetSheetState extends State<BuyAssetSheet> {
           left: 24,
           right: 24,
           top: 24,
-          bottom: MediaQuery.of(context).padding.bottom,
+          bottom: 24 + MediaQuery.of(context).padding.bottom,
         ),
         decoration: const BoxDecoration(
           color: Colors.white,
@@ -127,10 +127,12 @@ class _BuyAssetSheetState extends State<BuyAssetSheet> {
           top: false,
           child: Form(
             key: _formKey,
-            child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
               // Poignée de glissement
               Center(
                 child: Container(
@@ -173,7 +175,7 @@ class _BuyAssetSheetState extends State<BuyAssetSheet> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: AppTheme.mint.withOpacity(0.15),
+                      color: AppTheme.mint.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -193,10 +195,10 @@ class _BuyAssetSheetState extends State<BuyAssetSheet> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
-                  color: hasEnoughCash ? AppTheme.mint.withOpacity(0.12) : Colors.red.shade50,
+                  color: hasEnoughCash ? AppTheme.mint.withValues(alpha: 0.12) : Colors.red.shade50,
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: hasEnoughCash ? AppTheme.mint.withOpacity(0.3) : Colors.red.shade200,
+                    color: hasEnoughCash ? AppTheme.mint.withValues(alpha: 0.3) : Colors.red.shade200,
                   ),
                 ),
                 child: Row(
@@ -376,7 +378,8 @@ class _BuyAssetSheetState extends State<BuyAssetSheet> {
         ),
       ),
     ),
-  );
+  ),
+);
 }
 
   Widget _buildShortcutChip(String label, double value) {

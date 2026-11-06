@@ -1,4 +1,4 @@
-// [AI-GENERATED] Phase 3, Agent, 2025-02-23
+// [AI-GENERATED] Phase 3 & 6, Agent, 2025-02-23
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -6,8 +6,11 @@ import 'package:le_compagnon_investissement/models/asset.dart';
 import 'package:le_compagnon_investissement/models/portfolio_position.dart';
 import 'package:le_compagnon_investissement/models/portfolio_transaction.dart';
 import 'package:le_compagnon_investissement/controllers/portfolio_controller.dart';
+import 'package:le_compagnon_investissement/controllers/data_controller.dart';
 import 'package:le_compagnon_investissement/services/cache_service.dart';
+import 'package:le_compagnon_investissement/services/api_service.dart';
 import 'package:le_compagnon_investissement/views/screens/asset_detail_screen.dart';
+import 'package:le_compagnon_investissement/views/screens/dca_simulator_screen.dart';
 import 'package:le_compagnon_investissement/views/widgets/buy_asset_sheet.dart';
 import 'package:le_compagnon_investissement/views/widgets/asset_historical_chart.dart';
 
@@ -37,6 +40,7 @@ class FakeCacheService extends CacheService {
 void main() {
   late Asset testAsset;
   late PortfolioController portfolioController;
+  late DataController dataController;
 
   setUp(() {
     testAsset = Asset(
@@ -51,13 +55,19 @@ void main() {
       changePercentage: 1.5,
     );
 
-    portfolioController = PortfolioController(cacheService: FakeCacheService());
+    final fakeCache = FakeCacheService();
+    portfolioController = PortfolioController(cacheService: fakeCache);
+    dataController = DataController(
+      apiService: ApiService(),
+      cacheService: fakeCache,
+    );
   });
 
   Widget buildTestableWidget(Widget child) {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<PortfolioController>.value(value: portfolioController),
+        ChangeNotifierProvider<DataController>.value(value: dataController),
       ],
       child: MaterialApp(
         home: child,
@@ -66,17 +76,18 @@ void main() {
   }
 
   group('AssetDetailScreen - Tests de l\'écran de détail', () {
-    testWidgets('Affiche le nom de l\'actif, le cours, le graphique et les statistiques', (WidgetTester tester) async {
+    testWidgets('Affiche le nom de l\'actif, le cours, le graphique, le bouton DCA et d\'achat', (WidgetTester tester) async {
       await tester.pumpWidget(buildTestableWidget(AssetDetailScreen(asset: testAsset)));
 
       expect(find.text('AAPL'), findsOneWidget);
       expect(find.text('Apple Inc.'), findsOneWidget);
       expect(find.text('175,50 €'), findsOneWidget);
       expect(find.byType(AssetHistoricalChart), findsOneWidget);
-      expect(find.text('Acheter cet actif (Fictif)'), findsOneWidget);
+      expect(find.text('Simuler DCA'), findsOneWidget);
+      expect(find.text('Acheter'), findsOneWidget);
     });
 
-    testWidgets('Le clic sur le bouton dédié "Acheter cet actif (Fictif)" ouvre la feuille modale d\'achat', (WidgetTester tester) async {
+    testWidgets('Le clic sur le bouton "Acheter" ouvre la feuille modale d\'achat', (WidgetTester tester) async {
       await tester.pumpWidget(buildTestableWidget(AssetDetailScreen(asset: testAsset)));
 
       // Clic sur le bouton d'achat en bas d'écran
@@ -87,6 +98,17 @@ void main() {
       // Vérification que BuyAssetSheet est ouvert
       expect(find.byType(BuyAssetSheet), findsOneWidget);
       expect(find.text('Confirmer l\'achat fictif'), findsOneWidget);
+    });
+
+    testWidgets('Le clic sur le bouton "Simuler DCA" navigue vers le simulateur DCA', (WidgetTester tester) async {
+      await tester.pumpWidget(buildTestableWidget(AssetDetailScreen(asset: testAsset)));
+
+      final dcaButton = find.byKey(const Key('dca_simulate_detail_button'));
+      await tester.tap(dcaButton);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DcaSimulatorScreen), findsOneWidget);
+      expect(find.text('Simulateur DCA'), findsOneWidget);
     });
   });
 }

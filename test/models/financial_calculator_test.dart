@@ -1,6 +1,8 @@
 // [AI-GENERATED] Setup, Agent, 2025-02-23
 import 'package:flutter_test/flutter_test.dart';
 import 'package:le_compagnon_investissement/models/financial_calculator.dart';
+import 'package:le_compagnon_investissement/models/asset.dart';
+import 'package:le_compagnon_investissement/models/price_point.dart';
 
 void main() {
   group('FinancialCalculator', () {
@@ -125,6 +127,138 @@ void main() {
         );
         expect(finalValue['totalInvested'], 0.0);
         expect(finalValue['finalValue'], 0.0);
+      });
+    });
+
+    group('simulateDcaCompound', () {
+      test('retourne des montants nuls si le montant mensuel est de 0€', () {
+        final res = FinancialCalculator.simulateDcaCompound(
+          monthlyAmount: 0.0,
+          annualReturnRate: 7.0,
+          durationYears: 10,
+        );
+        expect(res['totalInvested'], 0.0);
+        expect(res['finalValue'], 0.0);
+        expect(res['totalGains'], 0.0);
+      });
+
+      test('retourne des montants nuls si la durée est de 0 an', () {
+        final res = FinancialCalculator.simulateDcaCompound(
+          monthlyAmount: 100.0,
+          annualReturnRate: 7.0,
+          durationYears: 0,
+        );
+        expect(res['totalInvested'], 0.0);
+        expect(res['finalValue'], 0.0);
+        expect(res['totalGains'], 0.0);
+      });
+
+      test('calcule correctement avec un taux de rendement de 0%', () {
+        final res = FinancialCalculator.simulateDcaCompound(
+          monthlyAmount: 100.0,
+          annualReturnRate: 0.0,
+          durationYears: 5,
+        );
+        // 100 € * 12 * 5 = 6000 €
+        expect(res['totalInvested'], closeTo(6000.0, 0.001));
+        expect(res['finalValue'], closeTo(6000.0, 0.001));
+        expect(res['totalGains'], closeTo(0.0, 0.001));
+      });
+
+      test('calcule la simulation DCA avec intérêts composés (100€/mois, 7%, 10 ans)', () {
+        final res = FinancialCalculator.simulateDcaCompound(
+          monthlyAmount: 100.0,
+          annualReturnRate: 7.0,
+          durationYears: 10,
+        );
+        // Total investi: 100 * 12 * 10 = 12000 €
+        expect(res['totalInvested'], closeTo(12000.0, 0.001));
+        // Valeur finale estimée ~ 17308.48 €
+        expect(res['finalValue'], closeTo(17308.48, 1.0));
+        // Gains générés ~ 5308.48 €
+        expect(res['totalGains'], closeTo(5308.48, 1.0));
+      });
+
+      test('gère un rendement négatif (-2% par an)', () {
+        final res = FinancialCalculator.simulateDcaCompound(
+          monthlyAmount: 100.0,
+          annualReturnRate: -2.0,
+          durationYears: 5,
+        );
+        // 6000 € investis
+        expect(res['totalInvested'], closeTo(6000.0, 0.001));
+        expect(res['finalValue']!, lessThan(6000.0));
+        expect(res['totalGains']!, lessThan(0.0));
+      });
+    });
+
+    group('calculateAssetAnnualizedReturn', () {
+      test('calcule le rendement annuel composé (CAGR) à partir de l\'historique des prix', () {
+        // Asset avec 2 points de données séparés de 1 an exactement (100 € -> 110 €)
+        final asset = Asset(
+          symbol: 'TEST',
+          name: 'Test Asset',
+          currentPrice: 110.0,
+          type: 'Stock',
+          description: 'Test',
+          marketOpen: true,
+          timezone: 'US/Eastern',
+          timeSeries: {
+            '2024-01-01': PricePoint(
+              open: 108.0,
+              high: 111.0,
+              low: 107.0,
+              close: 110.0,
+              volume: 1000,
+            ),
+            '2023-01-01': PricePoint(
+              open: 99.0,
+              high: 101.0,
+              low: 98.0,
+              close: 100.0,
+              volume: 1000,
+            ),
+          },
+        );
+
+        final rate = FinancialCalculator.calculateAssetAnnualizedReturn(asset);
+        // (110 / 100)^(1/1) - 1 = 10%
+        expect(rate, closeTo(10.0, 0.1));
+      });
+
+      test('calcule le rendement à partir de la variation (%) et des métriques 52 semaines', () {
+        final asset = Asset(
+          symbol: 'DYNAMIC',
+          name: 'Dynamic Asset',
+          currentPrice: 120.0,
+          type: 'Stock',
+          description: 'Dynamic',
+          marketOpen: true,
+          timezone: 'US/Eastern',
+          timeSeries: {},
+          changePercentage: 2.0,
+          low52Week: 100.0,
+        );
+
+        final rate = FinancialCalculator.calculateAssetAnnualizedReturn(asset);
+        // (120 - 100) / 100 = 20%
+        expect(rate, closeTo(20.0, 0.1));
+      });
+
+      test('retourne une valeur de secours réaliste si l\'historique est vide', () {
+        final assetAapl = Asset(
+          symbol: 'AAPL',
+          name: 'Apple Inc.',
+          currentPrice: 175.0,
+          type: 'Stock',
+          description: 'Tech',
+          marketOpen: true,
+          timezone: 'US/Eastern',
+          timeSeries: {},
+        );
+
+        final rate = FinancialCalculator.calculateAssetAnnualizedReturn(assetAapl);
+        expect(rate, closeTo(12.0, 0.001));
       });
     });
 

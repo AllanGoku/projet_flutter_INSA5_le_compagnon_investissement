@@ -1,4 +1,6 @@
-// [AI-GENERATED] Issue #5, Agent, 2025-02-23
+// [AI-GENERATED] Issue #5 & #6, Agent, 2025-02-23
+import 'dart:math';
+import 'asset.dart';
 
 /// Classe utilitaire contenant exclusivement des fonctions pures pour les calculs financiers.
 ///
@@ -94,6 +96,189 @@ class FinancialCalculator {
       'totalInvested': totalInvested,
       'finalValue': finalValue,
     };
+  }
+
+  /// Simule un investissement mensuel programmé (DCA - Dollar-Cost Averaging) avec intérêts composés.
+  ///
+  /// [monthlyAmount] est le montant versé chaque mois en euros.
+  /// [annualReturnRate] est le taux de rendement annuel attendu en pourcentage (ex: 7.0 pour 7%).
+  /// [durationYears] est la durée totale de l'investissement en années.
+  ///
+  /// Retourne une [Map] avec les clés :
+  /// - `'totalInvested'` : le capital total versé sur la période.
+  /// - `'finalValue'` : la valeur finale estimée du portefeuille.
+  /// - `'totalGains'` : le montant des gains d'intérêts générés (`finalValue - totalInvested`).
+  static Map<String, double> simulateDcaCompound({
+    required double monthlyAmount,
+    required double annualReturnRate,
+    required int durationYears,
+  }) {
+    if (monthlyAmount <= 0.0 || durationYears <= 0) {
+      return {
+        'totalInvested': 0.0,
+        'finalValue': 0.0,
+        'totalGains': 0.0,
+      };
+    }
+
+    final int totalMonths = durationYears * 12;
+    final double totalInvested = monthlyAmount * totalMonths;
+
+    if (annualReturnRate == 0.0) {
+      return {
+        'totalInvested': totalInvested,
+        'finalValue': totalInvested,
+        'totalGains': 0.0,
+      };
+    }
+
+    final double monthlyRate = (annualReturnRate / 100) / 12;
+    double finalValue = 0.0;
+
+    for (int month = 0; month < totalMonths; month++) {
+      finalValue = finalValue * (1 + monthlyRate) + monthlyAmount;
+    }
+
+    final double totalGains = finalValue - totalInvested;
+
+    return {
+      'totalInvested': totalInvested,
+      'finalValue': finalValue,
+      'totalGains': totalGains,
+    };
+  }
+
+  /// Simule une projection DCA réaliste générant 3 scénarios (Défavorable, Neutre, Favorable)
+  /// et les données annuelles pour tracer un cône de projection.
+  static Map<String, dynamic> simulateDcaProjection({
+    required double monthlyAmount,
+    required double annualReturnRate,
+    required int durationYears,
+    double beta = 1.0,
+  }) {
+    if (monthlyAmount <= 0.0 || durationYears <= 0) {
+      return {
+        'totalInvested': 0.0,
+        'neutralValue': 0.0,
+        'pessimisticValue': 0.0,
+        'optimisticValue': 0.0,
+        'yearlyData': <Map<String, double>>[],
+      };
+    }
+
+    // Volatilité de marché estimée à 15% / an, ajustée par le Bêta de l'actif
+    final double volatility = 15.0 * (beta > 0.0 ? beta : 1.0);
+    
+    // Estimation d'écart-type de projection sur le rendement
+    final double pessimisticRate = annualReturnRate - (volatility * 0.4);
+    final double optimisticRate = annualReturnRate + (volatility * 0.4);
+
+    final double neutralMonthlyRate = (annualReturnRate / 100) / 12;
+    final double pessimisticMonthlyRate = (pessimisticRate / 100) / 12;
+    final double optimisticMonthlyRate = (optimisticRate / 100) / 12;
+
+    List<Map<String, double>> yearlyData = [];
+    
+    double neutralValue = 0.0;
+    double pessimisticValue = 0.0;
+    double optimisticValue = 0.0;
+    double invested = 0.0;
+
+    yearlyData.add({
+      'year': 0.0,
+      'invested': 0.0,
+      'neutral': 0.0,
+      'pessimistic': 0.0,
+      'optimistic': 0.0,
+    });
+
+    for (int y = 1; y <= durationYears; y++) {
+      for (int m = 0; m < 12; m++) {
+        neutralValue = neutralValue * (1 + neutralMonthlyRate) + monthlyAmount;
+        pessimisticValue = pessimisticValue * (1 + pessimisticMonthlyRate) + monthlyAmount;
+        optimisticValue = optimisticValue * (1 + optimisticMonthlyRate) + monthlyAmount;
+        invested += monthlyAmount;
+      }
+      yearlyData.add({
+        'year': y.toDouble(),
+        'invested': invested,
+        'neutral': neutralValue,
+        'pessimistic': pessimisticValue,
+        'optimistic': optimisticValue,
+      });
+    }
+
+    return {
+      'totalInvested': invested,
+      'neutralValue': neutralValue,
+      'pessimisticValue': pessimisticValue,
+      'optimisticValue': optimisticValue,
+      'yearlyData': yearlyData,
+    };
+  }
+
+  /// Calcule le taux de rendement annuel composé (CAGR - Compound Annual Growth Rate) d'un actif
+  /// à partir de son historique de prix réel (`asset.timeSeries`).
+  ///
+  /// Si l'historique contient au moins 2 points séparés dans le temps, calcule :
+  /// `((Prix_final / Prix_initial) ^ (1 / Années)) - 1`
+  ///
+  /// Si l'historique est insuffisant ou indisponible, retourne une valeur de référence historique réaliste.
+  static double calculateAssetAnnualizedReturn(Asset asset) {
+    if (asset.timeSeries.length >= 2) {
+      final entries = asset.timeSeries.entries.map((e) {
+        final date = DateTime.tryParse(e.key);
+        return MapEntry(date, e.value);
+      }).where((e) => e.key != null).toList();
+
+      if (entries.length >= 2) {
+        entries.sort((a, b) => a.key!.compareTo(b.key!));
+
+        final firstEntry = entries.first;
+        final lastEntry = entries.last;
+
+        final startPrice = firstEntry.value.close;
+        final endPrice = lastEntry.value.close;
+
+        final daysDiff = lastEntry.key!.difference(firstEntry.key!).inDays;
+
+        if (startPrice > 0.0 && endPrice > 0.0 && daysDiff >= 30) {
+          final double years = daysDiff / 365.25;
+          final double cagr = (pow(endPrice / startPrice, 1 / years) - 1) * 100;
+          if (!cagr.isNaN && !cagr.isInfinite && cagr > -50.0 && cagr < 100.0) {
+            return double.parse(cagr.toStringAsFixed(1));
+          }
+        }
+      }
+    }
+
+    // 2. Calcul basé sur le plus bas 52 semaines si présent
+    if (asset.low52Week != null && asset.low52Week! > 0.0 && asset.currentPrice > 0.0) {
+      final double gainRatio = ((asset.currentPrice - asset.low52Week!) / asset.low52Week!) * 100;
+      if (gainRatio > 0.0) {
+        final double estimatedRate = gainRatio.clamp(2.0, 25.0);
+        return double.parse(estimatedRate.toStringAsFixed(1));
+      }
+    }
+
+    // 3. Calcul annualisé basé sur la variation quotidienne (%)
+    final double change = asset.dailyChangePercentage;
+    if (change != 0.0) {
+      final double estimatedRate = (7.0 + (change * 1.5)).clamp(1.0, 25.0);
+      return double.parse(estimatedRate.toStringAsFixed(1));
+    }
+
+    // 4. Taux historiques de référence si l'historique disponible est trop court
+    final symbol = asset.symbol.toUpperCase();
+    if (symbol == 'AAPL') return 12.0;
+    if (symbol == 'MSFT') return 10.0;
+    if (symbol == 'NVDA') return 18.0;
+    if (symbol == 'AMZN') return 11.0;
+    if (symbol == 'SPY' || symbol == 'S&P 500') return 7.0;
+    if (symbol == 'QQQ') return 11.0;
+    if (asset.type.toUpperCase() == 'ETF') return 7.5;
+
+    return 8.0;
   }
 
   /// Calcule la plus-value ou moins-value réalisée lors de la revente d'un actif.

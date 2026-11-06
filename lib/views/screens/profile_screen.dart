@@ -1,4 +1,4 @@
-// [AI-GENERATED] Issue #5, Agent, 2025-02-23
+// [AI-GENERATED] Issue #5 & Fix, Agent, 2025-02-23
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/auth_controller.dart';
@@ -6,6 +6,7 @@ import '../../controllers/portfolio_controller.dart';
 import '../../models/financial_calculator.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/formatters.dart';
+import 'login_screen.dart';
 
 /// Écran de profil utilisateur.
 ///
@@ -63,7 +64,14 @@ class ProfileScreen extends StatelessWidget {
           TextButton(
             onPressed: () async {
               Navigator.of(ctx).pop();
-              await context.read<AuthController>().logout();
+              final authCtrl = context.read<AuthController>();
+              await authCtrl.logout();
+              if (context.mounted) {
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                  (route) => false,
+                );
+              }
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Se déconnecter'),
@@ -107,7 +115,7 @@ class ProfileScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       )
@@ -117,7 +125,7 @@ class ProfileScreen extends StatelessWidget {
                     children: [
                       CircleAvatar(
                         radius: 40,
-                        backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                        backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
                         child: Text(
                           user.firstName[0].toUpperCase() + user.lastName[0].toUpperCase(),
                           style: const TextStyle(
@@ -186,7 +194,7 @@ class ProfileScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       )
@@ -236,7 +244,7 @@ class ProfileScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       )
@@ -250,7 +258,7 @@ class ProfileScreen extends StatelessWidget {
                       title: const Text('Conseils pédagogiques'),
                       subtitle: const Text('Afficher des astuces sur l\'accueil'),
                       value: user.showTips,
-                      activeColor: AppTheme.primaryColor,
+                      activeTrackColor: AppTheme.primaryColor,
                       onChanged: (val) {
                         auth.toggleShowTips(val);
                       },
@@ -317,7 +325,7 @@ class ProfileScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       )
@@ -328,7 +336,7 @@ class ProfileScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: AppTheme.primaryColor.withOpacity(0.1),
+              color: AppTheme.primaryColor.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: AppTheme.primaryColor, size: 20),
