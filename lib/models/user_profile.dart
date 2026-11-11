@@ -1,16 +1,16 @@
 // [AI-GENERATED] Issue #5, Agent, 2025-02-23
 
 /// Modèle représentant le profil de l'utilisateur.
-/// 
+///
 /// L'objectif de cette classe est de stocker les informations du compte,
-/// de gérer la progression via un système d'expérience (XP) et de maintenir 
+/// de gérer la progression via un système d'expérience (XP) et de maintenir
 /// l'historique des records (gamification).
 class UserProfile {
   final String firstName;
   final String lastName;
   final String email;
   final String country;
-  
+
   // Phase 5: Gamification et progression
   final int xp;
   final int level;
@@ -47,9 +47,12 @@ class UserProfile {
       level: json['level'] as int? ?? 1,
       highestLevelReached: json['highestLevelReached'] as int? ?? 1,
       highestXpReached: json['highestXpReached'] as int? ?? 0,
-      highestPortfolioValueReached: (json['highestPortfolioValueReached'] as num?)?.toDouble() ?? 0.0,
+      highestPortfolioValueReached:
+          (json['highestPortfolioValueReached'] as num?)?.toDouble() ?? 0.0,
       streak: json['streak'] as int? ?? 0,
-      lastLoginDate: json['lastLoginDate'] != null ? DateTime.tryParse(json['lastLoginDate'] as String) : null,
+      lastLoginDate: json['lastLoginDate'] != null
+          ? DateTime.tryParse(json['lastLoginDate'] as String)
+          : null,
       showTips: json['showTips'] as bool? ?? true,
     );
   }
@@ -96,7 +99,8 @@ class UserProfile {
       level: level ?? this.level,
       highestLevelReached: highestLevelReached ?? this.highestLevelReached,
       highestXpReached: highestXpReached ?? this.highestXpReached,
-      highestPortfolioValueReached: highestPortfolioValueReached ?? this.highestPortfolioValueReached,
+      highestPortfolioValueReached:
+          highestPortfolioValueReached ?? this.highestPortfolioValueReached,
       streak: streak ?? this.streak,
       lastLoginDate: lastLoginDate ?? this.lastLoginDate,
       showTips: showTips ?? this.showTips,

@@ -7,11 +7,11 @@ class Formatters {
     String formatted = amount.toStringAsFixed(2);
     // Remplacement du point par la virgule pour le format français
     formatted = formatted.replaceAll('.', ',');
-    
+
     // Ajout d'espaces pour les milliers (basique)
     final parts = formatted.split(',');
     String integerPart = parts[0];
-    
+
     // Gérer les montants négatifs
     bool isNegative = integerPart.startsWith('-');
     if (isNegative) {
@@ -25,7 +25,7 @@ class Formatters {
       }
       result += integerPart[i];
     }
-    
+
     if (isNegative) {
       result = '-$result';
     }

@@ -1,6 +1,7 @@
 // [AI-GENERATED] Phase 4, Agent, 2025-02-23
 import 'package:flutter/material.dart';
 import 'package:animated_flip_counter/animated_flip_counter.dart';
+
 import '../../utils/app_theme.dart';
 
 /// Carte présentant le solde de liquidités disponible de l'utilisateur avec animation.
@@ -10,10 +11,7 @@ import '../../utils/app_theme.dart';
 class CashBalanceCard extends StatelessWidget {
   final double cashBalance;
 
-  const CashBalanceCard({
-    super.key,
-    required this.cashBalance,
-  });
+  const CashBalanceCard({super.key, required this.cashBalance});
 
   @override
   Widget build(BuildContext context) {

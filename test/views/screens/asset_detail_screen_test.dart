@@ -19,22 +19,36 @@ class FakeCacheService extends CacheService {
   Future<void> initDB({bool inMemory = false}) async {}
 
   @override
-  Future<void> savePortfolioPositions(List<PortfolioPosition> positions) async {}
+  Future<void> savePortfolioPositions(
+    List<PortfolioPosition> positions, [
+    String userEmail = 'guest@app.local',
+  ]) async {}
 
   @override
-  Future<List<PortfolioPosition>> getPortfolioPositions() async => [];
+  Future<List<PortfolioPosition>> getPortfolioPositions([
+    String userEmail = 'guest@app.local',
+  ]) async => [];
 
   @override
-  Future<void> saveTransaction(PortfolioTransaction transaction) async {}
+  Future<void> saveTransaction(
+    PortfolioTransaction transaction, [
+    String userEmail = 'guest@app.local',
+  ]) async {}
 
   @override
-  Future<List<PortfolioTransaction>> getTransactions() async => [];
+  Future<List<PortfolioTransaction>> getTransactions([
+    String userEmail = 'guest@app.local',
+  ]) async => [];
 
   @override
-  Future<void> saveCashBalance(double balance) async {}
+  Future<void> saveCashBalance(
+    double balance, [
+    String userEmail = 'guest@app.local',
+  ]) async {}
 
   @override
-  Future<double> getCashBalance() async => 1000.0;
+  Future<double> getCashBalance([String userEmail = 'guest@app.local']) async =>
+      1000.0;
 }
 
 void main() {
@@ -66,49 +80,64 @@ void main() {
   Widget buildTestableWidget(Widget child) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider<PortfolioController>.value(value: portfolioController),
+        ChangeNotifierProvider<PortfolioController>.value(
+          value: portfolioController,
+        ),
         ChangeNotifierProvider<DataController>.value(value: dataController),
       ],
-      child: MaterialApp(
-        home: child,
-      ),
+      child: MaterialApp(home: child),
     );
   }
 
   group('AssetDetailScreen - Tests de l\'écran de détail', () {
-    testWidgets('Affiche le nom de l\'actif, le cours, le graphique, le bouton DCA et d\'achat', (WidgetTester tester) async {
-      await tester.pumpWidget(buildTestableWidget(AssetDetailScreen(asset: testAsset)));
+    testWidgets(
+      'Affiche le nom de l\'actif, le cours, le graphique, le bouton DCA et d\'achat',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(
+          buildTestableWidget(AssetDetailScreen(asset: testAsset)),
+        );
 
-      expect(find.text('AAPL'), findsOneWidget);
-      expect(find.text('Apple Inc.'), findsOneWidget);
-      expect(find.text('175,50 €'), findsOneWidget);
-      expect(find.byType(AssetHistoricalChart), findsOneWidget);
-      expect(find.text('Simuler DCA'), findsOneWidget);
-      expect(find.text('Acheter'), findsOneWidget);
-    });
+        expect(find.text('AAPL'), findsOneWidget);
+        expect(find.text('Apple Inc.'), findsOneWidget);
+        expect(find.text('175,50 €'), findsOneWidget);
+        expect(find.byType(AssetHistoricalChart), findsOneWidget);
+        expect(find.text('Simuler DCA'), findsOneWidget);
+        expect(find.text('Acheter'), findsOneWidget);
+      },
+    );
 
-    testWidgets('Le clic sur le bouton "Acheter" ouvre la feuille modale d\'achat', (WidgetTester tester) async {
-      await tester.pumpWidget(buildTestableWidget(AssetDetailScreen(asset: testAsset)));
+    testWidgets(
+      'Le clic sur le bouton "Acheter" ouvre la feuille modale d\'achat',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(
+          buildTestableWidget(AssetDetailScreen(asset: testAsset)),
+        );
 
-      // Clic sur le bouton d'achat en bas d'écran
-      final buyButton = find.byKey(const Key('buy_asset_detail_button'));
-      await tester.tap(buyButton);
-      await tester.pumpAndSettle();
+        // Clic sur le bouton d'achat en bas d'écran
+        final buyButton = find.byKey(const Key('buy_asset_detail_button'));
+        await tester.tap(buyButton);
+        await tester.pumpAndSettle();
 
-      // Vérification que BuyAssetSheet est ouvert
-      expect(find.byType(BuyAssetSheet), findsOneWidget);
-      expect(find.text('Confirmer l\'achat fictif'), findsOneWidget);
-    });
+        // Vérification que BuyAssetSheet est ouvert
+        expect(find.byType(BuyAssetSheet), findsOneWidget);
+        expect(find.text('Confirmer l\'achat fictif'), findsOneWidget);
+      },
+    );
 
-    testWidgets('Le clic sur le bouton "Simuler DCA" navigue vers le simulateur DCA', (WidgetTester tester) async {
-      await tester.pumpWidget(buildTestableWidget(AssetDetailScreen(asset: testAsset)));
+    testWidgets(
+      'Le clic sur le bouton "Simuler DCA" navigue vers le simulateur DCA',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(
+          buildTestableWidget(AssetDetailScreen(asset: testAsset)),
+        );
 
-      final dcaButton = find.byKey(const Key('dca_simulate_detail_button'));
-      await tester.tap(dcaButton);
-      await tester.pumpAndSettle();
+        final dcaButton = find.byKey(const Key('dca_simulate_detail_button'));
+        await tester.tap(dcaButton);
+        await tester.pumpAndSettle();
 
-      expect(find.byType(DcaSimulatorScreen), findsOneWidget);
-      expect(find.text('Simulateur DCA'), findsOneWidget);
-    });
+        expect(find.byType(DcaSimulatorScreen), findsOneWidget);
+        expect(find.text('Simulateur DCA'), findsOneWidget);
+      },
+    );
   });
 }

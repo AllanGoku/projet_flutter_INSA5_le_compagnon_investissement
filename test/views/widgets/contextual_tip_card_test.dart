@@ -10,11 +10,14 @@ import 'package:le_compagnon_investissement/services/auth_service.dart';
 // Un faux AuthController pour les tests
 class FakeAuthService implements AuthService {
   @override
+  Future<List<UserProfile>> getAllUsers() async => [];
+  @override
   Future<UserProfile?> getCurrentUser() async => null;
   @override
   Future<bool> isKeepLoggedIn() async => false;
   @override
-  Future<UserProfile> login(String e, String p, bool k) async => throw Exception();
+  Future<UserProfile> login(String e, String p, bool k) async =>
+      throw Exception();
   @override
   Future<void> logout() async {}
   @override
@@ -24,12 +27,13 @@ class FakeAuthService implements AuthService {
 }
 
 class FakeAuthController extends AuthController {
-  FakeAuthController({UserProfile? initialUser}) : super(authService: FakeAuthService()) {
+  FakeAuthController({UserProfile? initialUser})
+    : super(authService: FakeAuthService()) {
     _user = initialUser;
   }
-  
+
   UserProfile? _user;
-  
+
   @override
   UserProfile? get currentUser => _user;
 
@@ -54,34 +58,54 @@ void main() {
     );
   }
 
-  testWidgets('ContextualTipCard ne s\'affiche pas si l\'utilisateur est null', (WidgetTester tester) async {
-    final authCtrl = FakeAuthController(initialUser: null);
+  testWidgets(
+    'ContextualTipCard ne s\'affiche pas si l\'utilisateur est null',
+    (WidgetTester tester) async {
+      final authCtrl = FakeAuthController(initialUser: null);
+      await tester.pumpWidget(createWidgetUnderTest(authCtrl));
+
+      expect(find.byType(ContextualTipCard), findsOneWidget);
+      expect(find.byIcon(Icons.lightbulb_outline), findsNothing);
+    },
+  );
+
+  testWidgets('ContextualTipCard ne s\'affiche pas si showTips est false', (
+    WidgetTester tester,
+  ) async {
+    final user = UserProfile(
+      firstName: 'A',
+      lastName: 'B',
+      email: 'a@b.com',
+      country: 'FR',
+      showTips: false,
+    );
+    final authCtrl = FakeAuthController(initialUser: user);
     await tester.pumpWidget(createWidgetUnderTest(authCtrl));
-    
-    expect(find.byType(ContextualTipCard), findsOneWidget);
+
     expect(find.byIcon(Icons.lightbulb_outline), findsNothing);
   });
 
-  testWidgets('ContextualTipCard ne s\'affiche pas si showTips est false', (WidgetTester tester) async {
-    final user = UserProfile(firstName: 'A', lastName: 'B', email: 'a@b.com', country: 'FR', showTips: false);
-    final authCtrl = FakeAuthController(initialUser: user);
-    await tester.pumpWidget(createWidgetUnderTest(authCtrl));
-    
-    expect(find.byIcon(Icons.lightbulb_outline), findsNothing);
-  });
+  testWidgets(
+    'ContextualTipCard s\'affiche si showTips est true et permet de désactiver',
+    (WidgetTester tester) async {
+      final user = UserProfile(
+        firstName: 'A',
+        lastName: 'B',
+        email: 'a@b.com',
+        country: 'FR',
+        showTips: true,
+      );
+      final authCtrl = FakeAuthController(initialUser: user);
+      await tester.pumpWidget(createWidgetUnderTest(authCtrl));
 
-  testWidgets('ContextualTipCard s\'affiche si showTips est true et permet de désactiver', (WidgetTester tester) async {
-    final user = UserProfile(firstName: 'A', lastName: 'B', email: 'a@b.com', country: 'FR', showTips: true);
-    final authCtrl = FakeAuthController(initialUser: user);
-    await tester.pumpWidget(createWidgetUnderTest(authCtrl));
-    
-    expect(find.byIcon(Icons.lightbulb_outline), findsOneWidget);
-    
-    // Simuler clic sur le bouton fermer
-    await tester.tap(find.byIcon(Icons.close));
-    await tester.pumpAndSettle();
-    
-    // Le widget devrait disparaître car toggleShowTips(false) a été appelé
-    expect(find.byIcon(Icons.lightbulb_outline), findsNothing);
-  });
+      expect(find.byIcon(Icons.lightbulb_outline), findsOneWidget);
+
+      // Simuler clic sur le bouton fermer
+      await tester.tap(find.byIcon(Icons.close));
+      await tester.pumpAndSettle();
+
+      // Le widget devrait disparaître car toggleShowTips(false) a été appelé
+      expect(find.byIcon(Icons.lightbulb_outline), findsNothing);
+    },
+  );
 }

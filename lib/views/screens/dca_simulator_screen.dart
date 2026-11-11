@@ -3,9 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
+
 import '../../models/asset.dart';
 import '../../models/financial_calculator.dart';
 import '../../controllers/data_controller.dart';
+import '../../controllers/portfolio_controller.dart';
+import '../../controllers/gamification_controller.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/formatters.dart';
 import '../widgets/buy_asset_sheet.dart';
@@ -35,10 +38,7 @@ class DcaAssetOption {
 class DcaSimulatorScreen extends StatefulWidget {
   final Asset? initialAsset;
 
-  const DcaSimulatorScreen({
-    super.key,
-    this.initialAsset,
-  });
+  const DcaSimulatorScreen({super.key, this.initialAsset});
 
   @override
   State<DcaSimulatorScreen> createState() => _DcaSimulatorScreenState();
@@ -57,6 +57,23 @@ class _DcaSimulatorScreenState extends State<DcaSimulatorScreen> {
   void initState() {
     super.initState();
     _amountController = TextEditingController(text: '100');
+
+    // Déclenchement automatique du succès "Pionnier du DCA" lors de l'utilisation du simulateur
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        try {
+          final portfolio = context.read<PortfolioController>();
+          final gamification = context.read<GamificationController>();
+          gamification.checkAchievements(
+            portfolioValue: portfolio.totalValue,
+            totalInvested: portfolio.totalInvested,
+            assetCount: portfolio.positions.length,
+            hasSimulatedDCA: true,
+            readLexicon: false,
+          );
+        } catch (_) {}
+      }
+    });
   }
 
   @override
@@ -101,7 +118,8 @@ class _DcaSimulatorScreenState extends State<DcaSimulatorScreen> {
         if (existingIndex != -1) {
           _selectedOption = _assetOptions[existingIndex];
         } else {
-          final calculatedRate = FinancialCalculator.calculateAssetAnnualizedReturn(initialAsset);
+          final calculatedRate =
+              FinancialCalculator.calculateAssetAnnualizedReturn(initialAsset);
           final customOpt = DcaAssetOption(
             label: '${initialAsset.name} (${initialAsset.symbol})',
             estimatedReturnRate: calculatedRate,
@@ -115,7 +133,9 @@ class _DcaSimulatorScreenState extends State<DcaSimulatorScreen> {
       }
 
       if (_selectedOption.asset != null) {
-        _currentReturnRate = FinancialCalculator.calculateAssetAnnualizedReturn(_selectedOption.asset!);
+        _currentReturnRate = FinancialCalculator.calculateAssetAnnualizedReturn(
+          _selectedOption.asset!,
+        );
       } else {
         _currentReturnRate = 7.0;
       }
@@ -138,7 +158,21 @@ class _DcaSimulatorScreenState extends State<DcaSimulatorScreen> {
   }
 
   void _openBuySheet() {
-    final assetToBuy = _selectedOption.asset ?? _assetOptions.firstWhere((opt) => opt.asset != null).asset!;
+    final Asset assetToBuy =
+        _selectedOption.asset ??
+        _assetOptions.where((opt) => opt.asset != null).firstOrNull?.asset ??
+        context.read<DataController>().assets.values.firstOrNull ??
+        Asset(
+          symbol: 'AAPL',
+          name: 'Apple Inc.',
+          currentPrice: 180.0,
+          changePercentage: 1.4,
+          type: 'Action',
+          description: 'Apple Inc.',
+          marketOpen: true,
+          timezone: 'US/Eastern',
+          timeSeries: const {},
+        );
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -166,7 +200,7 @@ class _DcaSimulatorScreenState extends State<DcaSimulatorScreen> {
     final double finalValue = simulation['neutralValue'] ?? 0.0;
     final double pessimisticValue = simulation['pessimisticValue'] ?? 0.0;
     final double optimisticValue = simulation['optimisticValue'] ?? 0.0;
-    
+
     final List<Map<String, double>> yearlyData = simulation['yearlyData'] ?? [];
 
     final double totalGains = finalValue - totalInvested;
@@ -181,8 +215,12 @@ class _DcaSimulatorScreenState extends State<DcaSimulatorScreen> {
     final double gainsDiff3 = finalValue - comparison3Final;
 
     // Proportions pour la barre bicolore de répartition (sur le scénario Neutre)
-    final double investedRatio = finalValue > 0 ? (totalInvested / finalValue).clamp(0.0, 1.0) : 1.0;
-    final double gainsRatio = finalValue > 0 ? (totalGains / finalValue).clamp(0.0, 1.0) : 0.0;
+    final double investedRatio = finalValue > 0
+        ? (totalInvested / finalValue).clamp(0.0, 1.0)
+        : 1.0;
+    final double gainsRatio = finalValue > 0
+        ? (totalGains / finalValue).clamp(0.0, 1.0)
+        : 0.0;
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
@@ -193,10 +231,7 @@ class _DcaSimulatorScreenState extends State<DcaSimulatorScreen> {
         ),
         centerTitle: true,
         actions: const [
-          MarketTermHelpButton(
-            term: 'DCA',
-            iconSize: 22,
-          ),
+          MarketTermHelpButton(term: 'DCA', iconSize: 22),
           SizedBox(width: 12),
         ],
       ),
@@ -237,10 +272,7 @@ class _DcaSimulatorScreenState extends State<DcaSimulatorScreen> {
                             ),
                           ),
                         ),
-                        MarketTermHelpButton(
-                          term: 'DCA',
-                          iconSize: 18,
-                        ),
+                        MarketTermHelpButton(term: 'DCA', iconSize: 18),
                       ],
                     ),
                     const SizedBox(height: 12),
@@ -272,7 +304,9 @@ class _DcaSimulatorScreenState extends State<DcaSimulatorScreen> {
                             key: const Key('dca_monthly_amount_field'),
                             controller: _amountController,
                             keyboardType: TextInputType.number,
-                            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               fontSize: 16,
@@ -282,14 +316,22 @@ class _DcaSimulatorScreenState extends State<DcaSimulatorScreen> {
                             decoration: InputDecoration(
                               suffixText: '€',
                               isDense: true,
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.grey.shade300),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade300,
+                                ),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: AppTheme.primaryColor, width: 2),
+                                borderSide: const BorderSide(
+                                  color: AppTheme.primaryColor,
+                                  width: 2,
+                                ),
                               ),
                             ),
                             onChanged: _onAmountChanged,
@@ -314,7 +356,9 @@ class _DcaSimulatorScreenState extends State<DcaSimulatorScreen> {
                         final isSelected = _durationYears == years;
                         return Expanded(
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 2.0,
+                            ),
                             child: ChoiceChip(
                               key: Key('dca_duration_chip_$years'),
                               label: Center(
@@ -322,8 +366,12 @@ class _DcaSimulatorScreenState extends State<DcaSimulatorScreen> {
                                   '$years ${years > 1 ? 'ans' : 'an'}',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: isSelected ? Colors.white : Colors.black87,
-                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : Colors.black87,
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
                                   ),
                                 ),
                               ),
@@ -360,7 +408,10 @@ class _DcaSimulatorScreenState extends State<DcaSimulatorScreen> {
                     const SizedBox(height: 10),
                     Container(
                       key: const Key('dca_asset_selector'),
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.grey.shade50,
                         borderRadius: BorderRadius.circular(14),
@@ -370,7 +421,10 @@ class _DcaSimulatorScreenState extends State<DcaSimulatorScreen> {
                         child: DropdownButton<DcaAssetOption>(
                           isExpanded: true,
                           value: _selectedOption,
-                          icon: const Icon(Icons.arrow_drop_down_rounded, color: AppTheme.primaryColor),
+                          icon: const Icon(
+                            Icons.arrow_drop_down_rounded,
+                            color: AppTheme.primaryColor,
+                          ),
                           items: _assetOptions.map((opt) {
                             return DropdownMenuItem<DcaAssetOption>(
                               value: opt,
@@ -390,7 +444,10 @@ class _DcaSimulatorScreenState extends State<DcaSimulatorScreen> {
                               setState(() {
                                 _selectedOption = newOpt;
                                 if (newOpt.asset != null) {
-                                  _currentReturnRate = FinancialCalculator.calculateAssetAnnualizedReturn(newOpt.asset!);
+                                  _currentReturnRate =
+                                      FinancialCalculator.calculateAssetAnnualizedReturn(
+                                        newOpt.asset!,
+                                      );
                                 } else {
                                   _currentReturnRate = 7.0;
                                 }
@@ -405,7 +462,10 @@ class _DcaSimulatorScreenState extends State<DcaSimulatorScreen> {
                     // Taux de rendement : calculé automatiquement si actif sélectionné, ou slider si mode sur-mesure
                     if (!_selectedOption.isCustomRateMode) ...[
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.blue.shade50,
                           borderRadius: BorderRadius.circular(14),
@@ -413,7 +473,11 @@ class _DcaSimulatorScreenState extends State<DcaSimulatorScreen> {
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.auto_awesome_rounded, color: Colors.blue.shade700, size: 20),
+                            Icon(
+                              Icons.auto_awesome_rounded,
+                              color: Colors.blue.shade700,
+                              size: 20,
+                            ),
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(
@@ -450,7 +514,10 @@ class _DcaSimulatorScreenState extends State<DcaSimulatorScreen> {
                           Row(
                             children: [
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
                                 decoration: BoxDecoration(
                                   color: AppTheme.mint.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(10),
@@ -493,7 +560,7 @@ class _DcaSimulatorScreenState extends State<DcaSimulatorScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              
+
               // Disclaimer pédagogique sur la volatilité
               Container(
                 padding: const EdgeInsets.all(16),
@@ -505,14 +572,20 @@ class _DcaSimulatorScreenState extends State<DcaSimulatorScreen> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.warning_amber_rounded, color: Colors.amber.shade700),
+                    Icon(
+                      Icons.warning_amber_rounded,
+                      color: Colors.amber.shade700,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         'Avertissement : Les marchés fluctuent et ne montent jamais en ligne droite. '
                         'Ce simulateur projette 3 scénarios (Pessimiste, Neutre, Optimiste) basés sur la '
                         'volatilité de l\'actif pour être plus proche de la réalité.',
-                        style: TextStyle(fontSize: 13, color: Colors.amber.shade900),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.amber.shade900,
+                        ),
                       ),
                     ),
                   ],
@@ -545,19 +618,30 @@ class _DcaSimulatorScreenState extends State<DcaSimulatorScreen> {
                             getTitlesWidget: (value, meta) {
                               return Text(
                                 '${value.toInt()}A',
-                                style: const TextStyle(fontSize: 10, color: Colors.grey),
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.grey,
+                                ),
                               );
                             },
                           ),
                         ),
-                        leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        leftTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        topTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        rightTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
                       ),
                       borderData: FlBorderData(show: false),
                       lineBarsData: [
                         LineChartBarData(
-                          spots: yearlyData.map((e) => FlSpot(e['year']!, e['optimistic']!)).toList(),
+                          spots: yearlyData
+                              .map((e) => FlSpot(e['year']!, e['optimistic']!))
+                              .toList(),
                           isCurved: true,
                           color: AppTheme.mint,
                           barWidth: 2,
@@ -565,7 +649,9 @@ class _DcaSimulatorScreenState extends State<DcaSimulatorScreen> {
                           dotData: const FlDotData(show: false),
                         ),
                         LineChartBarData(
-                          spots: yearlyData.map((e) => FlSpot(e['year']!, e['neutral']!)).toList(),
+                          spots: yearlyData
+                              .map((e) => FlSpot(e['year']!, e['neutral']!))
+                              .toList(),
                           isCurved: true,
                           color: AppTheme.primaryColor,
                           barWidth: 3,
@@ -573,7 +659,9 @@ class _DcaSimulatorScreenState extends State<DcaSimulatorScreen> {
                           dotData: const FlDotData(show: false),
                         ),
                         LineChartBarData(
-                          spots: yearlyData.map((e) => FlSpot(e['year']!, e['pessimistic']!)).toList(),
+                          spots: yearlyData
+                              .map((e) => FlSpot(e['year']!, e['pessimistic']!))
+                              .toList(),
                           isCurved: true,
                           color: Colors.orange.shade400,
                           barWidth: 2,
@@ -581,7 +669,9 @@ class _DcaSimulatorScreenState extends State<DcaSimulatorScreen> {
                           dotData: const FlDotData(show: false),
                         ),
                         LineChartBarData(
-                          spots: yearlyData.map((e) => FlSpot(e['year']!, e['invested']!)).toList(),
+                          spots: yearlyData
+                              .map((e) => FlSpot(e['year']!, e['invested']!))
+                              .toList(),
                           isCurved: true,
                           color: Colors.grey.shade400,
                           barWidth: 2,
@@ -597,7 +687,11 @@ class _DcaSimulatorScreenState extends State<DcaSimulatorScreen> {
                               final double val = touchedSpot.y;
                               return LineTooltipItem(
                                 Formatters.formatCurrency(val),
-                                const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                                const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               );
                             }).toList();
                           },
@@ -656,7 +750,10 @@ class _DcaSimulatorScreenState extends State<DcaSimulatorScreen> {
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: AppTheme.gainColor.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(12),
@@ -694,12 +791,20 @@ class _DcaSimulatorScreenState extends State<DcaSimulatorScreen> {
                             Expanded(
                               child: Row(
                                 children: [
-                                  const Icon(Icons.arrow_upward_rounded, color: AppTheme.mint, size: 14),
+                                  const Icon(
+                                    Icons.arrow_upward_rounded,
+                                    color: AppTheme.mint,
+                                    size: 14,
+                                  ),
                                   const SizedBox(width: 4),
                                   Expanded(
                                     child: Text(
                                       'Opti. : ${Formatters.formatCurrency(optimisticValue)}',
-                                      style: const TextStyle(color: AppTheme.mint, fontSize: 12, fontWeight: FontWeight.bold),
+                                      style: const TextStyle(
+                                        color: AppTheme.mint,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
@@ -710,12 +815,20 @@ class _DcaSimulatorScreenState extends State<DcaSimulatorScreen> {
                             Expanded(
                               child: Row(
                                 children: [
-                                  Icon(Icons.arrow_downward_rounded, color: Colors.orange.shade400, size: 14),
+                                  Icon(
+                                    Icons.arrow_downward_rounded,
+                                    color: Colors.orange.shade400,
+                                    size: 14,
+                                  ),
                                   const SizedBox(width: 4),
                                   Expanded(
                                     child: Text(
                                       'Pess. : ${Formatters.formatCurrency(pessimisticValue)}',
-                                      style: TextStyle(color: Colors.orange.shade400, fontSize: 12, fontWeight: FontWeight.bold),
+                                      style: TextStyle(
+                                        color: Colors.orange.shade400,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
@@ -737,7 +850,10 @@ class _DcaSimulatorScreenState extends State<DcaSimulatorScreen> {
                           children: [
                             Text(
                               'Capital versé',
-                              style: TextStyle(fontSize: 12, color: Colors.grey.shade400),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade400,
+                              ),
                             ),
                             const SizedBox(height: 4),
                             Text(
@@ -756,7 +872,10 @@ class _DcaSimulatorScreenState extends State<DcaSimulatorScreen> {
                           children: [
                             Text(
                               'Gains générés',
-                              style: TextStyle(fontSize: 12, color: Colors.grey.shade400),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade400,
+                              ),
                             ),
                             const SizedBox(height: 4),
                             Text(
@@ -823,7 +942,10 @@ class _DcaSimulatorScreenState extends State<DcaSimulatorScreen> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.compare_arrows_rounded, color: Colors.blue.shade700),
+                        Icon(
+                          Icons.compare_arrows_rounded,
+                          color: Colors.blue.shade700,
+                        ),
                         const SizedBox(width: 8),
                         const Expanded(
                           child: Text(
@@ -840,20 +962,30 @@ class _DcaSimulatorScreenState extends State<DcaSimulatorScreen> {
                     const SizedBox(height: 12),
                     Text(
                       'Un placement à 3% (ex: Livret d\'épargne) vous aurait rapporté ${Formatters.formatCurrency(comparison3Final)}.',
-                      style: TextStyle(fontSize: 13, color: Colors.grey.shade700, height: 1.4),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade700,
+                        height: 1.4,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: gainsDiff3 >= 0 ? Colors.green.shade50 : Colors.orange.shade50,
+                        color: gainsDiff3 >= 0
+                            ? Colors.green.shade50
+                            : Colors.orange.shade50,
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Row(
                         children: [
                           Icon(
-                            gainsDiff3 >= 0 ? Icons.trending_up_rounded : Icons.trending_flat_rounded,
-                            color: gainsDiff3 >= 0 ? AppTheme.gainColor : Colors.orange,
+                            gainsDiff3 >= 0
+                                ? Icons.trending_up_rounded
+                                : Icons.trending_flat_rounded,
+                            color: gainsDiff3 >= 0
+                                ? AppTheme.gainColor
+                                : Colors.orange,
                           ),
                           const SizedBox(width: 10),
                           Expanded(
@@ -864,7 +996,9 @@ class _DcaSimulatorScreenState extends State<DcaSimulatorScreen> {
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
-                                color: gainsDiff3 >= 0 ? Colors.green.shade900 : Colors.orange.shade900,
+                                color: gainsDiff3 >= 0
+                                    ? Colors.green.shade900
+                                    : Colors.orange.shade900,
                               ),
                             ),
                           ),
@@ -904,7 +1038,10 @@ class _DcaSimulatorScreenState extends State<DcaSimulatorScreen> {
                 _selectedOption.asset != null
                     ? 'Ajouter ${_selectedOption.asset!.symbol} au portefeuille'
                     : 'Ajouter un actif au portefeuille',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryColor,
@@ -930,7 +1067,10 @@ class _DcaSimulatorScreenState extends State<DcaSimulatorScreen> {
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 4),
-        Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+        ),
       ],
     );
   }

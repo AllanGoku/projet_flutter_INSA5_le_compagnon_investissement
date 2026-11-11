@@ -95,9 +95,9 @@ void main() {
         // If we invested $100 for 10 months, total invested = 1000.
         // If we bought a total of 10 shares (average price 100), and final price is 120.
         // Value = 120 * 10 = 1200.
-        // Let's make the function simpler: it takes total periods, periodic investment, 
+        // Let's make the function simpler: it takes total periods, periodic investment,
         // average purchase price across those periods, and final asset price.
-        // Actually, typical DCA simulation: 
+        // Actually, typical DCA simulation:
         // given periodic amount, list of prices at each period.
         final finalValue = FinancialCalculator.simulateDCA(
           periodicInvestment: 100.0,
@@ -119,7 +119,7 @@ void main() {
         expect(finalValue['totalInvested'], 0.0);
         expect(finalValue['finalValue'], 0.0);
       });
-      
+
       test('should handle zero investment', () {
         final finalValue = FinancialCalculator.simulateDCA(
           periodicInvestment: 0.0,
@@ -245,21 +245,26 @@ void main() {
         expect(rate, closeTo(20.0, 0.1));
       });
 
-      test('retourne une valeur de secours réaliste si l\'historique est vide', () {
-        final assetAapl = Asset(
-          symbol: 'AAPL',
-          name: 'Apple Inc.',
-          currentPrice: 175.0,
-          type: 'Stock',
-          description: 'Tech',
-          marketOpen: true,
-          timezone: 'US/Eastern',
-          timeSeries: {},
-        );
+      test(
+        'retourne une valeur de secours réaliste si l\'historique est vide',
+        () {
+          final assetAapl = Asset(
+            symbol: 'AAPL',
+            name: 'Apple Inc.',
+            currentPrice: 175.0,
+            type: 'Stock',
+            description: 'Tech',
+            marketOpen: true,
+            timezone: 'US/Eastern',
+            timeSeries: {},
+          );
 
-        final rate = FinancialCalculator.calculateAssetAnnualizedReturn(assetAapl);
-        expect(rate, closeTo(12.0, 0.001));
-      });
+          final rate = FinancialCalculator.calculateAssetAnnualizedReturn(
+            assetAapl,
+          );
+          expect(rate, closeTo(12.0, 0.001));
+        },
+      );
     });
 
     group('calculateRealizedGain', () {
@@ -307,11 +312,29 @@ void main() {
 
       test('calculateSaleXp: gain basé sur la performance et durée', () {
         // 10% sur 5 jours -> 50
-        expect(FinancialCalculator.calculateSaleXp(performancePercentage: 10.0, holdingDuration: const Duration(days: 5)), 50);
+        expect(
+          FinancialCalculator.calculateSaleXp(
+            performancePercentage: 10.0,
+            holdingDuration: const Duration(days: 5),
+          ),
+          50,
+        );
         // < 1 jour = 1 jour -> 15% * 1 -> 15
-        expect(FinancialCalculator.calculateSaleXp(performancePercentage: 15.0, holdingDuration: const Duration(hours: 5)), 15);
+        expect(
+          FinancialCalculator.calculateSaleXp(
+            performancePercentage: 15.0,
+            holdingDuration: const Duration(hours: 5),
+          ),
+          15,
+        );
         // Perte ou 0% -> 10 minimum
-        expect(FinancialCalculator.calculateSaleXp(performancePercentage: -5.0, holdingDuration: const Duration(days: 10)), 10);
+        expect(
+          FinancialCalculator.calculateSaleXp(
+            performancePercentage: -5.0,
+            holdingDuration: const Duration(days: 10),
+          ),
+          10,
+        );
       });
 
       test('calculateStreakBonus: retourne le bon bonus', () {
@@ -334,7 +357,10 @@ void main() {
         expect(FinancialCalculator.getTitleForLevel(1), 'Novice');
         expect(FinancialCalculator.getTitleForLevel(5), 'Débutant');
         expect(FinancialCalculator.getTitleForLevel(10), 'Apprenti');
-        expect(FinancialCalculator.getTitleForLevel(100), 'Maître de Wall Street');
+        expect(
+          FinancialCalculator.getTitleForLevel(100),
+          'Maître de Wall Street',
+        );
       });
     });
   });

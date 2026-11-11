@@ -1,5 +1,6 @@
 // [AI-GENERATED] Phase 2, Agent, 2025-02-23
 import 'package:flutter/material.dart';
+
 import '../../models/asset.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/formatters.dart';
@@ -64,7 +65,9 @@ class AssetGridSection extends StatelessWidget {
               // Récupération de la variation (%) réelle de l'actif
               final double variation = asset.dailyChangePercentage;
               final bool isGain = variation >= 0;
-              final Color varColor = isGain ? AppTheme.gainColor : AppTheme.lossColor;
+              final Color varColor = isGain
+                  ? AppTheme.gainColor
+                  : AppTheme.lossColor;
 
               return Container(
                 width: 170,
@@ -104,7 +107,10 @@ class AssetGridSection extends StatelessWidget {
                               const SizedBox(width: 4),
 
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
                                   color: isEtf
                                       ? Colors.purple.shade50
@@ -138,7 +144,10 @@ class AssetGridSection extends StatelessWidget {
 
                           // Ligne 3 : Badge Plus-value / Moins-value (%)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
                             decoration: BoxDecoration(
                               color: varColor.withOpacity(0.12),
                               borderRadius: BorderRadius.circular(8),
@@ -165,7 +174,9 @@ class AssetGridSection extends StatelessWidget {
                                       fit: BoxFit.scaleDown,
                                       alignment: Alignment.centerLeft,
                                       child: Text(
-                                        Formatters.formatCurrency(asset.currentPrice),
+                                        Formatters.formatCurrency(
+                                          asset.currentPrice,
+                                        ),
                                         style: const TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.bold,

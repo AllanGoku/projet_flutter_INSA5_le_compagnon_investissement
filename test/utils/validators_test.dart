@@ -24,7 +24,7 @@ void main() {
       expect(Validators.isValidPassword('12345'), isFalse);
       expect(Validators.isValidPassword(''), isFalse);
     });
-    
+
     test('Passwords match', () {
       expect(Validators.passwordsMatch('password123', 'password123'), isTrue);
     });

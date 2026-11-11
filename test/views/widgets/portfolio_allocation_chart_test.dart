@@ -29,10 +29,20 @@ void main() {
   );
 
   group('PortfolioAllocationChart Widget Tests', () {
-    testWidgets('Affiche le donut chart et la légende avec les positions', (WidgetTester tester) async {
+    testWidgets('Affiche le donut chart et la légende avec les positions', (
+      WidgetTester tester,
+    ) async {
       final positions = [
-        PortfolioPosition(asset: assetNvda, quantity: 2.0, averagePurchasePrice: 100.0), // 200 € (50%)
-        PortfolioPosition(asset: assetAapl, quantity: 1.0, averagePurchasePrice: 200.0), // 200 € (50%)
+        PortfolioPosition(
+          asset: assetNvda,
+          quantity: 2.0,
+          averagePurchasePrice: 100.0,
+        ), // 200 € (50%)
+        PortfolioPosition(
+          asset: assetAapl,
+          quantity: 1.0,
+          averagePurchasePrice: 200.0,
+        ), // 200 € (50%)
       ];
 
       await tester.pumpWidget(
@@ -52,20 +62,20 @@ void main() {
       expect(find.textContaining('50.0%'), findsNWidgets(2));
     });
 
-    testWidgets('Affiche l\'état vide quand le portefeuille n\'a pas de positions', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: PortfolioAllocationChart(
-              positions: [],
-              totalValue: 0.0,
+    testWidgets(
+      'Affiche l\'état vide quand le portefeuille n\'a pas de positions',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: Scaffold(
+              body: PortfolioAllocationChart(positions: [], totalValue: 0.0),
             ),
           ),
-        ),
-      );
+        );
 
-      expect(find.text('Répartition du Portefeuille'), findsOneWidget);
-      expect(find.text('Aucune position à afficher'), findsOneWidget);
-    });
+        expect(find.text('Répartition du Portefeuille'), findsOneWidget);
+        expect(find.text('Aucune position à afficher'), findsOneWidget);
+      },
+    );
   });
 }

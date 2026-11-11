@@ -1,7 +1,9 @@
 // [AI-GENERATED] Issue #5, Agent, 2025-02-23
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../controllers/auth_controller.dart';
+
 import 'dart:math';
 
 /// Widget affichant un conseil pédagogique contextuel et dynamique.
@@ -24,7 +26,7 @@ class _ContextualTipCardState extends State<ContextualTipCard> {
     "Vos liquidités ne rapportent rien. Pensez à les investir intelligemment !",
     "La volatilité est normale. Ne paniquez pas lors d'une baisse temporaire.",
     "La patience est la clé. L'intérêt composé travaille avec le temps.",
-    "Revendre avec plus-value rapporte plus d'XP si vous gardez l'actif longtemps."
+    "Revendre avec plus-value rapporte plus d'XP si vous gardez l'actif longtemps.",
   ];
 
   @override

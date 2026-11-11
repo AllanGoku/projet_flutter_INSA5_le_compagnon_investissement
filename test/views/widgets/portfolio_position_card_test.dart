@@ -18,37 +18,40 @@ void main() {
   );
 
   group('PortfolioPositionCard Widget Tests', () {
-    testWidgets('Affiche les détails de la position et réagit au bouton Vendre', (WidgetTester tester) async {
-      bool sellPressed = false;
+    testWidgets(
+      'Affiche les détails de la position et réagit au bouton Vendre',
+      (WidgetTester tester) async {
+        bool sellPressed = false;
 
-      final position = PortfolioPosition(
-        asset: assetNvda,
-        quantity: 10.0,
-        averagePurchasePrice: 100.0,
-      );
+        final position = PortfolioPosition(
+          asset: assetNvda,
+          quantity: 10.0,
+          averagePurchasePrice: 100.0,
+        );
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: PortfolioPositionCard(
-              position: position,
-              onSellPressed: () {
-                sellPressed = true;
-              },
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: PortfolioPositionCard(
+                position: position,
+                onSellPressed: () {
+                  sellPressed = true;
+                },
+              ),
             ),
           ),
-        ),
-      );
+        );
 
-      expect(find.text('NVDA'), findsOneWidget);
-      expect(find.text('NVIDIA Corporation'), findsOneWidget);
-      expect(find.textContaining('10'), findsWidgets); // Quantité
-      expect(find.text('Vendre'), findsOneWidget);
+        expect(find.text('NVDA'), findsOneWidget);
+        expect(find.text('NVIDIA Corporation'), findsOneWidget);
+        expect(find.textContaining('10'), findsWidgets); // Quantité
+        expect(find.text('Vendre'), findsOneWidget);
 
-      await tester.tap(find.text('Vendre'));
-      await tester.pump();
+        await tester.tap(find.text('Vendre'));
+        await tester.pump();
 
-      expect(sellPressed, isTrue);
-    });
+        expect(sellPressed, isTrue);
+      },
+    );
   });
 }

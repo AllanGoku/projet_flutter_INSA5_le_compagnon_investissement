@@ -16,40 +16,56 @@ class FakeCacheService extends CacheService {
   Future<void> initDB({bool inMemory = false}) async {}
 
   @override
-  Future<void> savePortfolioPositions(List<PortfolioPosition> positions) async {
+  Future<void> savePortfolioPositions(
+    List<PortfolioPosition> positions, [
+    String userEmail = 'guest@app.local',
+  ]) async {
     _storedPositions.clear();
     _storedPositions.addAll(positions);
   }
 
   @override
-  Future<List<PortfolioPosition>> getPortfolioPositions() async {
+  Future<List<PortfolioPosition>> getPortfolioPositions([
+    String userEmail = 'guest@app.local',
+  ]) async {
     return List.from(_storedPositions);
   }
 
   @override
-  Future<void> saveTransaction(PortfolioTransaction transaction) async {
+  Future<void> saveTransaction(
+    PortfolioTransaction transaction, [
+    String userEmail = 'guest@app.local',
+  ]) async {
     _storedTransactions.insert(0, transaction);
   }
 
   @override
-  Future<List<PortfolioTransaction>> getTransactions() async {
+  Future<List<PortfolioTransaction>> getTransactions([
+    String userEmail = 'guest@app.local',
+  ]) async {
     return List.from(_storedTransactions);
   }
 
   @override
-  Future<void> deletePortfolioPosition(String symbol) async {
+  Future<void> deletePortfolioPosition(
+    String symbol, [
+    String userEmail = 'guest@app.local',
+  ]) async {
     _storedPositions.removeWhere(
       (p) => p.asset.symbol.toUpperCase() == symbol.toUpperCase(),
     );
   }
 
   @override
-  Future<void> saveCashBalance(double balance) async {
+  Future<void> saveCashBalance(
+    double balance, [
+    String userEmail = 'guest@app.local',
+  ]) async {
     _storedCashBalance = balance;
   }
 
   @override
-  Future<double> getCashBalance() async {
+  Future<double> getCashBalance([String userEmail = 'guest@app.local']) async {
     return _storedCashBalance;
   }
 }
@@ -102,7 +118,10 @@ void main() {
       await portfolioController.buyAsset(assetNvda, 2.0);
 
       expect(portfolioController.positions.length, equals(1));
-      expect(portfolioController.cashBalance, closeTo(740.0, 0.001)); // 1000 - 260
+      expect(
+        portfolioController.cashBalance,
+        closeTo(740.0, 0.001),
+      ); // 1000 - 260
       expect(portfolioController.totalValue, closeTo(260.0, 0.001));
     });
 
@@ -123,7 +142,10 @@ void main() {
       // Revente de 1 unité de NVDA à 130 € -> +130 €
       await portfolioController.sellAsset(assetNvda, 1.0);
 
-      expect(portfolioController.cashBalance, closeTo(870.0, 0.001)); // 740 + 130
+      expect(
+        portfolioController.cashBalance,
+        closeTo(870.0, 0.001),
+      ); // 740 + 130
       expect(portfolioController.positions.first.quantity, equals(1.0));
     });
 
@@ -139,7 +161,10 @@ void main() {
         timeSeries: {},
       );
 
-      await portfolioController.buyAsset(asset100, 5.0); // 5 x 100€ = 500€ -> solde = 500€
+      await portfolioController.buyAsset(
+        asset100,
+        5.0,
+      ); // 5 x 100€ = 500€ -> solde = 500€
 
       final asset150 = Asset(
         symbol: 'NVDA',
@@ -163,15 +188,24 @@ void main() {
       expect(portfolioController.totalRealizedGain, closeTo(150.0, 0.001));
     });
 
-    test('Revente totale d\'un actif : suppression de la position du portefeuille', () async {
-      await portfolioController.buyAsset(assetAapl, 2.0); // 440 € -> solde = 560 €
-      expect(portfolioController.positions.length, equals(1));
+    test(
+      'Revente totale d\'un actif : suppression de la position du portefeuille',
+      () async {
+        await portfolioController.buyAsset(
+          assetAapl,
+          2.0,
+        ); // 440 € -> solde = 560 €
+        expect(portfolioController.positions.length, equals(1));
 
-      await portfolioController.sellAsset(assetAapl, 2.0); // +440 € -> solde = 1000 €
+        await portfolioController.sellAsset(
+          assetAapl,
+          2.0,
+        ); // +440 € -> solde = 1000 €
 
-      expect(portfolioController.positions, isEmpty);
-      expect(portfolioController.cashBalance, closeTo(1000.0, 0.001));
-    });
+        expect(portfolioController.positions, isEmpty);
+        expect(portfolioController.cashBalance, closeTo(1000.0, 0.001));
+      },
+    );
 
     test('Rejet d\'achat avec quantité décimale / fraction', () async {
       expect(
@@ -189,14 +223,17 @@ void main() {
       );
     });
 
-    test('Rejet de revente si quantité supérieure au montant possédé', () async {
-      await portfolioController.buyAsset(assetNvda, 3.0);
+    test(
+      'Rejet de revente si quantité supérieure au montant possédé',
+      () async {
+        await portfolioController.buyAsset(assetNvda, 3.0);
 
-      expect(
-        () async => await portfolioController.sellAsset(assetNvda, 5.0),
-        throwsA(isA<ArgumentError>()),
-      );
-    });
+        expect(
+          () async => await portfolioController.sellAsset(assetNvda, 5.0),
+          throwsA(isA<ArgumentError>()),
+        );
+      },
+    );
 
     test('Rejet de revente si l\'actif n\'est pas détenu', () async {
       expect(
@@ -205,14 +242,20 @@ void main() {
       );
     });
 
-    test('Persistance CacheService : chargement des liquidités et positions', () async {
-      await portfolioController.buyAsset(assetNvda, 2.0); // 260 € -> solde 740 €
+    test(
+      'Persistance CacheService : chargement des liquidités et positions',
+      () async {
+        await portfolioController.buyAsset(
+          assetNvda,
+          2.0,
+        ); // 260 € -> solde 740 €
 
-      final newController = PortfolioController(cacheService: cacheService);
-      await newController.loadPositions();
+        final newController = PortfolioController(cacheService: cacheService);
+        await newController.loadPositions();
 
-      expect(newController.positions.length, equals(1));
-      expect(newController.cashBalance, closeTo(740.0, 0.001));
-    });
+        expect(newController.positions.length, equals(1));
+        expect(newController.cashBalance, closeTo(740.0, 0.001));
+      },
+    );
   });
 }

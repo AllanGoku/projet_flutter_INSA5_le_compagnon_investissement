@@ -1,6 +1,8 @@
 // [AI-GENERATED] Phase 3, Agent, 2025-02-23
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+
 import '../../models/asset.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/formatters.dart';
@@ -29,7 +31,8 @@ class InteractiveFlipAssetCard extends StatefulWidget {
   });
 
   @override
-  State<InteractiveFlipAssetCard> createState() => _InteractiveFlipAssetCardState();
+  State<InteractiveFlipAssetCard> createState() =>
+      _InteractiveFlipAssetCardState();
 }
 
 class _InteractiveFlipAssetCardState extends State<InteractiveFlipAssetCard>
@@ -45,9 +48,10 @@ class _InteractiveFlipAssetCardState extends State<InteractiveFlipAssetCard>
       vsync: this,
       duration: const Duration(milliseconds: 500),
     );
-    _animation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _animation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -87,7 +91,8 @@ class _InteractiveFlipAssetCardState extends State<InteractiveFlipAssetCard>
             child: isFrontVisible
                 ? _buildFrontCard(context)
                 : Transform(
-                    transform: Matrix4.identity()..rotateY(math.pi), // Évite l'effet miroir au verso
+                    transform: Matrix4.identity()
+                      ..rotateY(math.pi), // Évite l'effet miroir au verso
                     alignment: Alignment.center,
                     child: _buildBackCard(context),
                   ),
@@ -101,7 +106,9 @@ class _InteractiveFlipAssetCardState extends State<InteractiveFlipAssetCard>
   Widget _buildFrontCard(BuildContext context) {
     final double change = widget.asset.dailyChangePercentage;
     final bool isPositive = change >= 0;
-    final Color changeColor = isPositive ? AppTheme.gainColor : AppTheme.lossColor;
+    final Color changeColor = isPositive
+        ? AppTheme.gainColor
+        : AppTheme.lossColor;
 
     return Container(
       width: double.infinity,
@@ -127,7 +134,10 @@ class _InteractiveFlipAssetCardState extends State<InteractiveFlipAssetCard>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: AppTheme.mint.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(10),
@@ -196,7 +206,10 @@ class _InteractiveFlipAssetCardState extends State<InteractiveFlipAssetCard>
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: changeColor.withOpacity(0.12),
                       borderRadius: BorderRadius.circular(10),
@@ -250,7 +263,11 @@ class _InteractiveFlipAssetCardState extends State<InteractiveFlipAssetCard>
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.flip_camera_android_rounded, size: 14, color: Colors.grey.shade400),
+              Icon(
+                Icons.flip_camera_android_rounded,
+                size: 14,
+                color: Colors.grey.shade400,
+              ),
               const SizedBox(width: 6),
               Text(
                 'Touchez pour retourner 3D',
@@ -306,8 +323,14 @@ class _InteractiveFlipAssetCardState extends State<InteractiveFlipAssetCard>
             children: [
               const Row(
                 children: [
-                  Text('Marché : ', style: TextStyle(fontSize: 12, color: Colors.black54)),
-                  MarketTermHelpButton(term: 'Ouverture du marché', iconSize: 14),
+                  Text(
+                    'Marché : ',
+                    style: TextStyle(fontSize: 12, color: Colors.black54),
+                  ),
+                  MarketTermHelpButton(
+                    term: 'Ouverture du marché',
+                    iconSize: 14,
+                  ),
                 ],
               ),
               Text(
@@ -315,7 +338,9 @@ class _InteractiveFlipAssetCardState extends State<InteractiveFlipAssetCard>
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: widget.asset.marketOpen ? AppTheme.gainColor : Colors.grey,
+                  color: widget.asset.marketOpen
+                      ? AppTheme.gainColor
+                      : Colors.grey,
                 ),
               ),
             ],
@@ -327,10 +352,17 @@ class _InteractiveFlipAssetCardState extends State<InteractiveFlipAssetCard>
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Prix origine : ', style: TextStyle(fontSize: 12, color: Colors.black54)),
+                const Text(
+                  'Prix origine : ',
+                  style: TextStyle(fontSize: 12, color: Colors.black54),
+                ),
                 Text(
                   '${widget.asset.originalPrice.toStringAsFixed(2)} ${widget.asset.originalCurrency}',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.black87),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
                 ),
               ],
             ),
@@ -340,7 +372,10 @@ class _InteractiveFlipAssetCardState extends State<InteractiveFlipAssetCard>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Zone : ', style: TextStyle(fontSize: 12, color: Colors.black54)),
+              const Text(
+                'Zone : ',
+                style: TextStyle(fontSize: 12, color: Colors.black54),
+              ),
               Text(
                 widget.asset.timezone,
                 style: const TextStyle(fontSize: 12, color: Colors.black87),
@@ -357,7 +392,10 @@ class _InteractiveFlipAssetCardState extends State<InteractiveFlipAssetCard>
                   key: Key('flip_card_detail_button_${widget.asset.symbol}'),
                   onPressed: widget.onDetailPressed,
                   icon: const Icon(Icons.analytics_outlined, size: 16),
-                  label: const Text('Voir les détails', style: TextStyle(fontSize: 12)),
+                  label: const Text(
+                    'Voir les détails',
+                    style: TextStyle(fontSize: 12),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.secondaryColor,
                     foregroundColor: Colors.white,
@@ -373,11 +411,16 @@ class _InteractiveFlipAssetCardState extends State<InteractiveFlipAssetCard>
                 IconButton(
                   key: Key('flip_card_buy_button_${widget.asset.symbol}'),
                   onPressed: widget.onBuyPressed,
-                  icon: const Icon(Icons.add_shopping_cart_rounded, color: AppTheme.primaryColor),
+                  icon: const Icon(
+                    Icons.add_shopping_cart_rounded,
+                    color: AppTheme.primaryColor,
+                  ),
                   tooltip: 'Acheter cet actif',
                   style: IconButton.styleFrom(
                     backgroundColor: AppTheme.mint.withOpacity(0.2),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ],

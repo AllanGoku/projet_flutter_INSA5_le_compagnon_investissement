@@ -9,11 +9,11 @@ class AppTheme {
   /// Couleurs principales pour le mode clair.
   static const Color primaryColor = Color(0xFF2E7D32); // Vert sombre apaisant
   static const Color secondaryColor = Color(0xFF1565C0); // Bleu éducatif
-  
+
   // Design Soft UI
   static const Color backgroundColor = Color(0xFFF8F9FA); // Fond global Soft UI
   static const Color surfaceColor = Color(0xFFFFFFFF); // Cartes blanches
-  
+
   // Performance Colors
   static const Color gainColor = Color(0xFF10B981); // Vert pour les gains
   static const Color lossColor = Color(0xFFEF4444); // Rouge pour les pertes
@@ -44,9 +44,7 @@ class AppTheme {
       cardTheme: CardThemeData(
         color: surfaceColor,
         elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
@@ -55,8 +53,16 @@ class AppTheme {
         elevation: 0,
       ),
       textTheme: const TextTheme(
-        displayLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.black87),
-        titleLarge: TextStyle(fontSize: 22, fontWeight: FontWeight.w600, color: Colors.black87),
+        displayLarge: TextStyle(
+          fontSize: 32,
+          fontWeight: FontWeight.bold,
+          color: Colors.black87,
+        ),
+        titleLarge: TextStyle(
+          fontSize: 22,
+          fontWeight: FontWeight.w600,
+          color: Colors.black87,
+        ),
         bodyLarge: TextStyle(fontSize: 16, color: Colors.black87),
         bodyMedium: TextStyle(fontSize: 14, color: Colors.black54),
       ),

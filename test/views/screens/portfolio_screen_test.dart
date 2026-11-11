@@ -16,30 +16,47 @@ class FakeCacheService extends CacheService {
   Future<void> initDB({bool inMemory = false}) async {}
 
   @override
-  Future<void> savePortfolioPositions(List<PortfolioPosition> positions) async {
+  Future<void> savePortfolioPositions(
+    List<PortfolioPosition> positions, [
+    String userEmail = 'guest@app.local',
+  ]) async {
     _positions.clear();
     _positions.addAll(positions);
   }
 
   @override
-  Future<List<PortfolioPosition>> getPortfolioPositions() async {
+  Future<List<PortfolioPosition>> getPortfolioPositions([
+    String userEmail = 'guest@app.local',
+  ]) async {
     return List.from(_positions);
   }
 
   @override
-  Future<void> deletePortfolioPosition(String symbol) async {}
+  Future<void> deletePortfolioPosition(
+    String symbol, [
+    String userEmail = 'guest@app.local',
+  ]) async {}
 
   @override
-  Future<void> saveTransaction(dynamic transaction) async {}
+  Future<void> saveTransaction(
+    dynamic transaction, [
+    String userEmail = 'guest@app.local',
+  ]) async {}
 
   @override
-  Future<List<PortfolioTransaction>> getTransactions() async => [];
+  Future<List<PortfolioTransaction>> getTransactions([
+    String userEmail = 'guest@app.local',
+  ]) async => [];
 
   @override
-  Future<void> saveCashBalance(double balance) async {}
+  Future<void> saveCashBalance(
+    double balance, [
+    String userEmail = 'guest@app.local',
+  ]) async {}
 
   @override
-  Future<double> getCashBalance() async => 1000.0;
+  Future<double> getCashBalance([String userEmail = 'guest@app.local']) async =>
+      1000.0;
 }
 
 void main() {
@@ -55,37 +72,40 @@ void main() {
   );
 
   group('PortfolioScreen Widget Tests', () {
-    testWidgets('Affiche la synthèse, le graphique, la position et l\'historique', (WidgetTester tester) async {
-      final cacheService = FakeCacheService();
-      final portfolioController = PortfolioController(
-        cacheService: cacheService,
-        initialPositions: [
-          PortfolioPosition(
-            asset: assetNvda,
-            quantity: 2.0,
-            averagePurchasePrice: 100.0,
-          )
-        ],
-      );
+    testWidgets(
+      'Affiche la synthèse, le graphique, la position et l\'historique',
+      (WidgetTester tester) async {
+        final cacheService = FakeCacheService();
+        final portfolioController = PortfolioController(
+          cacheService: cacheService,
+          initialPositions: [
+            PortfolioPosition(
+              asset: assetNvda,
+              quantity: 2.0,
+              averagePurchasePrice: 100.0,
+            ),
+          ],
+        );
 
-      await tester.pumpWidget(
-        ChangeNotifierProvider<PortfolioController>.value(
-          value: portfolioController,
-          child: const MaterialApp(
-            home: PortfolioScreen(),
+        await tester.pumpWidget(
+          ChangeNotifierProvider<PortfolioController>.value(
+            value: portfolioController,
+            child: const MaterialApp(home: PortfolioScreen()),
           ),
-        ),
-      );
+        );
 
-      expect(find.text('Mon Portefeuille'), findsOneWidget);
-      expect(find.text('Patrimoine Total (Actifs + Cash)'), findsOneWidget);
-      expect(find.text('Répartition du Portefeuille'), findsOneWidget);
-      expect(find.text('Mes Positions (1)'), findsOneWidget);
-      expect(find.text('NVDA'), findsWidgets);
-      expect(find.text('Historique des Transactions'), findsOneWidget);
-    });
+        expect(find.text('Mon Portefeuille'), findsOneWidget);
+        expect(find.text('Patrimoine Total (Actifs + Cash)'), findsOneWidget);
+        expect(find.text('Répartition du Portefeuille'), findsOneWidget);
+        expect(find.text('Mes Positions (1)'), findsOneWidget);
+        expect(find.text('NVDA'), findsWidgets);
+        expect(find.text('Historique des Transactions'), findsOneWidget);
+      },
+    );
 
-    testWidgets('Affiche l\'état vide quand aucune position n\'est détenue', (WidgetTester tester) async {
+    testWidgets('Affiche l\'état vide quand aucune position n\'est détenue', (
+      WidgetTester tester,
+    ) async {
       final cacheService = FakeCacheService();
       final portfolioController = PortfolioController(
         cacheService: cacheService,
@@ -95,9 +115,7 @@ void main() {
       await tester.pumpWidget(
         ChangeNotifierProvider<PortfolioController>.value(
           value: portfolioController,
-          child: const MaterialApp(
-            home: PortfolioScreen(),
-          ),
+          child: const MaterialApp(home: PortfolioScreen()),
         ),
       );
 

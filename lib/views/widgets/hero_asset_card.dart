@@ -1,5 +1,6 @@
 // [AI-GENERATED] Phase 2, Agent, 2025-02-23
 import 'package:flutter/material.dart';
+
 import '../../models/asset.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/formatters.dart';
@@ -68,7 +69,10 @@ class HeroAssetCard extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.25),
                             borderRadius: BorderRadius.circular(12),
@@ -162,12 +166,19 @@ class HeroAssetCard extends StatelessWidget {
                             backgroundColor: Colors.white,
                             foregroundColor: Colors.black87,
                             elevation: 0,
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
                           ),
-                          icon: const Icon(Icons.add_shopping_cart_rounded, size: 18, color: Colors.black87),
+                          icon: const Icon(
+                            Icons.add_shopping_cart_rounded,
+                            size: 18,
+                            color: Colors.black87,
+                          ),
                           label: const Text(
                             'Acheter',
                             style: TextStyle(

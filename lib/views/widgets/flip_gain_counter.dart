@@ -1,6 +1,7 @@
 // [AI-GENERATED] Issue #5, Agent, 2025-02-23
 import 'package:flutter/material.dart';
 import 'package:animated_flip_counter/animated_flip_counter.dart';
+
 import '../../models/user_profile.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/formatters.dart';
@@ -69,7 +70,9 @@ class _FlipGainCounterState extends State<FlipGainCounter> {
   @override
   Widget build(BuildContext context) {
     final bool isGain = widget.capitalGain >= 0;
-    final Color gainLossColor = isGain ? AppTheme.gainColor : AppTheme.lossColor;
+    final Color gainLossColor = isGain
+        ? AppTheme.gainColor
+        : AppTheme.lossColor;
     final Color pillBgColor = gainLossColor.withOpacity(0.15);
 
     return Container(
@@ -84,12 +87,7 @@ class _FlipGainCounterState extends State<FlipGainCounter> {
         ),
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(32)),
       ),
-      padding: const EdgeInsets.only(
-        top: 48,
-        left: 20,
-        right: 20,
-        bottom: 24,
-      ),
+      padding: const EdgeInsets.only(top: 48, left: 20, right: 20, bottom: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -170,7 +168,10 @@ class _FlipGainCounterState extends State<FlipGainCounter> {
 
                 // Pilule interactive gain/perte
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: pillBgColor,
                     borderRadius: BorderRadius.circular(20),
@@ -179,13 +180,17 @@ class _FlipGainCounterState extends State<FlipGainCounter> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        isGain ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+                        isGain
+                            ? Icons.arrow_upward_rounded
+                            : Icons.arrow_downward_rounded,
                         size: 14,
                         color: gainLossColor,
                       ),
                       const SizedBox(width: 4),
                       AnimatedFlipCounter(
-                        value: _showPercentage ? widget.performancePercentage : widget.capitalGain,
+                        value: _showPercentage
+                            ? widget.performancePercentage
+                            : widget.capitalGain,
                         prefix: _showPercentage
                             ? (widget.performancePercentage > 0 ? '+ ' : '')
                             : (widget.capitalGain > 0 ? '+ ' : ''),

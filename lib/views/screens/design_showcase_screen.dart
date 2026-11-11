@@ -1,6 +1,7 @@
 // [AI-GENERATED] Issue #2, Agent, 2024-05-24
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../widgets/soft_card.dart';
 import '../widgets/performance_text.dart';
 import '../widgets/textured_button.dart';
@@ -17,7 +18,9 @@ class DesignShowcaseScreen extends StatefulWidget {
 }
 
 class _DesignShowcaseScreenState extends State<DesignShowcaseScreen> {
-  final TextEditingController _symbolController = TextEditingController(text: 'AAPL');
+  final TextEditingController _symbolController = TextEditingController(
+    text: 'AAPL',
+  );
 
   @override
   void dispose() {
@@ -30,9 +33,7 @@ class _DesignShowcaseScreenState extends State<DesignShowcaseScreen> {
     final dataController = context.watch<DataController>();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Showcase Design & Test API'),
-      ),
+      appBar: AppBar(title: const Text('Showcase Design & Test API')),
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
@@ -98,7 +99,7 @@ class _DesignShowcaseScreenState extends State<DesignShowcaseScreen> {
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
-          
+
           const Text('Variante Dark (Défaut, style "Ajouter au portefeuille")'),
           const SizedBox(height: 8),
           TexturedButton(
@@ -112,7 +113,7 @@ class _DesignShowcaseScreenState extends State<DesignShowcaseScreen> {
             },
           ),
           const SizedBox(height: 16),
-          
+
           const Text('Variante Gradient (Style FAB Simulateur)'),
           const SizedBox(height: 8),
           Center(
@@ -128,7 +129,7 @@ class _DesignShowcaseScreenState extends State<DesignShowcaseScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          
+
           const Text('Variante Light (Style "Analyser")'),
           const SizedBox(height: 8),
           Center(
@@ -180,9 +181,14 @@ class _DesignShowcaseScreenState extends State<DesignShowcaseScreen> {
                     variant: ButtonVariant.dark,
                     onPressed: () {
                       if (dataController.state == DataState.loading) return;
-                      final symbol = _symbolController.text.trim().toUpperCase();
+                      final symbol = _symbolController.text
+                          .trim()
+                          .toUpperCase();
                       if (symbol.isNotEmpty) {
-                        context.read<DataController>().loadAsset(symbol, isHot: true);
+                        context.read<DataController>().loadAsset(
+                          symbol,
+                          isHot: true,
+                        );
                       }
                     },
                   ),
@@ -202,11 +208,16 @@ class _DesignShowcaseScreenState extends State<DesignShowcaseScreen> {
                     style: const TextStyle(color: Colors.red),
                   ),
                 ],
-                if (dataController.assets.containsKey(_symbolController.text.trim().toUpperCase())) ...[
+                if (dataController.assets.containsKey(
+                  _symbolController.text.trim().toUpperCase(),
+                )) ...[
                   const SizedBox(height: 16),
                   const Divider(),
                   const SizedBox(height: 8),
-                  _buildAssetDetails(dataController, _symbolController.text.trim().toUpperCase()),
+                  _buildAssetDetails(
+                    dataController,
+                    _symbolController.text.trim().toUpperCase(),
+                  ),
                 ],
               ],
             ),
@@ -227,7 +238,7 @@ class _DesignShowcaseScreenState extends State<DesignShowcaseScreen> {
       case DataState.error:
         return Colors.red;
       case DataState.initial:
-      return Colors.grey;
+        return Colors.grey;
     }
   }
 

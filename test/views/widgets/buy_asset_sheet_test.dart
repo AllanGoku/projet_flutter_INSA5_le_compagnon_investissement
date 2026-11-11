@@ -14,11 +14,14 @@ import 'package:le_compagnon_investissement/services/cache_service.dart';
 
 class FakeAuthService implements AuthService {
   @override
+  Future<List<UserProfile>> getAllUsers() async => [];
+  @override
   Future<UserProfile?> getCurrentUser() async => null;
   @override
   Future<bool> isKeepLoggedIn() async => false;
   @override
-  Future<UserProfile> login(String e, String p, bool k) async => throw Exception();
+  Future<UserProfile> login(String e, String p, bool k) async =>
+      throw Exception();
   @override
   Future<void> logout() async {}
   @override
@@ -32,16 +35,26 @@ class FakeCacheService extends CacheService {
   Future<void> initDB({bool inMemory = false}) async {}
 
   @override
-  Future<void> savePortfolioPositions(List<PortfolioPosition> positions) async {}
+  Future<void> savePortfolioPositions(
+    List<PortfolioPosition> positions, [
+    String userEmail = 'guest@app.local',
+  ]) async {}
 
   @override
-  Future<List<PortfolioPosition>> getPortfolioPositions() async => [];
+  Future<List<PortfolioPosition>> getPortfolioPositions([
+    String userEmail = 'guest@app.local',
+  ]) async => [];
 
   @override
-  Future<void> saveTransaction(PortfolioTransaction transaction) async {}
+  Future<void> saveTransaction(
+    PortfolioTransaction transaction, [
+    String userEmail = 'guest@app.local',
+  ]) async {}
 
   @override
-  Future<List<PortfolioTransaction>> getTransactions() async => [];
+  Future<List<PortfolioTransaction>> getTransactions([
+    String userEmail = 'guest@app.local',
+  ]) async => [];
 }
 
 void main() {
@@ -73,9 +86,7 @@ void main() {
             ChangeNotifierProvider<PortfolioController>.value(
               value: portfolioController,
             ),
-            ChangeNotifierProvider<AuthController>.value(
-              value: authController,
-            ),
+            ChangeNotifierProvider<AuthController>.value(value: authController),
           ],
           child: child,
         ),
@@ -84,7 +95,9 @@ void main() {
   }
 
   group('BuyAssetSheet - Tests de widgets', () {
-    testWidgets('Affiche le nom de l\'actif et le prix unitaire', (WidgetTester tester) async {
+    testWidgets('Affiche le nom de l\'actif et le prix unitaire', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(buildTestWidget(BuyAssetSheet(asset: testAsset)));
 
       expect(find.text('NVIDIA Corporation'), findsOneWidget);
@@ -92,40 +105,55 @@ void main() {
       expect(find.text('Confirmer l\'achat fictif'), findsOneWidget);
     });
 
-    testWidgets('Validation du champ quantité > 0 et refus de validation si invalide', (WidgetTester tester) async {
-      await tester.pumpWidget(buildTestWidget(BuyAssetSheet(asset: testAsset)));
+    testWidgets(
+      'Validation du champ quantité > 0 et refus de validation si invalide',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(
+          buildTestWidget(BuyAssetSheet(asset: testAsset)),
+        );
 
-      // Effacer la quantité par défaut
-      final textField = find.byType(TextFormField);
-      await tester.enterText(textField, '0');
-      await tester.pump();
+        // Effacer la quantité par défaut
+        final textField = find.byType(TextFormField);
+        await tester.enterText(textField, '0');
+        await tester.pump();
 
-      // Tap sur le bouton de confirmation
-      final confirmButton = find.byKey(const Key('confirm_buy_button'));
-      await tester.tap(confirmButton);
-      await tester.pumpAndSettle();
+        // Tap sur le bouton de confirmation
+        final confirmButton = find.byKey(const Key('confirm_buy_button'));
+        await tester.tap(confirmButton);
+        await tester.pumpAndSettle();
 
-      // Vérifies l'apparition du message de validation d'erreur
-      expect(find.text('La quantité doit être supérieure à 0.'), findsOneWidget);
-      expect(portfolioController.positions, isEmpty);
-    });
+        // Vérifies l'apparition du message de validation d'erreur
+        expect(
+          find.text('La quantité doit être supérieure à 0.'),
+          findsOneWidget,
+        );
+        expect(portfolioController.positions, isEmpty);
+      },
+    );
 
-    testWidgets('Refus de validation en cas de saisie d\'une fraction d\'action', (WidgetTester tester) async {
-      await tester.pumpWidget(buildTestWidget(BuyAssetSheet(asset: testAsset)));
+    testWidgets(
+      'Refus de validation en cas de saisie d\'une fraction d\'action',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(
+          buildTestWidget(BuyAssetSheet(asset: testAsset)),
+        );
 
-      final textField = find.byType(TextFormField);
-      await tester.enterText(textField, '1.5');
-      await tester.pump();
+        final textField = find.byType(TextFormField);
+        await tester.enterText(textField, '1.5');
+        await tester.pump();
 
-      final confirmButton = find.byKey(const Key('confirm_buy_button'));
-      await tester.tap(confirmButton);
-      await tester.pumpAndSettle();
+        final confirmButton = find.byKey(const Key('confirm_buy_button'));
+        await tester.tap(confirmButton);
+        await tester.pumpAndSettle();
 
-      expect(find.textContaining('entier'), findsOneWidget);
-      expect(portfolioController.positions, isEmpty);
-    });
+        expect(find.textContaining('entier'), findsOneWidget);
+        expect(portfolioController.positions, isEmpty);
+      },
+    );
 
-    testWidgets('Saisie d\'une quantité valide et déclenchement de l\'achat', (WidgetTester tester) async {
+    testWidgets('Saisie d\'une quantité valide et déclenchement de l\'achat', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(buildTestWidget(BuyAssetSheet(asset: testAsset)));
 
       final textField = find.byType(TextFormField);

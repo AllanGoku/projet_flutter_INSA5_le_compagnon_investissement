@@ -1,6 +1,7 @@
 // [AI-GENERATED] Phase 4, Agent, 2025-02-23
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../controllers/portfolio_controller.dart';
 import '../../models/asset.dart';
 import '../../models/portfolio_position.dart';
@@ -45,9 +46,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
 
   void _openAssetDetail(Asset asset) {
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => AssetDetailScreen(asset: asset),
-      ),
+      MaterialPageRoute(builder: (context) => AssetDetailScreen(asset: asset)),
     );
   }
 
@@ -236,7 +235,10 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(12),
@@ -263,10 +265,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
           ),
           const SizedBox(height: 16),
 
-          Container(
-            height: 1,
-            color: Colors.white.withOpacity(0.15),
-          ),
+          Container(height: 1, color: Colors.white.withOpacity(0.15)),
           const SizedBox(height: 14),
 
           // Ligne des sous-métriques : Valeur Actifs, Gain Latent, Gain Réalisé
@@ -313,19 +312,31 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
                           PerformanceText(
                             value: portfolio.totalCapitalGain,
                             isCurrency: true,
-                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           Text(
                             ' (',
-                            style: TextStyle(fontSize: 11, color: Colors.white.withOpacity(0.7)),
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.white.withOpacity(0.7),
+                            ),
                           ),
                           PerformanceText(
                             value: portfolio.totalPerformance,
-                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           Text(
                             ')',
-                            style: TextStyle(fontSize: 11, color: Colors.white.withOpacity(0.7)),
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.white.withOpacity(0.7),
+                            ),
                           ),
                         ],
                       ),
@@ -347,7 +358,10 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
                       child: PerformanceText(
                         value: portfolio.totalRealizedGain,
                         isCurrency: true,
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],

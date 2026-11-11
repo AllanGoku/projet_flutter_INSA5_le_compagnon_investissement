@@ -9,6 +9,7 @@ import 'package:le_compagnon_investissement/views/screens/login_screen.dart';
 import 'package:le_compagnon_investissement/controllers/auth_controller.dart';
 import 'package:le_compagnon_investissement/controllers/data_controller.dart';
 import 'package:le_compagnon_investissement/controllers/portfolio_controller.dart';
+import 'package:le_compagnon_investissement/controllers/gamification_controller.dart';
 import 'package:le_compagnon_investissement/services/api_service.dart';
 import 'package:le_compagnon_investissement/services/cache_service.dart';
 
@@ -20,7 +21,7 @@ void main() async {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-  
+
   // Chargement des variables d'environnement (.env)
   try {
     await dotenv.load(fileName: ".env", isOptional: true);
@@ -47,9 +48,10 @@ void main() async {
           ),
         ),
         ChangeNotifierProvider(
-          create: (_) => PortfolioController(
-            cacheService: cacheService,
-          ),
+          create: (_) => PortfolioController(cacheService: cacheService),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => GamificationController(cacheService)..loadData(),
         ),
       ],
       child: const MyApp(),
@@ -98,11 +100,7 @@ class _MyAppState extends State<MyApp> {
       title: 'Le Compagnon d\'Investissement',
       theme: AppTheme.lightTheme,
       home: _isCheckingAuth
-          ? const Scaffold(
-              body: Center(
-                child: CircularProgressIndicator(),
-              ),
-            )
+          ? const Scaffold(body: Center(child: CircularProgressIndicator()))
           : (isLoggedIn ? const DashboardScreen() : const LoginScreen()),
     );
   }

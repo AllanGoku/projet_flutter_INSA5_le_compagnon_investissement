@@ -42,7 +42,10 @@ void main() {
       expect(restored.type, equals(TransactionType.buy));
       expect(restored.quantity, equals(5.0));
       expect(restored.price, equals(150.0));
-      expect(restored.timestamp.millisecondsSinceEpoch, equals(now.millisecondsSinceEpoch));
+      expect(
+        restored.timestamp.millisecondsSinceEpoch,
+        equals(now.millisecondsSinceEpoch),
+      );
     });
 
     test('Création et sérialisation d\'une transaction de vente', () {

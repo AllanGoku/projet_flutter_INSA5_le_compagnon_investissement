@@ -1,6 +1,7 @@
 // [AI-GENERATED] Phase 3, Agent, 2025-02-23
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../controllers/data_controller.dart';
 import '../../models/asset.dart';
 import '../../utils/app_theme.dart';
@@ -16,10 +17,7 @@ import 'asset_detail_screen.dart';
 class SearchScreen extends StatefulWidget {
   final VoidCallback? onNavigateToPortfolio;
 
-  const SearchScreen({
-    super.key,
-    this.onNavigateToPortfolio,
-  });
+  const SearchScreen({super.key, this.onNavigateToPortfolio});
 
   @override
   State<SearchScreen> createState() => _SearchScreenState();
@@ -57,9 +55,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   void _openDetailScreen(Asset asset) async {
     final result = await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => AssetDetailScreen(asset: asset),
-      ),
+      MaterialPageRoute(builder: (context) => AssetDetailScreen(asset: asset)),
     );
     if (result == 'open_portfolio') {
       if (widget.onNavigateToPortfolio != null) {
@@ -88,7 +84,8 @@ class _SearchScreenState extends State<SearchScreen> {
   List<Asset> _getFilteredAssets(List<Asset> allAssets) {
     return allAssets.where((asset) {
       // 1. Filtrage par texte (symbole ou nom)
-      final matchesSearch = _searchQuery.isEmpty ||
+      final matchesSearch =
+          _searchQuery.isEmpty ||
           asset.symbol.toLowerCase().contains(_searchQuery) ||
           asset.name.toLowerCase().contains(_searchQuery);
 
@@ -96,7 +93,8 @@ class _SearchScreenState extends State<SearchScreen> {
       bool matchesCategory = true;
       if (_selectedCategory == 'Actions') {
         final t = asset.type.toLowerCase();
-        matchesCategory = t.contains('stock') || t.contains('action') || t.contains('equity');
+        matchesCategory =
+            t.contains('stock') || t.contains('action') || t.contains('equity');
       } else if (_selectedCategory == 'ETF') {
         final t = asset.type.toLowerCase();
         matchesCategory = t.contains('etf') || t.contains('fonds');
@@ -135,7 +133,10 @@ class _SearchScreenState extends State<SearchScreen> {
                 controller: _searchController,
                 decoration: InputDecoration(
                   hintText: 'Rechercher par symbole ou nom (ex: AAPL, Apple)',
-                  prefixIcon: const Icon(Icons.search_rounded, color: AppTheme.secondaryColor),
+                  prefixIcon: const Icon(
+                    Icons.search_rounded,
+                    color: AppTheme.secondaryColor,
+                  ),
                   suffixIcon: _searchQuery.isNotEmpty
                       ? IconButton(
                           key: const Key('clear_search_button'),
@@ -151,7 +152,10 @@ class _SearchScreenState extends State<SearchScreen> {
                     borderRadius: BorderRadius.circular(20),
                     borderSide: BorderSide.none,
                   ),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 14,
+                    horizontal: 16,
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
@@ -171,14 +175,20 @@ class _SearchScreenState extends State<SearchScreen> {
                         selectedColor: AppTheme.mint.withValues(alpha: 0.2),
                         backgroundColor: Colors.white,
                         labelStyle: TextStyle(
-                          color: isSelected ? AppTheme.primaryColor : Colors.black87,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          color: isSelected
+                              ? AppTheme.primaryColor
+                              : Colors.black87,
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.normal,
                         ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
                         side: BorderSide(
-                          color: isSelected ? AppTheme.mint : Colors.grey.shade200,
+                          color: isSelected
+                              ? AppTheme.mint
+                              : Colors.grey.shade200,
                         ),
                         onSelected: (selected) {
                           setState(() {

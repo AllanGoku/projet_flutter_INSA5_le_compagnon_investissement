@@ -1,6 +1,7 @@
 // [AI-GENERATED] Phase 4, Agent, 2025-02-23
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../models/portfolio_transaction.dart';
 import '../../models/asset.dart';
 import '../../controllers/data_controller.dart';
@@ -17,10 +18,7 @@ import 'performance_text.dart';
 class TransactionDetailSheet extends StatelessWidget {
   final PortfolioTransaction transaction;
 
-  const TransactionDetailSheet({
-    super.key,
-    required this.transaction,
-  });
+  const TransactionDetailSheet({super.key, required this.transaction});
 
   String _formatDate(DateTime dt) {
     final day = dt.day.toString().padLeft(2, '0');
@@ -51,9 +49,7 @@ class TransactionDetailSheet extends StatelessWidget {
 
     Navigator.of(context).pop(); // Fermer la modale
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => AssetDetailScreen(asset: asset!),
-      ),
+      MaterialPageRoute(builder: (context) => AssetDetailScreen(asset: asset!)),
     );
   }
 
@@ -125,9 +121,14 @@ class TransactionDetailSheet extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
-                      color: isBuy ? AppTheme.mint.withOpacity(0.15) : Colors.orange.shade100,
+                      color: isBuy
+                          ? AppTheme.mint.withOpacity(0.15)
+                          : Colors.orange.shade100,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -135,7 +136,9 @@ class TransactionDetailSheet extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
-                        color: isBuy ? AppTheme.primaryColor : Colors.orange.shade900,
+                        color: isBuy
+                            ? AppTheme.primaryColor
+                            : Colors.orange.shade900,
                       ),
                     ),
                   ),
@@ -154,33 +157,46 @@ class TransactionDetailSheet extends StatelessWidget {
                   children: [
                     _buildDetailRow('Symbole d\'actif', transaction.symbol),
                     const Divider(height: 20),
-                    _buildDetailRow('Date & Heure', _formatDate(transaction.timestamp)),
+                    _buildDetailRow(
+                      'Date & Heure',
+                      _formatDate(transaction.timestamp),
+                    ),
                     const Divider(height: 20),
                     _buildDetailRow(
                       'Quantité',
                       '${transaction.quantity % 1 == 0 ? transaction.quantity.toInt() : transaction.quantity.toStringAsFixed(1)} un.',
                     ),
                     const Divider(height: 20),
-                    _buildDetailRow('Prix unitaire d\'exécution', Formatters.formatCurrency(transaction.price)),
+                    _buildDetailRow(
+                      'Prix unitaire d\'exécution',
+                      Formatters.formatCurrency(transaction.price),
+                    ),
                     const Divider(height: 20),
                     _buildDetailRow(
                       'Montant Total Fictif',
                       Formatters.formatCurrency(transaction.totalAmount),
                       isBold: true,
                     ),
-                    if (transaction.isSell && transaction.realizedGain != null) ...[
+                    if (transaction.isSell &&
+                        transaction.realizedGain != null) ...[
                       const Divider(height: 20),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text(
                             'Plus-value réalisée',
-                            style: TextStyle(fontSize: 14, color: Colors.black54),
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.black54,
+                            ),
                           ),
                           PerformanceText(
                             value: transaction.realizedGain!,
                             isCurrency: true,
-                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ],
                       ),

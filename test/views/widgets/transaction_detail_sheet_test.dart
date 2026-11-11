@@ -8,7 +8,9 @@ void main() {
   final now = DateTime.now();
 
   group('TransactionDetailSheet Widget Tests', () {
-    testWidgets('Affiche les détails d\'une transaction d\'achat', (WidgetTester tester) async {
+    testWidgets('Affiche les détails d\'une transaction d\'achat', (
+      WidgetTester tester,
+    ) async {
       final transaction = PortfolioTransaction(
         symbol: 'AAPL',
         assetName: 'Apple Inc.',
@@ -33,7 +35,9 @@ void main() {
       expect(find.text('Voir la fiche de l\'actif'), findsOneWidget);
     });
 
-    testWidgets('Affiche la plus-value pour une revente', (WidgetTester tester) async {
+    testWidgets('Affiche la plus-value pour une revente', (
+      WidgetTester tester,
+    ) async {
       final transaction = PortfolioTransaction(
         symbol: 'NVDA',
         assetName: 'NVIDIA Corporation',

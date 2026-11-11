@@ -1,6 +1,9 @@
 // [AI-GENERATED] Issue #5 & #6, Agent, 2025-02-23
 import 'dart:math';
+
 import 'asset.dart';
+import 'achievement.dart';
+import 'leaderboard_entry.dart';
 
 /// Classe utilitaire contenant exclusivement des fonctions pures pour les calculs financiers.
 ///
@@ -9,9 +12,9 @@ import 'asset.dart';
 /// conformément à l'architecture demandée.
 class FinancialCalculator {
   /// Calcule la performance globale d'un investissement en pourcentage.
-  /// 
+  ///
   /// Utilise la formule : `((currentValue - initialValue) / initialValue) * 100`
-  /// 
+  ///
   /// Gère le cas de division par zéro en retournant 0.0 si [initialValue] est 0.0.
   static double calculatePerformance({
     required double initialValue,
@@ -35,7 +38,7 @@ class FinancialCalculator {
   ///
   /// [positions] doit être une liste de Maps contenant au moins les clés
   /// `'quantity'` (double) et `'currentPrice'` (double).
-  /// 
+  ///
   /// Itère sur chaque ligne du portefeuille et additionne `quantité * prix_actuel`.
   static double calculatePortfolioValue(List<Map<String, double>> positions) {
     double total = 0.0;
@@ -51,7 +54,7 @@ class FinancialCalculator {
   ///
   /// [positions] doit être une liste de Maps contenant au moins les clés
   /// `'quantity'` (double) et `'averagePurchasePrice'` (double).
-  /// 
+  ///
   /// Itère sur chaque ligne du portefeuille et additionne `quantité * prix_achat_moyen`.
   static double calculateTotalInvested(List<Map<String, double>> positions) {
     double total = 0.0;
@@ -92,10 +95,7 @@ class FinancialCalculator {
     final finalPrice = pricesAtInvestmentPeriods.last;
     final finalValue = totalShares * finalPrice;
 
-    return {
-      'totalInvested': totalInvested,
-      'finalValue': finalValue,
-    };
+    return {'totalInvested': totalInvested, 'finalValue': finalValue};
   }
 
   /// Simule un investissement mensuel programmé (DCA - Dollar-Cost Averaging) avec intérêts composés.
@@ -114,11 +114,7 @@ class FinancialCalculator {
     required int durationYears,
   }) {
     if (monthlyAmount <= 0.0 || durationYears <= 0) {
-      return {
-        'totalInvested': 0.0,
-        'finalValue': 0.0,
-        'totalGains': 0.0,
-      };
+      return {'totalInvested': 0.0, 'finalValue': 0.0, 'totalGains': 0.0};
     }
 
     final int totalMonths = durationYears * 12;
@@ -168,7 +164,7 @@ class FinancialCalculator {
 
     // Volatilité de marché estimée à 15% / an, ajustée par le Bêta de l'actif
     final double volatility = 15.0 * (beta > 0.0 ? beta : 1.0);
-    
+
     // Estimation d'écart-type de projection sur le rendement
     final double pessimisticRate = annualReturnRate - (volatility * 0.4);
     final double optimisticRate = annualReturnRate + (volatility * 0.4);
@@ -178,7 +174,7 @@ class FinancialCalculator {
     final double optimisticMonthlyRate = (optimisticRate / 100) / 12;
 
     List<Map<String, double>> yearlyData = [];
-    
+
     double neutralValue = 0.0;
     double pessimisticValue = 0.0;
     double optimisticValue = 0.0;
@@ -195,8 +191,10 @@ class FinancialCalculator {
     for (int y = 1; y <= durationYears; y++) {
       for (int m = 0; m < 12; m++) {
         neutralValue = neutralValue * (1 + neutralMonthlyRate) + monthlyAmount;
-        pessimisticValue = pessimisticValue * (1 + pessimisticMonthlyRate) + monthlyAmount;
-        optimisticValue = optimisticValue * (1 + optimisticMonthlyRate) + monthlyAmount;
+        pessimisticValue =
+            pessimisticValue * (1 + pessimisticMonthlyRate) + monthlyAmount;
+        optimisticValue =
+            optimisticValue * (1 + optimisticMonthlyRate) + monthlyAmount;
         invested += monthlyAmount;
       }
       yearlyData.add({
@@ -226,10 +224,13 @@ class FinancialCalculator {
   /// Si l'historique est insuffisant ou indisponible, retourne une valeur de référence historique réaliste.
   static double calculateAssetAnnualizedReturn(Asset asset) {
     if (asset.timeSeries.length >= 2) {
-      final entries = asset.timeSeries.entries.map((e) {
-        final date = DateTime.tryParse(e.key);
-        return MapEntry(date, e.value);
-      }).where((e) => e.key != null).toList();
+      final entries = asset.timeSeries.entries
+          .map((e) {
+            final date = DateTime.tryParse(e.key);
+            return MapEntry(date, e.value);
+          })
+          .where((e) => e.key != null)
+          .toList();
 
       if (entries.length >= 2) {
         entries.sort((a, b) => a.key!.compareTo(b.key!));
@@ -253,8 +254,11 @@ class FinancialCalculator {
     }
 
     // 2. Calcul basé sur le plus bas 52 semaines si présent
-    if (asset.low52Week != null && asset.low52Week! > 0.0 && asset.currentPrice > 0.0) {
-      final double gainRatio = ((asset.currentPrice - asset.low52Week!) / asset.low52Week!) * 100;
+    if (asset.low52Week != null &&
+        asset.low52Week! > 0.0 &&
+        asset.currentPrice > 0.0) {
+      final double gainRatio =
+          ((asset.currentPrice - asset.low52Week!) / asset.low52Week!) * 100;
       if (gainRatio > 0.0) {
         final double estimatedRate = gainRatio.clamp(2.0, 25.0);
         return double.parse(estimatedRate.toStringAsFixed(1));
@@ -322,10 +326,10 @@ class FinancialCalculator {
     required Duration holdingDuration,
   }) {
     if (performancePercentage <= 0.0) return 10;
-    
+
     // Au minimum 1 jour de détention pour le calcul
     final int days = holdingDuration.inDays < 1 ? 1 : holdingDuration.inDays;
-    
+
     // L'XP = Performance (%) * Nombre de jours.
     // Cela valorise le "Long-Term Investing".
     return (performancePercentage * days).round();
@@ -360,5 +364,185 @@ class FinancialCalculator {
     if (level < 75) return "Expert";
     if (level < 100) return "Stratège";
     return "Maître de Wall Street";
+  }
+
+  /// Génère un classement (Leaderboard) déterministe en intégrant l'utilisateur parmi des PNJ (personnages non joueurs).
+  /// Les PNJ sont générés dynamiquement, mais de manière déterministe.
+  static List<LeaderboardEntry> generateMockLeaderboardEntries({
+    required int userXp,
+    required double userPortfolioValue,
+    required double userPerformancePercentage,
+    LeaderboardSortCriteria sortBy = LeaderboardSortCriteria.xp,
+    List<LeaderboardEntry> realUsers = const [],
+  }) {
+    final entries = <LeaderboardEntry>[];
+
+    if (realUsers.isNotEmpty) {
+      entries.addAll(realUsers);
+    } else {
+      // Ajout de l'utilisateur courant par défaut
+      final userLevel = calculateLevel(userXp);
+      entries.add(
+        LeaderboardEntry(
+          rank: 0,
+          name: 'Vous',
+          avatarInitials: 'VO',
+          level: userLevel,
+          xp: userXp,
+          portfolioValue: userPortfolioValue,
+          performancePercentage: userPerformancePercentage,
+          isCurrentUser: true,
+        ),
+      );
+    }
+
+    // Ajout de compétiteurs fictifs PNJ
+    final npcs = [
+      LeaderboardEntry(
+        rank: 0,
+        name: 'Warren B.',
+        avatarInitials: 'WB',
+        level: calculateLevel(15000),
+        xp: 15000,
+        portfolioValue: 120500.0,
+        performancePercentage: 22.4,
+      ),
+      LeaderboardEntry(
+        rank: 0,
+        name: 'Charlie M.',
+        avatarInitials: 'CM',
+        level: calculateLevel(12000),
+        xp: 12000,
+        portfolioValue: 95400.0,
+        performancePercentage: 18.2,
+      ),
+      LeaderboardEntry(
+        rank: 0,
+        name: 'Peter L.',
+        avatarInitials: 'PL',
+        level: calculateLevel(8500),
+        xp: 8500,
+        portfolioValue: 42000.0,
+        performancePercentage: 15.6,
+      ),
+      LeaderboardEntry(
+        rank: 0,
+        name: 'Alice S.',
+        avatarInitials: 'AS',
+        level: calculateLevel(4200),
+        xp: 4200,
+        portfolioValue: 18000.0,
+        performancePercentage: 9.8,
+      ),
+      LeaderboardEntry(
+        rank: 0,
+        name: 'Bob J.',
+        avatarInitials: 'BJ',
+        level: calculateLevel(1500),
+        xp: 1500,
+        portfolioValue: 4500.0,
+        performancePercentage: 4.2,
+      ),
+      LeaderboardEntry(
+        rank: 0,
+        name: 'Tom D.',
+        avatarInitials: 'TD',
+        level: calculateLevel(500),
+        xp: 500,
+        portfolioValue: 1200.0,
+        performancePercentage: 1.5,
+      ),
+    ];
+
+    for (var npc in npcs) {
+      if (!entries.any((e) => e.name.toLowerCase() == npc.name.toLowerCase())) {
+        entries.add(npc);
+      }
+    }
+
+    // Tri par le critère sélectionné (ordre décroissant)
+    entries.sort((a, b) {
+      switch (sortBy) {
+        case LeaderboardSortCriteria.xp:
+          return b.xp.compareTo(a.xp);
+        case LeaderboardSortCriteria.portfolioValue:
+          return b.portfolioValue.compareTo(a.portfolioValue);
+        case LeaderboardSortCriteria.performance:
+          return b.performancePercentage.compareTo(a.performancePercentage);
+      }
+    });
+
+    // Affectation du rang
+    final rankedEntries = <LeaderboardEntry>[];
+    for (int i = 0; i < entries.length; i++) {
+      final old = entries[i];
+      rankedEntries.add(
+        LeaderboardEntry(
+          rank: i + 1,
+          name: old.name,
+          avatarInitials: old.avatarInitials,
+          level: old.level,
+          xp: old.xp,
+          portfolioValue: old.portfolioValue,
+          performancePercentage: old.performancePercentage,
+          isCurrentUser: old.isCurrentUser,
+        ),
+      );
+    }
+
+    return rankedEntries;
+  }
+
+  /// Vérifie si l'utilisateur remplit les conditions pour débloquer de nouveaux succès.
+  /// Prends l'état actuel (XP, portefeuille, etc.) et retourne la liste des ID des succès nouvellement débloqués.
+  static List<String> checkAchievementUnlock({
+    required List<Achievement> achievements,
+    required int userXp,
+    required double portfolioValue,
+    required double totalInvested,
+    required int assetCount,
+    required bool hasSimulatedDCA,
+    required bool readLexicon,
+  }) {
+    final newlyUnlockedIds = <String>[];
+
+    for (var ach in achievements) {
+      if (ach.isUnlocked) continue; // Déjà débloqué
+
+      bool unlock = false;
+      switch (ach.id) {
+        case 'first_step':
+          unlock =
+              true; // Débloqué par défaut au lancement si présent non débloqué
+          break;
+        case 'lynx_eye':
+          unlock = assetCount >= 5; // 5 actifs consultés/possédés
+          break;
+        case 'market_linguist':
+          unlock = readLexicon;
+          break;
+        case 'dca_pioneer':
+          unlock = hasSimulatedDCA;
+          break;
+        case 'diversified_investor':
+          unlock = assetCount >= 3; // N'exige que d'avoir au moins 3 actifs différents en portefeuille
+          break;
+        case 'cap_5k':
+          unlock = portfolioValue >= 5000.0;
+          break;
+        case 'master_profit':
+          unlock = (portfolioValue - totalInvested) >= 1000.0;
+          break;
+        case 'golden_patience':
+          unlock = userXp >= 10000;
+          break;
+      }
+
+      if (unlock) {
+        newlyUnlockedIds.add(ach.id);
+      }
+    }
+
+    return newlyUnlockedIds;
   }
 }

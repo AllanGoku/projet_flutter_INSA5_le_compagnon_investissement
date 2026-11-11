@@ -1,6 +1,7 @@
 // [AI-GENERATED] Phase 3, Agent, 2025-02-23
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+
 import '../../models/price_point.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/formatters.dart';
@@ -137,21 +138,32 @@ class _AssetHistoricalChartState extends State<AssetHistoricalChart> {
     final double firstPrice = spots.first.y;
     final double lastPrice = spots.last.y;
     final bool isPositive = lastPrice >= firstPrice;
-    final Color trendColor = isPositive ? AppTheme.gainColor : AppTheme.lossColor;
+    final Color trendColor = isPositive
+        ? AppTheme.gainColor
+        : AppTheme.lossColor;
 
     // Point actif (touché par l'utilisateur ou le dernier point par défaut)
-    final int activeIndex = (_touchedIndex != null && _touchedIndex! >= 0 && _touchedIndex! < spots.length)
+    final int activeIndex =
+        (_touchedIndex != null &&
+            _touchedIndex! >= 0 &&
+            _touchedIndex! < spots.length)
         ? _touchedIndex!
         : (spots.length - 1);
     final String activeDate = _formatFullDate(dates[activeIndex]);
     final String activePrice = Formatters.formatCurrency(spots[activeIndex].y);
 
     // Calcul des bornes Y strictement réelles
-    final double rawMinY = spots.map((s) => s.y).reduce((a, b) => a < b ? a : b);
-    final double rawMaxY = spots.map((s) => s.y).reduce((a, b) => a > b ? a : b);
+    final double rawMinY = spots
+        .map((s) => s.y)
+        .reduce((a, b) => a < b ? a : b);
+    final double rawMaxY = spots
+        .map((s) => s.y)
+        .reduce((a, b) => a > b ? a : b);
 
     final double deltaY = (rawMaxY - rawMinY).abs();
-    final double paddingY = deltaY == 0 ? (rawMaxY > 0 ? rawMaxY * 0.1 : 1.0) : deltaY * 0.08;
+    final double paddingY = deltaY == 0
+        ? (rawMaxY > 0 ? rawMaxY * 0.1 : 1.0)
+        : deltaY * 0.08;
 
     final double minY = (rawMinY - paddingY).clamp(0.0, double.infinity);
     final double maxY = rawMaxY + paddingY;
@@ -187,7 +199,9 @@ class _AssetHistoricalChartState extends State<AssetHistoricalChart> {
                   backgroundColor: AppTheme.backgroundColor,
                   labelStyle: TextStyle(
                     fontSize: 12,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    fontWeight: isSelected
+                        ? FontWeight.bold
+                        : FontWeight.normal,
                     color: isSelected ? trendColor : Colors.black54,
                   ),
                   side: BorderSide(
@@ -222,7 +236,11 @@ class _AssetHistoricalChartState extends State<AssetHistoricalChart> {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.calendar_today_rounded, size: 14, color: Colors.grey.shade600),
+                    Icon(
+                      Icons.calendar_today_rounded,
+                      size: 14,
+                      color: Colors.grey.shade600,
+                    ),
                     const SizedBox(width: 6),
                     Text(
                       activeDate,
@@ -259,10 +277,8 @@ class _AssetHistoricalChartState extends State<AssetHistoricalChart> {
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
-                  getDrawingHorizontalLine: (value) => FlLine(
-                    color: Colors.grey.shade100,
-                    strokeWidth: 1,
-                  ),
+                  getDrawingHorizontalLine: (value) =>
+                      FlLine(color: Colors.grey.shade100, strokeWidth: 1),
                 ),
                 titlesData: FlTitlesData(
                   leftTitles: AxisTitles(
@@ -275,7 +291,9 @@ class _AssetHistoricalChartState extends State<AssetHistoricalChart> {
                         if ((value - meta.min).abs() < 0.001) {
                           return SideTitleWidget(
                             meta: meta,
-                            fitInside: SideTitleFitInsideData.fromTitleMeta(meta),
+                            fitInside: SideTitleFitInsideData.fromTitleMeta(
+                              meta,
+                            ),
                             child: Text(
                               Formatters.formatCurrency(rawMinY),
                               style: TextStyle(
@@ -291,7 +309,9 @@ class _AssetHistoricalChartState extends State<AssetHistoricalChart> {
                         if ((value - meta.max).abs() < 0.001) {
                           return SideTitleWidget(
                             meta: meta,
-                            fitInside: SideTitleFitInsideData.fromTitleMeta(meta),
+                            fitInside: SideTitleFitInsideData.fromTitleMeta(
+                              meta,
+                            ),
                             child: Text(
                               Formatters.formatCurrency(rawMaxY),
                               style: TextStyle(
@@ -328,7 +348,9 @@ class _AssetHistoricalChartState extends State<AssetHistoricalChart> {
                           return const SizedBox.shrink();
                         }
 
-                        final Alignment alignment = (index == 0) ? Alignment.topLeft : Alignment.topRight;
+                        final Alignment alignment = (index == 0)
+                            ? Alignment.topLeft
+                            : Alignment.topRight;
 
                         return SideTitleWidget(
                           meta: meta,
@@ -348,26 +370,32 @@ class _AssetHistoricalChartState extends State<AssetHistoricalChart> {
                       },
                     ),
                   ),
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                 ),
                 borderData: FlBorderData(show: false),
                 lineTouchData: LineTouchData(
                   enabled: true,
-                  touchCallback: (FlTouchEvent event, LineTouchResponse? touchResponse) {
-                    if (event is FlPanEndEvent || event is FlTapUpEvent) {
-                      setState(() {
-                        _touchedIndex = null;
-                      });
-                    } else if (touchResponse != null &&
-                        touchResponse.lineBarSpots != null &&
-                        touchResponse.lineBarSpots!.isNotEmpty) {
-                      final index = touchResponse.lineBarSpots!.first.spotIndex;
-                      setState(() {
-                        _touchedIndex = index;
-                      });
-                    }
-                  },
+                  touchCallback:
+                      (FlTouchEvent event, LineTouchResponse? touchResponse) {
+                        if (event is FlPanEndEvent || event is FlTapUpEvent) {
+                          setState(() {
+                            _touchedIndex = null;
+                          });
+                        } else if (touchResponse != null &&
+                            touchResponse.lineBarSpots != null &&
+                            touchResponse.lineBarSpots!.isNotEmpty) {
+                          final index =
+                              touchResponse.lineBarSpots!.first.spotIndex;
+                          setState(() {
+                            _touchedIndex = index;
+                          });
+                        }
+                      },
                   touchTooltipData: LineTouchTooltipData(
                     getTooltipItems: (touchedSpots) {
                       return touchedSpots.map((spot) {
@@ -375,7 +403,9 @@ class _AssetHistoricalChartState extends State<AssetHistoricalChart> {
                         final dateStr = (index >= 0 && index < dates.length)
                             ? _formatFullDate(dates[index])
                             : '';
-                        final formattedPrice = Formatters.formatCurrency(spot.y);
+                        final formattedPrice = Formatters.formatCurrency(
+                          spot.y,
+                        );
                         return LineTooltipItem(
                           '$dateStr\n$formattedPrice',
                           const TextStyle(

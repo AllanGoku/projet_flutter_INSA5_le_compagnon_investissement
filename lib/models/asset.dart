@@ -14,19 +14,19 @@ class Asset {
   final String type;
   final String description;
   final bool marketOpen;
-  
+
   /// Fuseau horaire du marché où l'actif est coté (ex: 'US/Eastern').
   final String timezone;
-  
+
   /// Historique complet des cours (open, high, low, close, volume) associés aux horodatages.
   final Map<String, PricePoint> timeSeries;
 
   /// Variation en pourcentage (%) optionnelle ou explicite de l'actif.
   final double? changePercentage;
-  
+
   /// La devise d'origine de l'actif (ex: USD, EUR).
   final String originalCurrency;
-  
+
   /// Le prix dans la devise d'origine, avant conversion en Euros.
   final double originalPrice;
 
@@ -189,9 +189,16 @@ class Asset {
     final quoteMap = json['quote'] as Map<String, dynamic>? ?? {};
 
     final metaData = timeSeriesMap['meta'] as Map<String, dynamic>? ?? {};
-    final symbol = metaData['symbol'] as String? ?? quoteMap['symbol'] as String? ?? '';
-    final timezone = metaData['exchange_timezone'] as String? ?? quoteMap['exchange_timezone'] as String? ?? 'UTC';
-    final originalCurrency = metaData['currency'] as String? ?? quoteMap['currency'] as String? ?? 'USD';
+    final symbol =
+        metaData['symbol'] as String? ?? quoteMap['symbol'] as String? ?? '';
+    final timezone =
+        metaData['exchange_timezone'] as String? ??
+        quoteMap['exchange_timezone'] as String? ??
+        'UTC';
+    final originalCurrency =
+        metaData['currency'] as String? ??
+        quoteMap['currency'] as String? ??
+        'USD';
 
     double conversionRate = 1.0;
     if (originalCurrency == 'USD') {
@@ -207,14 +214,19 @@ class Asset {
     }
 
     final Map<String, PricePoint> timeSeries = {};
-    double currentOriginalPrice = double.tryParse(quoteMap['close']?.toString() ?? '') ?? 0.0;
+    double currentOriginalPrice =
+        double.tryParse(quoteMap['close']?.toString() ?? '') ?? 0.0;
     double currentPrice = currentOriginalPrice * conversionRate;
-    double? computedChange = double.tryParse(quoteMap['percent_change']?.toString() ?? '');
+    double? computedChange = double.tryParse(
+      quoteMap['percent_change']?.toString() ?? '',
+    );
 
     final valuesList = timeSeriesMap['values'] as List? ?? [];
     for (var item in valuesList) {
       if (item is Map<String, dynamic> || item is Map) {
-        final itemMap = item is Map<String, dynamic> ? item : item.cast<String, dynamic>();
+        final itemMap = item is Map<String, dynamic>
+            ? item
+            : item.cast<String, dynamic>();
         final timestamp = itemMap['datetime'] as String? ?? '';
         if (timestamp.isNotEmpty) {
           final originalPoint = PricePoint.fromApiJson(itemMap);
@@ -242,8 +254,18 @@ class Asset {
       originalCurrency: originalCurrency,
       originalPrice: currentOriginalPrice,
       peRatio: double.tryParse(quoteMap['pe']?.toString() ?? ''),
-      high52Week: (double.tryParse(quoteMap['fifty_two_week']?['high']?.toString() ?? '') ?? 0.0) * conversionRate,
-      low52Week: (double.tryParse(quoteMap['fifty_two_week']?['low']?.toString() ?? '') ?? 0.0) * conversionRate,
+      high52Week:
+          (double.tryParse(
+                quoteMap['fifty_two_week']?['high']?.toString() ?? '',
+              ) ??
+              0.0) *
+          conversionRate,
+      low52Week:
+          (double.tryParse(
+                quoteMap['fifty_two_week']?['low']?.toString() ?? '',
+              ) ??
+              0.0) *
+          conversionRate,
     );
   }
 
@@ -257,7 +279,9 @@ class Asset {
         if (value is Map<String, dynamic>) {
           parsedTimeSeries[key.toString()] = PricePoint.fromJson(value);
         } else if (value is Map) {
-          parsedTimeSeries[key.toString()] = PricePoint.fromJson(value.cast<String, dynamic>());
+          parsedTimeSeries[key.toString()] = PricePoint.fromJson(
+            value.cast<String, dynamic>(),
+          );
         }
       });
     }
@@ -273,7 +297,9 @@ class Asset {
       timeSeries: parsedTimeSeries,
       changePercentage: (json['changePercentage'] as num?)?.toDouble(),
       originalCurrency: json['originalCurrency'] as String? ?? 'EUR',
-      originalPrice: (json['originalPrice'] as num?)?.toDouble() ?? (json['currentPrice'] as num).toDouble(),
+      originalPrice:
+          (json['originalPrice'] as num?)?.toDouble() ??
+          (json['currentPrice'] as num).toDouble(),
       marketCap: json['marketCap'] as String?,
       peRatio: (json['peRatio'] as num?)?.toDouble(),
       dividendYield: (json['dividendYield'] as num?)?.toDouble(),
@@ -295,11 +321,14 @@ class Asset {
       'description': description,
       'marketOpen': marketOpen,
       'timezone': timezone,
-      'timeSeries': timeSeries.map((key, value) => MapEntry(key, value.toJson())),
+      'timeSeries': timeSeries.map(
+        (key, value) => MapEntry(key, value.toJson()),
+      ),
       'originalCurrency': originalCurrency,
       'originalPrice': originalPrice,
     };
-    if (changePercentage != null) jsonMap['changePercentage'] = changePercentage;
+    if (changePercentage != null)
+      jsonMap['changePercentage'] = changePercentage;
     if (marketCap != null) jsonMap['marketCap'] = marketCap;
     if (peRatio != null) jsonMap['peRatio'] = peRatio;
     if (dividendYield != null) jsonMap['dividendYield'] = dividendYield;

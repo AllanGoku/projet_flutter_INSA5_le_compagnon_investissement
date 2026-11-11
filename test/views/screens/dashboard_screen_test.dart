@@ -10,30 +10,43 @@ import 'package:le_compagnon_investissement/views/widgets/market_movers_section.
 import 'package:le_compagnon_investissement/controllers/portfolio_controller.dart';
 import 'package:le_compagnon_investissement/controllers/data_controller.dart';
 import 'package:le_compagnon_investissement/controllers/auth_controller.dart';
+import 'package:le_compagnon_investissement/controllers/gamification_controller.dart';
 import 'package:le_compagnon_investissement/models/portfolio_position.dart';
 import 'package:le_compagnon_investissement/services/cache_service.dart';
 import 'package:le_compagnon_investissement/services/api_service.dart';
 import 'package:le_compagnon_investissement/services/auth_service.dart';
 import 'package:le_compagnon_investissement/models/user_profile.dart';
+// ignore: depend_on_referenced_packages
+import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
+// ignore: depend_on_referenced_packages
+import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
 
 class FakeCacheService extends CacheService {
   @override
   Future<void> initDB({bool inMemory = false}) async {}
 
   @override
-  Future<void> savePortfolioPositions(List<PortfolioPosition> positions) async {}
+  Future<void> savePortfolioPositions(
+    List<PortfolioPosition> positions, [
+    String userEmail = 'guest@app.local',
+  ]) async {}
 
   @override
-  Future<List<PortfolioPosition>> getPortfolioPositions() async => [];
+  Future<List<PortfolioPosition>> getPortfolioPositions([
+    String userEmail = 'guest@app.local',
+  ]) async => [];
 }
 
 class FakeAuthService implements AuthService {
+  @override
+  Future<List<UserProfile>> getAllUsers() async => [];
   @override
   Future<UserProfile?> getCurrentUser() async => null;
   @override
   Future<bool> isKeepLoggedIn() async => false;
   @override
-  Future<UserProfile> login(String e, String p, bool k) async => throw Exception();
+  Future<UserProfile> login(String e, String p, bool k) async =>
+      throw Exception();
   @override
   Future<void> logout() async {}
   @override
@@ -46,8 +59,11 @@ void main() {
   late PortfolioController portfolioController;
   late DataController dataController;
   late AuthController authController;
+  late GamificationController gamificationController;
 
   setUp(() {
+    SharedPreferencesAsyncPlatform.instance =
+        InMemorySharedPreferencesAsync.empty();
     final cacheService = FakeCacheService();
     portfolioController = PortfolioController(cacheService: cacheService);
     dataController = DataController(
@@ -55,15 +71,21 @@ void main() {
       cacheService: cacheService,
     );
     authController = AuthController(authService: FakeAuthService());
+    gamificationController = GamificationController(cacheService);
   });
 
   Widget buildTestableWidget(Widget child) {
     return MaterialApp(
       home: MultiProvider(
         providers: [
-          ChangeNotifierProvider<PortfolioController>.value(value: portfolioController),
+          ChangeNotifierProvider<PortfolioController>.value(
+            value: portfolioController,
+          ),
           ChangeNotifierProvider<DataController>.value(value: dataController),
           ChangeNotifierProvider<AuthController>.value(value: authController),
+          ChangeNotifierProvider<GamificationController>.value(
+            value: gamificationController,
+          ),
         ],
         child: child,
       ),
@@ -71,7 +93,9 @@ void main() {
   }
 
   group('DashboardScreen - Tests de widgets et d\'affichage', () {
-    testWidgets('Affichage des différentes sections du tableau de bord', (WidgetTester tester) async {
+    testWidgets('Affichage des différentes sections du tableau de bord', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(buildTestableWidget(const DashboardScreen()));
       await tester.pumpAndSettle();
 

@@ -1,6 +1,7 @@
 // [AI-GENERATED] Phase 4, Agent, 2025-02-23
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+
 import '../../models/portfolio_position.dart';
 import '../../models/financial_calculator.dart';
 import '../../utils/app_theme.dart';
@@ -97,11 +98,13 @@ class PortfolioAllocationChart extends StatelessWidget {
                       startDegreeOffset: -90,
                       sections: List.generate(positions.length, (index) {
                         final pos = positions[index];
-                        final positionVal = pos.quantity * pos.asset.currentPrice;
-                        final percentage = FinancialCalculator.calculateAllocationPercentage(
-                          positionValue: positionVal,
-                          totalPortfolioValue: totalValue,
-                        );
+                        final positionVal =
+                            pos.quantity * pos.asset.currentPrice;
+                        final percentage =
+                            FinancialCalculator.calculateAllocationPercentage(
+                              positionValue: positionVal,
+                              totalPortfolioValue: totalValue,
+                            );
                         final color = _chartColors[index % _chartColors.length];
 
                         return PieChartSectionData(
@@ -127,10 +130,11 @@ class PortfolioAllocationChart extends StatelessWidget {
                     children: List.generate(positions.length, (index) {
                       final pos = positions[index];
                       final positionVal = pos.quantity * pos.asset.currentPrice;
-                      final percentage = FinancialCalculator.calculateAllocationPercentage(
-                        positionValue: positionVal,
-                        totalPortfolioValue: totalValue,
-                      );
+                      final percentage =
+                          FinancialCalculator.calculateAllocationPercentage(
+                            positionValue: positionVal,
+                            totalPortfolioValue: totalValue,
+                          );
                       final color = _chartColors[index % _chartColors.length];
 
                       return Padding(

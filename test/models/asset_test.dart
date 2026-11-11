@@ -12,7 +12,7 @@ void main() {
             "symbol": "IBM",
             "interval": "1wk",
             "currency": "USD",
-            "exchange_timezone": "US/Eastern"
+            "exchange_timezone": "US/Eastern",
           },
           "values": [
             {
@@ -21,7 +21,7 @@ void main() {
               "high": "222.6300",
               "low": "222.4964",
               "close": "222.4964",
-              "volume": "281"
+              "volume": "281",
             },
             {
               "datetime": "2026-10-02 19:50:00",
@@ -29,28 +29,35 @@ void main() {
               "high": "222.6300",
               "low": "222.5886",
               "close": "222.6000",
-              "volume": "293"
-            }
-          ]
+              "volume": "293",
+            },
+          ],
         },
         "quote": {
           "symbol": "IBM",
           "name": "International Business Machines",
           "close": "222.4964",
-          "percent_change": "0.5"
-        }
+          "percent_change": "0.5",
+        },
       };
 
-      final asset = Asset.fromApiJson(apiJson, name: 'International Business Machines', type: 'Stock');
+      final asset = Asset.fromApiJson(
+        apiJson,
+        name: 'International Business Machines',
+        type: 'Stock',
+      );
 
       expect(asset.symbol, 'IBM');
       expect(asset.name, 'International Business Machines');
       expect(asset.timezone, 'US/Eastern');
-      
+
       // La monnaie étant USD, une conversion x0.92 doit s'appliquer
       expect(asset.currentPrice, closeTo(222.4964 * 0.92, 0.001));
       expect(asset.timeSeries.length, 2);
-      expect(asset.timeSeries['2026-10-02 19:55:00']?.close, closeTo(222.4964 * 0.92, 0.001));
+      expect(
+        asset.timeSeries['2026-10-02 19:55:00']?.close,
+        closeTo(222.4964 * 0.92, 0.001),
+      );
       expect(asset.timeSeries['2026-10-02 19:50:00']?.volume, 293);
     });
 
@@ -86,7 +93,7 @@ void main() {
       expect(asset.marketOpen, true);
       expect(asset.timezone, 'America/New_York');
       expect(asset.timeSeries.length, 1);
-      
+
       final pricePoint = asset.timeSeries['2025-02-23T10:00:00Z'];
       expect(pricePoint, isNotNull);
       expect(pricePoint!.close, 149.5);

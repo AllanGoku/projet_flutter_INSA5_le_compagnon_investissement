@@ -1,49 +1,68 @@
-// [AI-GENERATED] Phase 2, Agent, 2025-02-23
+// [AI-GENERATED] Phase 2 & Multi-User Isolation, Agent, 2025-02-23
 import 'dart:convert';
+
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+
 import '../models/asset.dart';
 import '../models/portfolio_position.dart';
 import '../models/portfolio_transaction.dart';
+import '../models/achievement.dart';
 
-/// Service responsable de la persistance locale des actifs (actions/ETF)
-/// et des positions du portefeuille fictif.
-/// Utilise SQLite pour stocker de manière robuste les données et l'historique
-/// des cours afin de limiter les requêtes API (Twelve Data) et permettre
-/// un fonctionnement hors-connexion.
+/// Service responsable de la persistance locale des actifs (actions/ETF),
+/// des positions du portefeuille, des transactions et des succès de CHAQUE utilisateur.
+/// Utilise SQLite avec isolation par `userEmail` pour permettre la gestion multi-utilisateur.
 class CacheService {
   Database? _database;
 
   /// Initialise la connexion à la base de données SQLite.
-  /// Crée les tables 'assets' et 'portfolio' si elles n'existent pas et pré-alimente la base.
   Future<void> initDB({bool inMemory = false}) async {
     if (_database != null) return;
 
     if (inMemory) {
-      _database = await openDatabase(inMemoryDatabasePath, version: 1, onCreate: _onCreate);
-    } else {
-      final dbPath = await getDatabasesPath();
-      final path = join(dbPath, 'compagnon_investissement.db');
       _database = await openDatabase(
-        path,
+        inMemoryDatabasePath,
         version: 1,
         onCreate: _onCreate,
       );
+    } else {
+      final dbPath = await getDatabasesPath();
+      final path = join(dbPath, 'compagnon_investissement.db');
+      _database = await openDatabase(path, version: 1, onCreate: _onCreate);
     }
 
-    // S'assurer que la table portfolio existe même si la base existait déjà
+    // S'assurer que les tables existent
     await _database!.execute('''
-      CREATE TABLE IF NOT EXISTS portfolio(
+      CREATE TABLE IF NOT EXISTS assets(
         symbol TEXT PRIMARY KEY,
-        quantity REAL,
-        averagePurchasePrice REAL
+        name TEXT,
+        currentPrice REAL,
+        type TEXT,
+        description TEXT,
+        marketOpen INTEGER,
+        timezone TEXT,
+        timeSeries TEXT,
+        lastUpdated INTEGER,
+        changePercentage REAL,
+        originalCurrency TEXT,
+        originalPrice REAL
       )
     ''');
 
-    // S'assurer que la table transactions existe
+    await _database!.execute('''
+      CREATE TABLE IF NOT EXISTS portfolio(
+        symbol TEXT,
+        userEmail TEXT,
+        quantity REAL,
+        averagePurchasePrice REAL,
+        PRIMARY KEY (symbol, userEmail)
+      )
+    ''');
+
     await _database!.execute('''
       CREATE TABLE IF NOT EXISTS transactions(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        userEmail TEXT,
         symbol TEXT,
         assetName TEXT,
         type TEXT,
@@ -54,7 +73,6 @@ class CacheService {
       )
     ''');
 
-    // S'assurer que la table settings existe pour les paramètres globaux (ex: solde de liquidités)
     await _database!.execute('''
       CREATE TABLE IF NOT EXISTS settings(
         key TEXT PRIMARY KEY,
@@ -62,24 +80,56 @@ class CacheService {
       )
     ''');
 
-    // Migrations de structure pour s'assurer que les nouvelles colonnes existent sur les bases préexistantes
-    try {
-      await _database!.execute('ALTER TABLE assets ADD COLUMN changePercentage REAL');
-    } catch (_) {}
-    try {
-      await _database!.execute('ALTER TABLE assets ADD COLUMN originalCurrency TEXT');
-    } catch (_) {}
-    try {
-      await _database!.execute('ALTER TABLE assets ADD COLUMN originalPrice REAL');
-    } catch (_) {}
-    try {
-      await _database!.execute('ALTER TABLE transactions ADD COLUMN realizedGain REAL');
-    } catch (_) {}
+    await _database!.execute('''
+      CREATE TABLE IF NOT EXISTS achievements(
+        id TEXT,
+        userEmail TEXT,
+        title TEXT,
+        description TEXT,
+        iconName TEXT,
+        xpReward INTEGER,
+        isUnlocked INTEGER,
+        unlockedAt TEXT,
+        PRIMARY KEY (id, userEmail)
+      )
+    ''');
 
-    // Pré-alimentation initiale supprimée (utilisation de l'API)
-    if (!inMemory) {
-      // Les données sont maintenant dynamiquement chargées depuis l'API.
-    }
+    // Migrations de structure
+    try {
+      await _database!.execute(
+        'ALTER TABLE assets ADD COLUMN changePercentage REAL',
+      );
+    } catch (_) {}
+    try {
+      await _database!.execute(
+        'ALTER TABLE assets ADD COLUMN originalCurrency TEXT',
+      );
+    } catch (_) {}
+    try {
+      await _database!.execute(
+        'ALTER TABLE assets ADD COLUMN originalPrice REAL',
+      );
+    } catch (_) {}
+    try {
+      await _database!.execute(
+        'ALTER TABLE transactions ADD COLUMN realizedGain REAL',
+      );
+    } catch (_) {}
+    try {
+      await _database!.execute(
+        "ALTER TABLE portfolio ADD COLUMN userEmail TEXT DEFAULT 'guest@app.local'",
+      );
+    } catch (_) {}
+    try {
+      await _database!.execute(
+        "ALTER TABLE transactions ADD COLUMN userEmail TEXT DEFAULT 'guest@app.local'",
+      );
+    } catch (_) {}
+    try {
+      await _database!.execute(
+        "ALTER TABLE achievements ADD COLUMN userEmail TEXT DEFAULT 'guest@app.local'",
+      );
+    } catch (_) {}
   }
 
   /// Fournit l'instance de la base de données.
@@ -110,15 +160,18 @@ class CacheService {
 
     await db.execute('''
       CREATE TABLE portfolio(
-        symbol TEXT PRIMARY KEY,
+        symbol TEXT,
+        userEmail TEXT,
         quantity REAL,
-        averagePurchasePrice REAL
+        averagePurchasePrice REAL,
+        PRIMARY KEY (symbol, userEmail)
       )
     ''');
 
     await db.execute('''
       CREATE TABLE transactions(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        userEmail TEXT,
         symbol TEXT,
         assetName TEXT,
         type TEXT,
@@ -135,9 +188,91 @@ class CacheService {
         value REAL
       )
     ''');
+
+    await db.execute('''
+      CREATE TABLE achievements(
+        id TEXT,
+        userEmail TEXT,
+        title TEXT,
+        description TEXT,
+        iconName TEXT,
+        xpReward INTEGER,
+        isUnlocked INTEGER,
+        unlockedAt TEXT,
+        PRIMARY KEY (id, userEmail)
+      )
+    ''');
   }
 
-  /// Sauvegarde un [Asset] dans le cache local (insert ou replace).
+  /// Migre automatiquement les données pré-existantes (sauvegardées sous 'guest@app.local' ou sans email) vers le compte utilisateur actif s'il n'a pas encore de données.
+  Future<void> migrateLegacyDataIfNeeded(String targetUserEmail) async {
+    if (targetUserEmail.isEmpty || targetUserEmail == 'guest@app.local') return;
+
+    try {
+      final database = await db;
+
+      // Vérifie si l'utilisateur actif a déjà des données de portefeuille
+      final userPositions = await database.query(
+        'portfolio',
+        where: 'userEmail = ?',
+        whereArgs: [targetUserEmail],
+      );
+
+      if (userPositions.isEmpty) {
+        // Vérifie s'il existe des positions héritées sous 'guest@app.local' ou sans email
+        final legacyPositions = await database.query(
+          'portfolio',
+          where: "userEmail = 'guest@app.local' OR userEmail IS NULL OR userEmail = ''",
+        );
+
+        if (legacyPositions.isNotEmpty) {
+          // Migre les positions
+          await database.update(
+            'portfolio',
+            {'userEmail': targetUserEmail},
+            where: "userEmail = 'guest@app.local' OR userEmail IS NULL OR userEmail = ''",
+          );
+
+          // Migre les transactions
+          await database.update(
+            'transactions',
+            {'userEmail': targetUserEmail},
+            where: "userEmail = 'guest@app.local' OR userEmail IS NULL OR userEmail = ''",
+          );
+
+          // Migre les succès
+          await database.update(
+            'achievements',
+            {'userEmail': targetUserEmail},
+            where: "userEmail = 'guest@app.local' OR userEmail IS NULL OR userEmail = ''",
+          );
+
+          // Migre le solde de liquidités et l'XP s'ils existent sous l'ancienne clé
+          final legacyCash = await database.query(
+            'settings',
+            where: "key = 'cashBalance' OR key = 'cashBalance_guest@app.local'",
+          );
+          if (legacyCash.isNotEmpty && legacyCash.first['value'] != null) {
+            final val = (legacyCash.first['value'] as num).toDouble();
+            await saveCashBalance(val, targetUserEmail);
+          }
+
+          final legacyXp = await database.query(
+            'settings',
+            where: "key = 'userXp' OR key = 'userXp_guest@app.local'",
+          );
+          if (legacyXp.isNotEmpty && legacyXp.first['value'] != null) {
+            final val = (legacyXp.first['value'] as num).toInt();
+            await saveUserXp(val, targetUserEmail);
+          }
+        }
+      }
+    } catch (e) {
+      // Ignorer les erreurs non critiques lors de la migration
+    }
+  }
+
+  /// Sauvegarde un [Asset] dans le cache local.
   Future<void> saveAsset(Asset asset, {int? lastUpdatedMillis}) async {
     final database = await db;
     final Map<String, dynamic> assetMap = {
@@ -165,7 +300,7 @@ class CacheService {
     );
   }
 
-  /// Récupère un [Asset] depuis le cache en utilisant son [symbol].
+  /// Récupère un [Asset] depuis le cache.
   Future<Asset?> getAsset(String symbol) async {
     final database = await db;
     final List<Map<String, dynamic>> maps = await database.query(
@@ -187,7 +322,7 @@ class CacheService {
     return null;
   }
 
-  /// Récupère l'ensemble des actifs enregistrés dans la table 'assets' de la base SQLite.
+  /// Récupère l'ensemble des actifs enregistrés.
   Future<List<Asset>> getAllAssets() async {
     final database = await db;
     final List<Map<String, dynamic>> maps = await database.query('assets');
@@ -207,16 +342,19 @@ class CacheService {
     return assets;
   }
 
-  /// Sauvegarde l'ensemble des positions du portefeuille fictif dans SQLite.
-  ///
-  /// Met à jour la table 'portfolio' et s'assure également de conserver la fiche de
-  /// chaque actif [Asset] dans la table 'assets'.
-  Future<void> savePortfolioPositions(List<PortfolioPosition> positions) async {
+  /// Sauvegarde les positions du portefeuille spécifiques à un `userEmail`.
+  Future<void> savePortfolioPositions(
+    List<PortfolioPosition> positions, [
+    String userEmail = 'guest@app.local',
+  ]) async {
     final database = await db;
     await database.transaction((txn) async {
-      await txn.delete('portfolio');
+      await txn.delete(
+        'portfolio',
+        where: 'userEmail = ?',
+        whereArgs: [userEmail],
+      );
       for (var pos in positions) {
-        // Sauvegarde de l'actif associé
         final Map<String, dynamic> assetMap = {
           'symbol': pos.asset.symbol,
           'name': pos.asset.name,
@@ -240,33 +378,33 @@ class CacheService {
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
 
-        // Sauvegarde de la ligne du portefeuille
-        await txn.insert(
-          'portfolio',
-          {
-            'symbol': pos.asset.symbol,
-            'quantity': pos.quantity,
-            'averagePurchasePrice': pos.averagePurchasePrice,
-          },
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
+        await txn.insert('portfolio', {
+          'symbol': pos.asset.symbol,
+          'userEmail': userEmail,
+          'quantity': pos.quantity,
+          'averagePurchasePrice': pos.averagePurchasePrice,
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
       }
     });
   }
 
-  /// Récupère toutes les positions du portefeuille fictif enregistrées en SQLite.
-  ///
-  /// Pour chaque position, tente de charger l'actif complet [Asset] depuis la table 'assets'.
-  /// Si l'actif n'est pas trouvé dans la table 'assets', construit une instance par défaut.
-  Future<List<PortfolioPosition>> getPortfolioPositions() async {
+  /// Récupère toutes les positions du portefeuille spécifiques à un `userEmail`.
+  Future<List<PortfolioPosition>> getPortfolioPositions([
+    String userEmail = 'guest@app.local',
+  ]) async {
     final database = await db;
-    final List<Map<String, dynamic>> maps = await database.query('portfolio');
+    final List<Map<String, dynamic>> maps = await database.query(
+      'portfolio',
+      where: 'userEmail = ?',
+      whereArgs: [userEmail],
+    );
     final List<PortfolioPosition> positions = [];
 
     for (var map in maps) {
       final String symbol = map['symbol'] as String;
       final double quantity = (map['quantity'] as num).toDouble();
-      final double averagePurchasePrice = (map['averagePurchasePrice'] as num).toDouble();
+      final double averagePurchasePrice = (map['averagePurchasePrice'] as num)
+          .toDouble();
 
       Asset? asset = await getAsset(symbol);
       asset ??= Asset(
@@ -280,17 +418,19 @@ class CacheService {
         timeSeries: {},
       );
 
-      positions.add(PortfolioPosition(
-        asset: asset,
-        quantity: quantity,
-        averagePurchasePrice: averagePurchasePrice,
-      ));
+      positions.add(
+        PortfolioPosition(
+          asset: asset,
+          quantity: quantity,
+          averagePurchasePrice: averagePurchasePrice,
+        ),
+      );
     }
 
     return positions;
   }
 
-  /// Récupère la date de dernière mise à jour d'un actif dans le cache.
+  /// Récupère la date de dernière mise à jour d'un actif.
   Future<DateTime?> getLastUpdated(String symbol) async {
     final database = await db;
     final List<Map<String, dynamic>> maps = await database.query(
@@ -308,7 +448,7 @@ class CacheService {
     }
     return null;
   }
-  
+
   /// Vide la base de données pour réinitialiser le cache (assets compris).
   Future<void> clearCache() async {
     final database = await db;
@@ -317,62 +457,96 @@ class CacheService {
     await database.delete('transactions');
   }
 
-  /// Vide uniquement le portefeuille et l'historique de transactions (réinitialisation de compte).
-  Future<void> clearPortfolioAndTransactions() async {
+  /// Supprime les données du portefeuille et transactions pour un `userEmail`.
+  Future<void> clearPortfolioAndTransactions([
+    String userEmail = 'guest@app.local',
+  ]) async {
     final database = await db;
-    await database.delete('portfolio');
-    await database.delete('transactions');
-    await saveCashBalance(1000.0);
+    await database.delete(
+      'portfolio',
+      where: 'userEmail = ?',
+      whereArgs: [userEmail],
+    );
+    await database.delete(
+      'transactions',
+      where: 'userEmail = ?',
+      whereArgs: [userEmail],
+    );
+    await saveCashBalance(1000.0, userEmail);
   }
 
-  /// Sauvegarde une transaction (achat ou revente) dans la table SQLite `transactions`.
-  Future<void> saveTransaction(PortfolioTransaction transaction) async {
+  /// Vide la table des succès et réinitialise l'XP d'un `userEmail`.
+  Future<void> clearAchievements([String userEmail = 'guest@app.local']) async {
     final database = await db;
+    await database.delete(
+      'achievements',
+      where: 'userEmail = ?',
+      whereArgs: [userEmail],
+    );
+    await saveUserXp(0, userEmail);
+  }
+
+  /// Sauvegarde une transaction pour un `userEmail`.
+  Future<void> saveTransaction(
+    PortfolioTransaction transaction, [
+    String userEmail = 'guest@app.local',
+  ]) async {
+    final database = await db;
+    final map = transaction.toMap();
+    map['userEmail'] = userEmail;
     await database.insert(
       'transactions',
-      transaction.toMap(),
+      map,
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
-  /// Récupère toutes les transactions enregistrées en SQLite, triées de la plus récente à la plus ancienne.
-  Future<List<PortfolioTransaction>> getTransactions() async {
+  /// Récupère toutes les transactions enregistrées pour un `userEmail`.
+  Future<List<PortfolioTransaction>> getTransactions([
+    String userEmail = 'guest@app.local',
+  ]) async {
     final database = await db;
     final List<Map<String, dynamic>> maps = await database.query(
       'transactions',
+      where: 'userEmail = ?',
+      whereArgs: [userEmail],
       orderBy: 'timestamp DESC',
     );
     return maps.map((map) => PortfolioTransaction.fromMap(map)).toList();
   }
 
-  /// Supprime la position d'un actif du portefeuille dans SQLite (utilisé lors d'une revente totale).
-  Future<void> deletePortfolioPosition(String symbol) async {
+  /// Supprime la position d'un actif du portefeuille pour un `userEmail`.
+  Future<void> deletePortfolioPosition(
+    String symbol, [
+    String userEmail = 'guest@app.local',
+  ]) async {
     final database = await db;
     await database.delete(
       'portfolio',
-      where: 'symbol = ?',
-      whereArgs: [symbol],
+      where: 'symbol = ? AND userEmail = ?',
+      whereArgs: [symbol, userEmail],
     );
   }
 
-  /// Sauvegarde le solde de liquidités disponible en Euros (€) dans la table `settings`.
-  Future<void> saveCashBalance(double balance) async {
+  /// Sauvegarde le solde de liquidités pour un `userEmail`.
+  Future<void> saveCashBalance(
+    double balance, [
+    String userEmail = 'guest@app.local',
+  ]) async {
     final database = await db;
-    await database.insert(
-      'settings',
-      {'key': 'cashBalance', 'value': balance},
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await database.insert('settings', {
+      'key': 'cashBalance_$userEmail',
+      'value': balance,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  /// Récupère le solde de liquidités disponible en Euros (€).
-  /// Retourne un solde initial par défaut de 1 000,00 € si aucun solde n'a été enregistré.
-  Future<double> getCashBalance() async {
+  /// Récupère le solde de liquidités pour un `userEmail`. Default = 1000.0.
+  Future<double> getCashBalance([String userEmail = 'guest@app.local']) async {
     final database = await db;
     final List<Map<String, dynamic>> maps = await database.query(
       'settings',
       where: 'key = ?',
-      whereArgs: ['cashBalance'],
+      whereArgs: ['cashBalance_$userEmail'],
     );
     if (maps.isNotEmpty && maps.first['value'] != null) {
       return (maps.first['value'] as num).toDouble();
@@ -380,10 +554,64 @@ class CacheService {
     return 1000.0;
   }
 
-  /// Ferme la connexion à la base de données (utile pour les tests).
+  /// Ferme la connexion à la base de données.
   Future<void> close() async {
     final database = await db;
     await database.close();
     _database = null;
+  }
+
+  /// Sauvegarde un [Achievement] pour un `userEmail`.
+  Future<void> saveAchievement(
+    Achievement achievement, [
+    String userEmail = 'guest@app.local',
+  ]) async {
+    final database = await db;
+    final map = achievement.toMap();
+    map['userEmail'] = userEmail;
+    await database.insert(
+      'achievements',
+      map,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  /// Récupère la liste des [Achievement] d'un `userEmail`.
+  Future<List<Achievement>> getAchievements([
+    String userEmail = 'guest@app.local',
+  ]) async {
+    final database = await db;
+    final List<Map<String, dynamic>> maps = await database.query(
+      'achievements',
+      where: 'userEmail = ?',
+      whereArgs: [userEmail],
+    );
+    return maps.map((map) => Achievement.fromMap(map)).toList();
+  }
+
+  /// Récupère l'XP total d'un `userEmail`.
+  Future<int> getUserXp([String userEmail = 'guest@app.local']) async {
+    final database = await db;
+    final List<Map<String, dynamic>> maps = await database.query(
+      'settings',
+      where: 'key = ?',
+      whereArgs: ['userXp_$userEmail'],
+    );
+    if (maps.isNotEmpty && maps.first['value'] != null) {
+      return (maps.first['value'] as num).toInt();
+    }
+    return 0;
+  }
+
+  /// Sauvegarde l'XP total d'un `userEmail`.
+  Future<void> saveUserXp(
+    int xp, [
+    String userEmail = 'guest@app.local',
+  ]) async {
+    final database = await db;
+    await database.insert('settings', {
+      'key': 'userXp_$userEmail',
+      'value': xp,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 }

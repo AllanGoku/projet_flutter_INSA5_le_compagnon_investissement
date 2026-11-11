@@ -72,25 +72,31 @@ void main() {
       expect(asset.timezone, 'America/New_York');
       expect(asset.currentPrice, closeTo(189.5 * 0.92, 0.001));
       expect(asset.timeSeries.length, 1);
-      expect(asset.timeSeries['2024-05-24']?.open, closeTo(190.0 * 0.92, 0.001));
+      expect(
+        asset.timeSeries['2024-05-24']?.open,
+        closeTo(190.0 * 0.92, 0.001),
+      );
       expect(asset.changePercentage, closeTo(0.79, 0.001));
     });
 
-    test('fetchAssetData lance une exception en cas de limite atteinte', () async {
-      final mockClient = MockClient((request) async {
-        return http.Response('''
+    test(
+      'fetchAssetData lance une exception en cas de limite atteinte',
+      () async {
+        final mockClient = MockClient((request) async {
+          return http.Response('''
         {
           "status": "error",
           "code": 429,
           "message": "You have reached your API call limit."
         }
         ''', 200); // L'API renvoie parfois 200 avec le status error
-      });
+        });
 
-      final apiService = ApiService(client: mockClient);
+        final apiService = ApiService(client: mockClient);
 
-      expect(() => apiService.fetchAssetData('AAPL'), throwsException);
-    });
+        expect(() => apiService.fetchAssetData('AAPL'), throwsException);
+      },
+    );
 
     test('fetchAssetData lance une exception si le statut HTTP est différent de 200', () async {
       final mockClient = MockClient((request) async {

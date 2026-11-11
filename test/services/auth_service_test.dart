@@ -1,4 +1,4 @@
-// [AI-GENERATED] Issue #1, Agent, 2025-02-23
+// [AI-GENERATED] Issue #1 & Email Uniqueness Tests, Agent, 2025-02-23
 
 import 'package:flutter_test/flutter_test.dart';
 // ignore: depend_on_referenced_packages
@@ -14,7 +14,8 @@ void main() {
     late AuthService authService;
 
     setUp(() {
-      SharedPreferencesAsyncPlatform.instance = InMemorySharedPreferencesAsync.empty();
+      SharedPreferencesAsyncPlatform.instance =
+          InMemorySharedPreferencesAsync.empty();
       FlutterSecureStorage.setMockInitialValues({});
       authService = AuthService();
     });
@@ -34,6 +35,28 @@ void main() {
       expect(storedUser!.email, 'john.doe@example.com');
     });
 
+    test('Register fails if user with same email already exists', () async {
+      final user1 = UserProfile(
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'john.doe@example.com',
+        country: 'France',
+      );
+      final user2 = UserProfile(
+        firstName: 'Johnny',
+        lastName: 'Doe',
+        email: 'JOHN.DOE@EXAMPLE.COM',
+        country: 'France',
+      );
+
+      await authService.register(user1, 'password123');
+
+      expect(
+        () => authService.register(user2, 'password456'),
+        throwsA(isA<Exception>()),
+      );
+    });
+
     test('Login succeeds with correct credentials', () async {
       final user = UserProfile(
         firstName: 'John',
@@ -43,10 +66,14 @@ void main() {
       );
 
       await authService.register(user, 'password123');
-      
-      final loggedUser = await authService.login('john.doe@example.com', 'password123', true);
+
+      final loggedUser = await authService.login(
+        'john.doe@example.com',
+        'password123',
+        true,
+      );
       expect(loggedUser.firstName, 'John');
-      
+
       final keepLoggedIn = await authService.isKeepLoggedIn();
       expect(keepLoggedIn, isTrue);
     });
@@ -77,7 +104,7 @@ void main() {
 
       await authService.register(user, 'password123');
       await authService.login('john.doe@example.com', 'password123', true);
-      
+
       await authService.logout();
       final keepLoggedIn = await authService.isKeepLoggedIn();
       expect(keepLoggedIn, isFalse);

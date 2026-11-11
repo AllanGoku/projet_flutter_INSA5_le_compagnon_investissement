@@ -2,7 +2,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../controllers/auth_controller.dart';
+import '../../controllers/portfolio_controller.dart';
+import '../../controllers/gamification_controller.dart';
 import '../../utils/validators.dart';
 import 'dashboard_screen.dart';
 import 'register_screen.dart';
@@ -41,6 +44,12 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (success && mounted) {
+        final email = authController.currentUser?.email;
+        if (email != null) {
+          await context.read<PortfolioController>().loadPositions(email);
+          await context.read<GamificationController>().loadData(email);
+        }
+
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const DashboardScreen()),
           (route) => false,
@@ -61,9 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final authController = context.watch<AuthController>();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Connexion'),
-      ),
+      appBar: AppBar(title: const Text('Connexion')),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -138,7 +145,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           width: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Se connecter', style: TextStyle(fontSize: 16)),
+                      : const Text(
+                          'Se connecter',
+                          style: TextStyle(fontSize: 16),
+                        ),
                 ),
                 const SizedBox(height: 16),
                 TextButton(

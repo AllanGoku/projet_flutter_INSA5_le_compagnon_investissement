@@ -1,12 +1,13 @@
 // [AI-GENERATED] Migration Twelve Data, Agent, 2025-02-23
 import 'package:flutter/foundation.dart';
+
 import 'data_state.dart';
 import '../services/api_service.dart';
 import '../services/cache_service.dart';
 import '../models/asset.dart';
 
 /// Contrôleur gérant la récupération, la mise en cache SQLite et la distribution des données
-/// financières réelles de l'application. 
+/// financières réelles de l'application.
 /// Gère explicitement l'état de chargement et le quota restreint de l'API (25 appels/jour).
 class DataController extends ChangeNotifier {
   final ApiService apiService;
@@ -14,14 +15,11 @@ class DataController extends ChangeNotifier {
 
   DataState _state = DataState.initial;
   String _errorMessage = '';
-  
+
   // Dictionnaire local des actifs réels récupérés depuis SQLite ou l'API
   final Map<String, Asset> _assets = {};
 
-  DataController({
-    required this.apiService,
-    required this.cacheService,
-  });
+  DataController({required this.apiService, required this.cacheService});
 
   DataState get state => _state;
   String get errorMessage => _errorMessage;
@@ -66,15 +64,22 @@ class DataController extends ChangeNotifier {
       debugPrint("Info API Market Movers: $e");
       // S'il n'y a aucun actif dans le cache pour compenser l'erreur API, afficher l'erreur
       if (_assets.isEmpty) {
-        _setState(DataState.error, error: e.toString().replaceAll('Exception: ', ''));
+        _setState(
+          DataState.error,
+          error: e.toString().replaceAll('Exception: ', ''),
+        );
       } else {
-        _setState(DataState.offline, error: 'Impossible de récupérer les mouvements de marché : ${e.toString().replaceAll('Exception: ', '')}');
+        _setState(
+          DataState.offline,
+          error:
+              'Impossible de récupérer les mouvements de marché : ${e.toString().replaceAll('Exception: ', '')}',
+        );
       }
     }
   }
 
   /// Charge un actif spécifique depuis SQLite ou l'API Twelve Data.
-  /// 
+  ///
   /// Si la donnée en cache est une graine initiale (`timeSeries` vide ou `lastUpdated == 0`),
   /// force l'appel à l'API Twelve Data pour récupérer les vraies données de marché.
   Future<void> loadAsset(
@@ -103,7 +108,9 @@ class DataController extends ChangeNotifier {
 
         // N'utiliser le cache SQLite sans appel API que si l'actif contient l'historique complet API
         // et que la dernière mise à jour date de moins de 24h.
-        if (cachedAsset.timeSeries.isNotEmpty && difference < threshold && lastUpdated.millisecondsSinceEpoch > 0) {
+        if (cachedAsset.timeSeries.isNotEmpty &&
+            difference < threshold &&
+            lastUpdated.millisecondsSinceEpoch > 0) {
           needsRefresh = false;
         }
       }
@@ -120,12 +127,21 @@ class DataController extends ChangeNotifier {
           _assets[symbol] = asset;
           _setState(DataState.success);
         } catch (apiError) {
-          debugPrint("Erreur API lors de la récupération de $symbol : $apiError");
+          debugPrint(
+            "Erreur API lors de la récupération de $symbol : $apiError",
+          );
           // Si l'API échoue ou quota atteint, conserver la donnée locale SQLite
           if (_assets.containsKey(symbol)) {
-            _setState(DataState.offline, error: 'Données hors-connexion. Erreur: ${apiError.toString().replaceAll('Exception: ', '')}');
+            _setState(
+              DataState.offline,
+              error:
+                  'Données hors-connexion. Erreur: ${apiError.toString().replaceAll('Exception: ', '')}',
+            );
           } else {
-            _setState(DataState.error, error: apiError.toString().replaceAll('Exception: ', ''));
+            _setState(
+              DataState.error,
+              error: apiError.toString().replaceAll('Exception: ', ''),
+            );
           }
         }
       } else {
@@ -159,11 +175,20 @@ class DataController extends ChangeNotifier {
         _assets[symbol] = asset;
         _setState(DataState.success);
       } catch (apiError) {
-        debugPrint("Erreur API lors du rafraîchissement de $symbol : $apiError");
+        debugPrint(
+          "Erreur API lors du rafraîchissement de $symbol : $apiError",
+        );
         if (_assets.containsKey(symbol)) {
-          _setState(DataState.offline, error: 'Données hors-connexion. Erreur: ${apiError.toString().replaceAll('Exception: ', '')}');
+          _setState(
+            DataState.offline,
+            error:
+                'Données hors-connexion. Erreur: ${apiError.toString().replaceAll('Exception: ', '')}',
+          );
         } else {
-          _setState(DataState.error, error: apiError.toString().replaceAll('Exception: ', ''));
+          _setState(
+            DataState.error,
+            error: apiError.toString().replaceAll('Exception: ', ''),
+          );
         }
       }
     } else {

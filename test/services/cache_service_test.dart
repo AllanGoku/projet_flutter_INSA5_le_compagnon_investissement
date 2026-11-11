@@ -30,7 +30,8 @@ void main() {
           if (method == 'insert') {
             if (args != null && args['sql'] != null) {
               final sql = args['sql'] as String;
-              if (sql.contains('INTO transactions') && args['arguments'] != null) {
+              if (sql.contains('INTO transactions') &&
+                  args['arguments'] != null) {
                 final list = args['arguments'] as List;
                 transactionsList.add({
                   'symbol': list[0],
@@ -55,7 +56,9 @@ void main() {
                   'marketOpen': list.length > 5 ? list[5] : 1,
                   'timezone': list.length > 6 ? list[6] : 'UTC',
                   'timeSeries': list.length > 7 ? list[7] : '{}',
-                  'lastUpdated': list.length > 8 ? list[8] : DateTime.now().millisecondsSinceEpoch,
+                  'lastUpdated': list.length > 8
+                      ? list[8]
+                      : DateTime.now().millisecondsSinceEpoch,
                 };
                 inMemoryStorage[list[0] as String] = row;
               }
@@ -107,7 +110,13 @@ void main() {
         marketOpen: true,
         timezone: 'US/Eastern',
         timeSeries: {
-          '2024-05-24': PricePoint(open: 195.0, high: 205.0, low: 190.0, close: 200.0, volume: 5000)
+          '2024-05-24': PricePoint(
+            open: 195.0,
+            high: 205.0,
+            low: 190.0,
+            close: 200.0,
+            volume: 5000,
+          ),
         },
       );
 
@@ -119,7 +128,10 @@ void main() {
       expect(retrievedAsset.name, 'Tesla');
       expect(retrievedAsset.currentPrice, closeTo(200.0, 0.001));
       expect(retrievedAsset.timeSeries.containsKey('2024-05-24'), isTrue);
-      expect(retrievedAsset.timeSeries['2024-05-24']!.open, closeTo(195.0, 0.001));
+      expect(
+        retrievedAsset.timeSeries['2024-05-24']!.open,
+        closeTo(195.0, 0.001),
+      );
     });
 
     test('getAsset renvoie null si l\'actif n\'existe pas', () async {

@@ -1,8 +1,10 @@
 // [AI-GENERATED] Phase 2, Agent, 2025-02-23
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_confetti/flutter_confetti.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../../utils/app_theme.dart';
 
 /// Widget d'animation personnalisée simulant un paiement fictif par carte bancaire.
@@ -26,7 +28,8 @@ class PurchaseAnimation extends StatefulWidget {
   State<PurchaseAnimation> createState() => _PurchaseAnimationState();
 }
 
-class _PurchaseAnimationState extends State<PurchaseAnimation> with SingleTickerProviderStateMixin {
+class _PurchaseAnimationState extends State<PurchaseAnimation>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _slideAnimation;
   late Animation<double> _scaleAnimation;
@@ -77,42 +80,31 @@ class _PurchaseAnimationState extends State<PurchaseAnimation> with SingleTicker
 
             void shoot() {
               if (!mounted) return;
-              
-              Confetti.launch(context,
-                  options: options.copyWith(
-                    particleCount: 20,
-                  ),
-                  particleBuilder: (index) => Emoji(
-                      emoji: '💶',
-                      textStyle:
-                          GoogleFonts.notoColorEmoji()));
-              Confetti.launch(context,
-                  options: options.copyWith(
-                    particleCount: 15,
-                  ),
-                  particleBuilder: (index) => Emoji(
-                        emoji: '💵',
-                        textStyle:
-                            GoogleFonts.notoColorEmoji(),
-                      ));
-              Confetti.launch(context,
-                  options: options.copyWith(
-                    particleCount: 15,
-                  ),
-                  particleBuilder: (index) => Emoji(
-                        emoji: '💴',
-                        textStyle:
-                            GoogleFonts.notoColorEmoji(),
-                      ));
-              Confetti.launch(context,
-                  options: options.copyWith(
-                    particleCount: 15,
-                  ),
-                  particleBuilder: (index) => Emoji(
-                        emoji: '💷',
-                        textStyle:
-                            GoogleFonts.notoColorEmoji(),
-                      ));
+
+              Confetti.launch(
+                context,
+                options: options.copyWith(particleCount: 20),
+                particleBuilder: (index) =>
+                    Emoji(emoji: '💶', textStyle: GoogleFonts.notoColorEmoji()),
+              );
+              Confetti.launch(
+                context,
+                options: options.copyWith(particleCount: 15),
+                particleBuilder: (index) =>
+                    Emoji(emoji: '💵', textStyle: GoogleFonts.notoColorEmoji()),
+              );
+              Confetti.launch(
+                context,
+                options: options.copyWith(particleCount: 15),
+                particleBuilder: (index) =>
+                    Emoji(emoji: '💴', textStyle: GoogleFonts.notoColorEmoji()),
+              );
+              Confetti.launch(
+                context,
+                options: options.copyWith(particleCount: 15),
+                particleBuilder: (index) =>
+                    Emoji(emoji: '💷', textStyle: GoogleFonts.notoColorEmoji()),
+              );
             }
 
             Timer(Duration.zero, shoot);
@@ -154,20 +146,21 @@ class _PurchaseAnimationState extends State<PurchaseAnimation> with SingleTicker
           children: [
             const SizedBox(height: 12),
             Text(
-              _isContactlessDone ? 'Achat Fictif Confirmé ! (+50 XP)' : 'Paiement en cours...',
+              _isContactlessDone
+                  ? 'Achat Fictif Confirmé ! (+50 XP)'
+                  : 'Paiement en cours...',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: _isContactlessDone ? AppTheme.primaryColor : Colors.black87,
+                color: _isContactlessDone
+                    ? AppTheme.primaryColor
+                    : Colors.black87,
               ),
             ),
             const SizedBox(height: 6),
             Text(
               '${widget.quantity % 1 == 0 ? widget.quantity.toInt() : widget.quantity.toStringAsFixed(2)} x ${widget.assetSymbol}',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
             ),
             const SizedBox(height: 30),
 
@@ -205,12 +198,18 @@ class _PurchaseAnimationState extends State<PurchaseAnimation> with SingleTicker
                               Container(
                                 width: 160,
                                 height: 50,
-                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: _isContactlessDone ? Colors.green.shade900 : Colors.black,
+                                  color: _isContactlessDone
+                                      ? Colors.green.shade900
+                                      : Colors.black,
                                   borderRadius: BorderRadius.circular(10),
                                   border: Border.all(
-                                    color: _isContactlessDone ? AppTheme.gainColor : Colors.grey.shade800,
+                                    color: _isContactlessDone
+                                        ? AppTheme.gainColor
+                                        : Colors.grey.shade800,
                                   ),
                                 ),
                                 child: Center(
@@ -218,7 +217,8 @@ class _PurchaseAnimationState extends State<PurchaseAnimation> with SingleTicker
                                     fit: BoxFit.scaleDown,
                                     child: _isContactlessDone
                                         ? Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
                                             children: const [
                                               Icon(
                                                 Icons.check_circle_rounded,
@@ -237,7 +237,8 @@ class _PurchaseAnimationState extends State<PurchaseAnimation> with SingleTicker
                                             ],
                                           )
                                         : Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
                                             children: const [
                                               Icon(
                                                 Icons.contactless_rounded,
@@ -265,7 +266,9 @@ class _PurchaseAnimationState extends State<PurchaseAnimation> with SingleTicker
                                 children: List.generate(
                                   3,
                                   (index) => Container(
-                                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                                    margin: const EdgeInsets.symmetric(
+                                      horizontal: 4,
+                                    ),
                                     width: 24,
                                     height: 8,
                                     decoration: BoxDecoration(
@@ -309,9 +312,14 @@ class _PurchaseAnimationState extends State<PurchaseAnimation> with SingleTicker
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: const [
-                                    Icon(Icons.nfc_rounded, color: Colors.white, size: 18),
+                                    Icon(
+                                      Icons.nfc_rounded,
+                                      color: Colors.white,
+                                      size: 18,
+                                    ),
                                     Text(
                                       'COMPAGNON',
                                       style: TextStyle(
@@ -377,7 +385,9 @@ class _PurchaseAnimationState extends State<PurchaseAnimation> with SingleTicker
                   ),
                 ),
                 child: Text(
-                  _isContactlessDone ? 'Voir mon Portefeuille' : 'Validation...',
+                  _isContactlessDone
+                      ? 'Voir mon Portefeuille'
+                      : 'Validation...',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,

@@ -1,8 +1,12 @@
 // [AI-GENERATED] Phase 3 & 6, Agent, 2025-02-23
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import '../../models/asset.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/formatters.dart';
+import '../../controllers/portfolio_controller.dart';
+import '../../controllers/gamification_controller.dart';
 import '../widgets/asset_historical_chart.dart';
 import '../widgets/market_term_help_button.dart';
 import '../widgets/buy_asset_sheet.dart';
@@ -16,16 +20,32 @@ import 'dca_simulator_screen.dart';
 class AssetDetailScreen extends StatefulWidget {
   final Asset asset;
 
-  const AssetDetailScreen({
-    super.key,
-    required this.asset,
-  });
+  const AssetDetailScreen({super.key, required this.asset});
 
   @override
   State<AssetDetailScreen> createState() => _AssetDetailScreenState();
 }
 
 class _AssetDetailScreenState extends State<AssetDetailScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        try {
+          final portfolio = context.read<PortfolioController>();
+          final gamification = context.read<GamificationController>();
+          gamification.trackAssetView(
+            widget.asset.symbol,
+            portfolioValue: portfolio.totalValue,
+            totalInvested: portfolio.totalInvested,
+            portfolioAssetCount: portfolio.positions.length,
+          );
+        } catch (_) {}
+      }
+    });
+  }
+
   void _openBuyModal() {
     showModalBottomSheet(
       context: context,
@@ -62,7 +82,9 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
                 height: 10,
                 margin: const EdgeInsets.symmetric(horizontal: 2),
                 decoration: BoxDecoration(
-                  color: isFilled ? const Color(0xFFF97316) : Colors.grey.shade200,
+                  color: isFilled
+                      ? const Color(0xFFF97316)
+                      : Colors.grey.shade200,
                   borderRadius: BorderRadius.circular(5),
                 ),
               ),
@@ -139,10 +161,7 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
                   ),
                 ),
               ),
-              MarketTermHelpButton(
-                term: helpTerm,
-                iconSize: 16,
-              ),
+              MarketTermHelpButton(term: helpTerm, iconSize: 16),
             ],
           ),
           const SizedBox(height: 8),
@@ -169,7 +188,9 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
     final asset = widget.asset;
     final double change = asset.dailyChangePercentage;
     final bool isPositive = change >= 0;
-    final Color changeColor = isPositive ? AppTheme.gainColor : AppTheme.lossColor;
+    final Color changeColor = isPositive
+        ? AppTheme.gainColor
+        : AppTheme.lossColor;
 
     // Récupération des données OHLCV
     double openPrice = 0.0;
@@ -194,10 +215,7 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
         ),
         centerTitle: true,
         actions: [
-          MarketTermHelpButton(
-            term: asset.type,
-            iconSize: 22,
-          ),
+          MarketTermHelpButton(term: asset.type, iconSize: 22),
           const SizedBox(width: 8),
         ],
       ),
@@ -228,7 +246,10 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
                         Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
                                 color: AppTheme.mint.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(8),
@@ -244,7 +265,10 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
                             ),
                             const SizedBox(width: 8),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
                                 color: asset.marketOpen
                                     ? Colors.green.shade50
@@ -261,11 +285,15 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
                                   Icon(
                                     Icons.circle,
                                     size: 8,
-                                    color: asset.marketOpen ? AppTheme.gainColor : Colors.grey,
+                                    color: asset.marketOpen
+                                        ? AppTheme.gainColor
+                                        : Colors.grey,
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
-                                    asset.marketOpen ? 'Marché Ouvert' : 'Marché Fermé',
+                                    asset.marketOpen
+                                        ? 'Marché Ouvert'
+                                        : 'Marché Fermé',
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
@@ -329,13 +357,19 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
                           const SizedBox(height: 2),
                           Text(
                             'Origine : ${asset.originalPrice.toStringAsFixed(2)} ${asset.originalCurrency}',
-                            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
                           ),
                         ],
                       ],
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: changeColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(16),
@@ -346,7 +380,9 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
                           Row(
                             children: [
                               Icon(
-                                isPositive ? Icons.trending_up : Icons.trending_down,
+                                isPositive
+                                    ? Icons.trending_up
+                                    : Icons.trending_down,
                                 color: changeColor,
                                 size: 18,
                               ),
@@ -385,10 +421,7 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
                       color: Colors.black87,
                     ),
                   ),
-                  MarketTermHelpButton(
-                    term: 'Cap. Boursière',
-                    iconSize: 18,
-                  ),
+                  MarketTermHelpButton(term: 'Cap. Boursière', iconSize: 18),
                 ],
               ),
               const SizedBox(height: 12),
@@ -414,7 +447,8 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
                   _buildStatCard(
                     title: 'Dividende',
                     helpTerm: 'Dividende',
-                    valueText: '${asset.displayDividendYield.toStringAsFixed(2)}%',
+                    valueText:
+                        '${asset.displayDividendYield.toStringAsFixed(2)}%',
                   ),
                   _buildStatCard(
                     title: 'Risque',
@@ -434,12 +468,16 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
                   _buildStatCard(
                     title: 'Plus haut 52 sem.',
                     helpTerm: 'Plus haut 52 sem.',
-                    valueText: Formatters.formatCurrency(asset.displayHigh52Week),
+                    valueText: Formatters.formatCurrency(
+                      asset.displayHigh52Week,
+                    ),
                   ),
                   _buildStatCard(
                     title: 'Plus bas 52 sem.',
                     helpTerm: 'Plus bas 52 sem.',
-                    valueText: Formatters.formatCurrency(asset.displayLow52Week),
+                    valueText: Formatters.formatCurrency(
+                      asset.displayLow52Week,
+                    ),
                   ),
                 ],
               ),
@@ -455,10 +493,7 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              AssetHistoricalChart(
-                timeSeries: asset.timeSeries,
-                height: 250,
-              ),
+              AssetHistoricalChart(timeSeries: asset.timeSeries, height: 250),
               const SizedBox(height: 24),
 
               // 5. Métriques Générales de Séance (Ouverture, Plus Haut, Volume)
@@ -480,11 +515,26 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
                 ),
                 child: Column(
                   children: [
-                    _buildMetricRow('Ouverture', openPrice > 0 ? Formatters.formatCurrency(openPrice) : 'N/A'),
+                    _buildMetricRow(
+                      'Ouverture',
+                      openPrice > 0
+                          ? Formatters.formatCurrency(openPrice)
+                          : 'N/A',
+                    ),
                     const Divider(height: 20),
-                    _buildMetricRow('Plus haut jour', highPrice > 0 ? Formatters.formatCurrency(highPrice) : 'N/A'),
+                    _buildMetricRow(
+                      'Plus haut jour',
+                      highPrice > 0
+                          ? Formatters.formatCurrency(highPrice)
+                          : 'N/A',
+                    ),
                     const Divider(height: 20),
-                    _buildMetricRow('Plus bas jour', lowPrice > 0 ? Formatters.formatCurrency(lowPrice) : 'N/A'),
+                    _buildMetricRow(
+                      'Plus bas jour',
+                      lowPrice > 0
+                          ? Formatters.formatCurrency(lowPrice)
+                          : 'N/A',
+                    ),
                     const Divider(height: 20),
                     _buildMetricRow(
                       'Volume 24h',
@@ -555,14 +605,24 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
                 child: OutlinedButton.icon(
                   key: const Key('dca_simulate_detail_button'),
                   onPressed: _openDcaSimulator,
-                  icon: const Icon(Icons.calculate_outlined, color: AppTheme.primaryColor),
+                  icon: const Icon(
+                    Icons.calculate_outlined,
+                    color: AppTheme.primaryColor,
+                  ),
                   label: const Text(
                     'Simuler DCA',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.primaryColor),
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.primaryColor,
+                    ),
                   ),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    side: const BorderSide(color: AppTheme.primaryColor, width: 1.5),
+                    side: const BorderSide(
+                      color: AppTheme.primaryColor,
+                      width: 1.5,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),

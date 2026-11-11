@@ -1,5 +1,6 @@
 // [AI-GENERATED] Phase 4, Agent, 2025-02-23
 import 'package:flutter/material.dart';
+
 import '../../models/portfolio_transaction.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/formatters.dart';
@@ -118,12 +119,18 @@ class TransactionHistorySection extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: isBuy ? AppTheme.mint.withOpacity(0.15) : Colors.orange.shade50,
+                              color: isBuy
+                                  ? AppTheme.mint.withOpacity(0.15)
+                                  : Colors.orange.shade50,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Icon(
-                              isBuy ? Icons.add_shopping_cart_rounded : Icons.sell_rounded,
-                              color: isBuy ? AppTheme.primaryColor : Colors.orange.shade800,
+                              isBuy
+                                  ? Icons.add_shopping_cart_rounded
+                                  : Icons.sell_rounded,
+                              color: isBuy
+                                  ? AppTheme.primaryColor
+                                  : Colors.orange.shade800,
                               size: 20,
                             ),
                           ),
@@ -146,9 +153,14 @@ class TransactionHistorySection extends StatelessWidget {
                                     ),
                                     const SizedBox(width: 8),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
+                                      ),
                                       decoration: BoxDecoration(
-                                        color: isBuy ? AppTheme.mint.withOpacity(0.2) : Colors.orange.shade100,
+                                        color: isBuy
+                                            ? AppTheme.mint.withOpacity(0.2)
+                                            : Colors.orange.shade100,
                                         borderRadius: BorderRadius.circular(6),
                                       ),
                                       child: Text(
@@ -156,7 +168,9 @@ class TransactionHistorySection extends StatelessWidget {
                                         style: TextStyle(
                                           fontSize: 10,
                                           fontWeight: FontWeight.bold,
-                                          color: isBuy ? AppTheme.primaryColor : Colors.orange.shade900,
+                                          color: isBuy
+                                              ? AppTheme.primaryColor
+                                              : Colors.orange.shade900,
                                         ),
                                       ),
                                     ),
@@ -199,11 +213,20 @@ class TransactionHistorySection extends StatelessWidget {
                                 Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Text('Plus-value: ', style: TextStyle(fontSize: 10, color: Colors.grey.shade600)),
+                                    Text(
+                                      'Plus-value: ',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
                                     PerformanceText(
                                       value: tx.realizedGain!,
                                       isCurrency: true,
-                                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ],
                                 ),

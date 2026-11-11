@@ -1,19 +1,22 @@
 // [AI-GENERATED] Issue #0, Agent, 2025-02-23
 import 'package:flutter/material.dart';
+
 import '../../utils/app_theme.dart';
 
 /// Variantes de style pour les boutons.
 enum ButtonVariant {
   /// Bouton d'action principal (Gris très foncé, inspiré du mockup).
   dark,
+
   /// Bouton avec le dégradé de la marque (Menthe vers Azur).
   gradient,
+
   /// Bouton avec fond blanc et texte azur.
   light,
 }
 
 /// Bouton d'action principal réutilisable inspiré de la maquette HTML.
-/// 
+///
 /// Dispose de plusieurs variantes (dark, gradient, light) pour s'adapter
 /// aux différents contextes (formulaires, actions secondaires, etc.).
 class TexturedButton extends StatefulWidget {
@@ -45,7 +48,8 @@ class TexturedButton extends StatefulWidget {
   State<TexturedButton> createState() => _TexturedButtonState();
 }
 
-class _TexturedButtonState extends State<TexturedButton> with SingleTickerProviderStateMixin {
+class _TexturedButtonState extends State<TexturedButton>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
 
@@ -94,7 +98,8 @@ class _TexturedButtonState extends State<TexturedButton> with SingleTickerProvid
           borderRadius: BorderRadius.circular(16.0), // rounded-2xl
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF111827).withOpacity(0.2), // shadow-gray-900/20
+              color: const Color(0xFF111827)
+                  .withOpacity(0.2), // shadow-gray-900/20
               blurRadius: 15,
               offset: const Offset(0, 10), // shadow-lg
             ),
@@ -134,7 +139,7 @@ class _TexturedButtonState extends State<TexturedButton> with SingleTickerProvid
 
     final Widget buttonContent = Padding(
       padding: EdgeInsets.symmetric(
-        horizontal: widget.variant == ButtonVariant.light ? 16.0 : 24.0, 
+        horizontal: widget.variant == ButtonVariant.light ? 16.0 : 24.0,
         vertical: widget.variant == ButtonVariant.light ? 12.0 : 16.0,
       ),
       child: Row(
@@ -149,7 +154,9 @@ class _TexturedButtonState extends State<TexturedButton> with SingleTickerProvid
             widget.label,
             style: TextStyle(
               color: textColor,
-              fontSize: widget.variant == ButtonVariant.light ? 14.0 : 18.0, // text-sm ou text-lg
+              fontSize: widget.variant == ButtonVariant.light
+                  ? 14.0
+                  : 18.0, // text-sm ou text-lg
               fontWeight: FontWeight.bold,
             ),
           ),

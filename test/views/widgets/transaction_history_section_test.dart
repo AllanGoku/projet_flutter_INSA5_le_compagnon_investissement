@@ -8,7 +8,9 @@ void main() {
   final now = DateTime.now();
 
   group('TransactionHistorySection Widget Tests', () {
-    testWidgets('Affiche la liste des transactions d\'achat et de revente', (WidgetTester tester) async {
+    testWidgets('Affiche la liste des transactions d\'achat et de revente', (
+      WidgetTester tester,
+    ) async {
       final transactions = [
         PortfolioTransaction(
           symbol: 'AAPL',
@@ -46,17 +48,18 @@ void main() {
       expect(find.text('NVDA'), findsOneWidget);
     });
 
-    testWidgets('Affiche le message vide lorsque aucune transaction n\'existe', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: TransactionHistorySection(transactions: []),
+    testWidgets(
+      'Affiche le message vide lorsque aucune transaction n\'existe',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: Scaffold(body: TransactionHistorySection(transactions: [])),
           ),
-        ),
-      );
+        );
 
-      expect(find.text('Historique des Transactions'), findsOneWidget);
-      expect(find.text('Aucune transaction enregistrée'), findsOneWidget);
-    });
+        expect(find.text('Historique des Transactions'), findsOneWidget);
+        expect(find.text('Aucune transaction enregistrée'), findsOneWidget);
+      },
+    );
   });
 }

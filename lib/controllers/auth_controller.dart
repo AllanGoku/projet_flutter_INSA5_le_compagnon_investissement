@@ -1,6 +1,7 @@
 // [AI-GENERATED] Issue #5, Agent, 2025-02-23
 
 import 'package:flutter/material.dart';
+
 import '../models/user_profile.dart';
 import '../services/auth_service.dart';
 import '../models/financial_calculator.dart';
@@ -16,7 +17,7 @@ class AuthController extends ChangeNotifier {
   UserProfile? _currentUser;
 
   AuthController({AuthService? authService})
-      : _authService = authService ?? AuthService();
+    : _authService = authService ?? AuthService();
 
   bool get isLoading => _isLoading;
   String? get error => _error;
@@ -75,13 +76,13 @@ class AuthController extends ChangeNotifier {
   /// Gère la série de connexions quotidiennes et attribue l'XP correspondant.
   Future<void> _processLoginStreak() async {
     if (_currentUser == null) return;
-    
+
     final now = DateTime.now();
     final lastLogin = _currentUser!.lastLoginDate;
-    
+
     int newStreak = _currentUser!.streak;
     int xpGained = 0;
-    
+
     if (lastLogin == null) {
       // Première connexion
       newStreak = 1;
@@ -90,7 +91,7 @@ class AuthController extends ChangeNotifier {
       final difference = DateTime(now.year, now.month, now.day)
           .difference(DateTime(lastLogin.year, lastLogin.month, lastLogin.day))
           .inDays;
-          
+
       if (difference == 1) {
         // Connexion consécutive
         newStreak += 1;
@@ -102,22 +103,37 @@ class AuthController extends ChangeNotifier {
       }
       // Si difference == 0, déjà connecté aujourd'hui, pas de bonus
     }
-    
-    if (xpGained > 0 || lastLogin == null || newStreak != _currentUser!.streak) {
+
+    if (xpGained > 0 ||
+        lastLogin == null ||
+        newStreak != _currentUser!.streak) {
       await addXp(xpGained, newStreak: newStreak, newLoginDate: now);
     }
   }
 
   /// Ajoute de l'XP à l'utilisateur et met à jour ses records et son niveau.
-  Future<void> addXp(int amount, {int? newStreak, DateTime? newLoginDate}) async {
-    if (_currentUser == null || amount < 0 && newStreak == null && newLoginDate == null) return;
-    
-    final int newXp = (_currentUser!.xp + amount).clamp(0, double.maxFinite.toInt());
+  Future<void> addXp(
+    int amount, {
+    int? newStreak,
+    DateTime? newLoginDate,
+  }) async {
+    if (_currentUser == null ||
+        amount < 0 && newStreak == null && newLoginDate == null)
+      return;
+
+    final int newXp = (_currentUser!.xp + amount).clamp(
+      0,
+      double.maxFinite.toInt(),
+    );
     final int newLevel = FinancialCalculator.calculateLevel(newXp);
-    
-    final int highestXp = newXp > _currentUser!.highestXpReached ? newXp : _currentUser!.highestXpReached;
-    final int highestLevel = newLevel > _currentUser!.highestLevelReached ? newLevel : _currentUser!.highestLevelReached;
-    
+
+    final int highestXp = newXp > _currentUser!.highestXpReached
+        ? newXp
+        : _currentUser!.highestXpReached;
+    final int highestLevel = newLevel > _currentUser!.highestLevelReached
+        ? newLevel
+        : _currentUser!.highestLevelReached;
+
     final updatedUser = _currentUser!.copyWith(
       xp: newXp,
       level: newLevel,
@@ -126,7 +142,32 @@ class AuthController extends ChangeNotifier {
       streak: newStreak ?? _currentUser!.streak,
       lastLoginDate: newLoginDate ?? _currentUser!.lastLoginDate,
     );
-    
+
+    await _authService.updateUser(updatedUser);
+    _currentUser = updatedUser;
+    notifyListeners();
+  }
+
+  /// Synchronise l'XP de l'utilisateur avec la valeur centrale du GamificationController.
+  Future<void> syncXp(int targetXp) async {
+    if (_currentUser == null) return;
+    if (_currentUser!.xp == targetXp) return;
+
+    final int newLevel = FinancialCalculator.calculateLevel(targetXp);
+    final int highestXp = targetXp > _currentUser!.highestXpReached
+        ? targetXp
+        : _currentUser!.highestXpReached;
+    final int highestLevel = newLevel > _currentUser!.highestLevelReached
+        ? newLevel
+        : _currentUser!.highestLevelReached;
+
+    final updatedUser = _currentUser!.copyWith(
+      xp: targetXp,
+      level: newLevel,
+      highestXpReached: highestXp,
+      highestLevelReached: highestLevel,
+    );
+
     await _authService.updateUser(updatedUser);
     _currentUser = updatedUser;
     notifyListeners();
@@ -136,7 +177,9 @@ class AuthController extends ChangeNotifier {
   Future<void> updateHighestPortfolioValue(double value) async {
     if (_currentUser == null) return;
     if (value > _currentUser!.highestPortfolioValueReached) {
-      final updatedUser = _currentUser!.copyWith(highestPortfolioValueReached: value);
+      final updatedUser = _currentUser!.copyWith(
+        highestPortfolioValueReached: value,
+      );
       await _authService.updateUser(updatedUser);
       _currentUser = updatedUser;
       // On ne notifie pas forcément pour ne pas surcharger, sauf si affiché

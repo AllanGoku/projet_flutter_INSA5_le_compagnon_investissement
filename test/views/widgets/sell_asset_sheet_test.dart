@@ -18,36 +18,54 @@ class FakeCacheService extends CacheService {
   Future<void> initDB({bool inMemory = false}) async {}
 
   @override
-  Future<void> savePortfolioPositions(List<PortfolioPosition> positions) async {
+  Future<void> savePortfolioPositions(
+    List<PortfolioPosition> positions, [
+    String userEmail = 'guest@app.local',
+  ]) async {
     _positions.clear();
     _positions.addAll(positions);
   }
 
   @override
-  Future<List<PortfolioPosition>> getPortfolioPositions() async {
+  Future<List<PortfolioPosition>> getPortfolioPositions([
+    String userEmail = 'guest@app.local',
+  ]) async {
     return List.from(_positions);
   }
 
   @override
-  Future<void> deletePortfolioPosition(String symbol) async {}
+  Future<void> deletePortfolioPosition(
+    String symbol, [
+    String userEmail = 'guest@app.local',
+  ]) async {}
 
   @override
-  Future<void> saveTransaction(dynamic transaction) async {}
+  Future<void> saveTransaction(
+    dynamic transaction, [
+    String userEmail = 'guest@app.local',
+  ]) async {}
 
   @override
-  Future<void> saveCashBalance(double balance) async {}
+  Future<void> saveCashBalance(
+    double balance, [
+    String userEmail = 'guest@app.local',
+  ]) async {}
 
   @override
-  Future<double> getCashBalance() async => 1000.0;
+  Future<double> getCashBalance([String userEmail = 'guest@app.local']) async =>
+      1000.0;
 }
 
 class FakeAuthService implements AuthService {
+  @override
+  Future<List<UserProfile>> getAllUsers() async => [];
   @override
   Future<UserProfile?> getCurrentUser() async => null;
   @override
   Future<bool> isKeepLoggedIn() async => false;
   @override
-  Future<UserProfile> login(String e, String p, bool k) async => throw Exception();
+  Future<UserProfile> login(String e, String p, bool k) async =>
+      throw Exception();
   @override
   Future<void> logout() async {}
   @override
@@ -75,7 +93,9 @@ void main() {
   );
 
   group('SellAssetSheet Widget Tests', () {
-    testWidgets('Rendu de la modale de revente et raccourci Tout vendre', (WidgetTester tester) async {
+    testWidgets('Rendu de la modale de revente et raccourci Tout vendre', (
+      WidgetTester tester,
+    ) async {
       final cacheService = FakeCacheService();
       final portfolioController = PortfolioController(
         cacheService: cacheService,
@@ -85,13 +105,15 @@ void main() {
       await tester.pumpWidget(
         MultiProvider(
           providers: [
-            ChangeNotifierProvider<PortfolioController>.value(value: portfolioController),
-            ChangeNotifierProvider<AuthController>(create: (_) => AuthController(authService: FakeAuthService())),
+            ChangeNotifierProvider<PortfolioController>.value(
+              value: portfolioController,
+            ),
+            ChangeNotifierProvider<AuthController>(
+              create: (_) => AuthController(authService: FakeAuthService()),
+            ),
           ],
           child: MaterialApp(
-            home: Scaffold(
-              body: SellAssetSheet(position: position),
-            ),
+            home: Scaffold(body: SellAssetSheet(position: position)),
           ),
         ),
       );
@@ -104,11 +126,15 @@ void main() {
       await tester.tap(find.text('Tout vendre'));
       await tester.pumpAndSettle();
 
-      final textField = tester.widget<TextFormField>(find.byType(TextFormField));
+      final textField = tester.widget<TextFormField>(
+        find.byType(TextFormField),
+      );
       expect(textField.controller?.text, equals('5'));
     });
 
-    testWidgets('Validation et alerte en cas de saisie décimale/fraction', (WidgetTester tester) async {
+    testWidgets('Validation et alerte en cas de saisie décimale/fraction', (
+      WidgetTester tester,
+    ) async {
       final cacheService = FakeCacheService();
       final portfolioController = PortfolioController(
         cacheService: cacheService,
@@ -118,13 +144,15 @@ void main() {
       await tester.pumpWidget(
         MultiProvider(
           providers: [
-            ChangeNotifierProvider<PortfolioController>.value(value: portfolioController),
-            ChangeNotifierProvider<AuthController>(create: (_) => AuthController(authService: FakeAuthService())),
+            ChangeNotifierProvider<PortfolioController>.value(
+              value: portfolioController,
+            ),
+            ChangeNotifierProvider<AuthController>(
+              create: (_) => AuthController(authService: FakeAuthService()),
+            ),
           ],
           child: MaterialApp(
-            home: Scaffold(
-              body: SellAssetSheet(position: position),
-            ),
+            home: Scaffold(body: SellAssetSheet(position: position)),
           ),
         ),
       );
@@ -137,7 +165,9 @@ void main() {
       expect(find.textContaining('entier'), findsOneWidget);
     });
 
-    testWidgets('Exécution réussie de la revente d\'unités entières', (WidgetTester tester) async {
+    testWidgets('Exécution réussie de la revente d\'unités entières', (
+      WidgetTester tester,
+    ) async {
       bool successCalled = false;
       final cacheService = FakeCacheService();
       final portfolioController = PortfolioController(
@@ -148,8 +178,12 @@ void main() {
       await tester.pumpWidget(
         MultiProvider(
           providers: [
-            ChangeNotifierProvider<PortfolioController>.value(value: portfolioController),
-            ChangeNotifierProvider<AuthController>(create: (_) => AuthController(authService: FakeAuthService())),
+            ChangeNotifierProvider<PortfolioController>.value(
+              value: portfolioController,
+            ),
+            ChangeNotifierProvider<AuthController>(
+              create: (_) => AuthController(authService: FakeAuthService()),
+            ),
           ],
           child: MaterialApp(
             home: Scaffold(

@@ -15,7 +15,9 @@ class FakeCacheService extends CacheService {
   Future<void> initDB({bool inMemory = false}) async {}
 
   @override
-  Future<List<PortfolioPosition>> getPortfolioPositions() async => [];
+  Future<List<PortfolioPosition>> getPortfolioPositions([
+    String userEmail = 'guest@app.local',
+  ]) async => [];
 }
 
 void main() {
@@ -34,17 +36,19 @@ void main() {
   Widget buildTestableWidget({Asset? initialAsset}) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider<PortfolioController>.value(value: portfolioController),
+        ChangeNotifierProvider<PortfolioController>.value(
+          value: portfolioController,
+        ),
         ChangeNotifierProvider<DataController>.value(value: dataController),
       ],
-      child: MaterialApp(
-        home: DcaSimulatorScreen(initialAsset: initialAsset),
-      ),
+      child: MaterialApp(home: DcaSimulatorScreen(initialAsset: initialAsset)),
     );
   }
 
   group('DcaSimulatorScreen - Tests de widgets et simulation', () {
-    testWidgets('Affiche les composants principaux du simulateur DCA', (WidgetTester tester) async {
+    testWidgets('Affiche les composants principaux du simulateur DCA', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(buildTestableWidget());
       await tester.pumpAndSettle();
 
@@ -53,7 +57,10 @@ void main() {
 
       // Champs de saisie et curseurs
       expect(find.byKey(const Key('dca_monthly_amount_field')), findsOneWidget);
-      expect(find.byKey(const Key('dca_monthly_amount_slider')), findsOneWidget);
+      expect(
+        find.byKey(const Key('dca_monthly_amount_slider')),
+        findsOneWidget,
+      );
 
       // Puces de sélection de durée (1, 5, 10, 20 ans)
       expect(find.byKey(const Key('dca_duration_chip_1')), findsOneWidget);
@@ -72,20 +79,25 @@ void main() {
       expect(find.byKey(const Key('dca_buy_button')), findsOneWidget);
     });
 
-    testWidgets('Met à jour la simulation lors de la modification de la durée', (WidgetTester tester) async {
-      await tester.pumpWidget(buildTestableWidget());
-      await tester.pumpAndSettle();
+    testWidgets(
+      'Met à jour la simulation lors de la modification de la durée',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(buildTestableWidget());
+        await tester.pumpAndSettle();
 
-      // Sélection de 5 ans au lieu de 10 ans
-      final chip5Years = find.byKey(const Key('dca_duration_chip_5'));
-      await tester.tap(chip5Years);
-      await tester.pumpAndSettle();
+        // Sélection de 5 ans au lieu de 10 ans
+        final chip5Years = find.byKey(const Key('dca_duration_chip_5'));
+        await tester.tap(chip5Years);
+        await tester.pumpAndSettle();
 
-      // 100€/mois pendant 5 ans = 6000€ investis
-      expect(find.textContaining('6 000'), findsAtLeastNWidgets(1));
-    });
+        // 100€/mois pendant 5 ans = 6000€ investis
+        expect(find.textContaining('6 000'), findsAtLeastNWidgets(1));
+      },
+    );
 
-    testWidgets('Initialise le simulateur avec un actif spécifique', (WidgetTester tester) async {
+    testWidgets('Initialise le simulateur avec un actif spécifique', (
+      WidgetTester tester,
+    ) async {
       final testAsset = Asset(
         symbol: 'AAPL',
         name: 'Apple Inc.',
@@ -103,16 +115,19 @@ void main() {
       expect(find.textContaining('Apple Inc.'), findsAtLeastNWidgets(1));
     });
 
-    testWidgets('Ouvre la modale d\'achat lors du clic sur le bouton d\'action', (WidgetTester tester) async {
-      await tester.pumpWidget(buildTestableWidget());
-      await tester.pumpAndSettle();
+    testWidgets(
+      'Ouvre la modale d\'achat lors du clic sur le bouton d\'action',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(buildTestableWidget());
+        await tester.pumpAndSettle();
 
-      final buyButton = find.byKey(const Key('dca_buy_button'));
-      await tester.tap(buyButton);
-      await tester.pumpAndSettle();
+        final buyButton = find.byKey(const Key('dca_buy_button'));
+        await tester.tap(buyButton);
+        await tester.pumpAndSettle();
 
-      // Vérifie l'ouverture du sheet d'achat
-      expect(find.textContaining('Achat Fictif'), findsOneWidget);
-    });
+        // Vérifie l'ouverture du sheet d'achat
+        expect(find.textContaining('Achat Fictif'), findsOneWidget);
+      },
+    );
   });
 }

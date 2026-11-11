@@ -1,5 +1,6 @@
 // [AI-GENERATED] Phase 2, Agent, 2025-02-23
 import 'package:flutter/material.dart';
+
 import '../../models/asset.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/formatters.dart';
@@ -55,11 +56,13 @@ class MarketMoversSection extends StatelessWidget {
             separatorBuilder: (context, index) => const SizedBox(height: 8),
             itemBuilder: (context, index) {
               final asset = assets[index];
-              
+
               // Récupération de la variation (%) réelle de l'actif
               final double variation = asset.dailyChangePercentage;
               final bool isGain = variation >= 0;
-              final Color varColor = isGain ? AppTheme.gainColor : AppTheme.lossColor;
+              final Color varColor = isGain
+                  ? AppTheme.gainColor
+                  : AppTheme.lossColor;
 
               return Material(
                 color: Colors.white,
@@ -87,7 +90,12 @@ class MarketMoversSection extends StatelessWidget {
                           ),
                           child: Center(
                             child: Text(
-                              asset.symbol.substring(0, asset.symbol.length > 2 ? 2 : asset.symbol.length),
+                              asset.symbol.substring(
+                                0,
+                                asset.symbol.length > 2
+                                    ? 2
+                                    : asset.symbol.length,
+                              ),
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
@@ -137,7 +145,10 @@ class MarketMoversSection extends StatelessWidget {
                             ),
                             const SizedBox(height: 4),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
                                 color: varColor.withOpacity(0.12),
                                 borderRadius: BorderRadius.circular(8),

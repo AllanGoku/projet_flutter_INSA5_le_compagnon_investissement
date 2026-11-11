@@ -1,10 +1,12 @@
 // [AI-GENERATED] Phase 3 & 6, Agent, 2025-02-23
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../controllers/portfolio_controller.dart';
 import '../../controllers/data_controller.dart';
 import '../../controllers/auth_controller.dart';
 import '../../controllers/data_state.dart';
+import '../../controllers/gamification_controller.dart';
 import '../../models/asset.dart';
 import '../../utils/app_theme.dart';
 import '../widgets/flip_gain_counter.dart';
@@ -13,10 +15,12 @@ import '../widgets/asset_grid_section.dart';
 import '../widgets/market_movers_section.dart';
 import '../widgets/buy_asset_sheet.dart';
 import '../widgets/contextual_tip_card.dart';
+import '../widgets/achievement_unlock_dialog.dart';
 import 'asset_detail_screen.dart';
 import 'dca_simulator_screen.dart';
 import 'search_screen.dart';
 import 'portfolio_screen.dart';
+import 'leaderboard_screen.dart';
 import 'profile_screen.dart';
 
 /// Écran principal du tableau de bord (Accueil restructuré).
@@ -36,9 +40,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // Liste d'actifs pour alimenter le tableau de bord
   static const _heroSymbol = 'AAPL';
   static const _watchListConfigs = [
-    {'symbol': 'MSFT', 'name': 'Microsoft Corp.', 'type': 'Stock', 'desc': 'Logiciel & Cloud'},
-    {'symbol': 'AMZN', 'name': 'Amazon.com Inc.', 'type': 'Stock', 'desc': 'E-commerce & Cloud AWS'},
-    {'symbol': 'IBM', 'name': 'IBM Corp.', 'type': 'Stock', 'desc': 'Informatique & Services IT'},
+    {
+      'symbol': 'MSFT',
+      'name': 'Microsoft Corp.',
+      'type': 'Stock',
+      'desc': 'Logiciel & Cloud',
+    },
+    {
+      'symbol': 'AMZN',
+      'name': 'Amazon.com Inc.',
+      'type': 'Stock',
+      'desc': 'E-commerce & Cloud AWS',
+    },
+    {
+      'symbol': 'IBM',
+      'name': 'IBM Corp.',
+      'type': 'Stock',
+      'desc': 'Informatique & Services IT',
+    },
   ];
 
   static const _marketMoversConfigs = <Map<String, String>>[];
@@ -47,8 +66,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      // 1. Restauration du portefeuille fictif depuis SQLite
-      context.read<PortfolioController>().loadPositions();
+      final authController = context.read<AuthController>();
+      final currentUserEmail =
+          authController.currentUser?.email ?? 'guest@app.local';
+
+      // 1. Restauration du portefeuille fictif et des succès du compte connecté
+      await context.read<PortfolioController>().loadPositions(currentUserEmail);
+      await context.read<GamificationController>().loadData(currentUserEmail);
 
       final dataController = context.read<DataController>();
 
@@ -83,6 +107,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
           description: item['desc'],
         );
       }
+
+      final portfolioController = context.read<PortfolioController>();
+      final gamificationController = context.read<GamificationController>();
+
+      // Synchronisation de l'XP entre l'AuthController et le GamificationController
+      final userXp = authController.currentUser?.xp ?? 0;
+      if (gamificationController.userXp < userXp) {
+        await gamificationController.awardXp(
+          userXp - gamificationController.userXp,
+        );
+      } else if (gamificationController.userXp > userXp) {
+        await authController.syncXp(gamificationController.userXp);
+      }
+
+      // Vérification rétroactive automatique des succès pour les utilisateurs existants
+      await gamificationController.checkAchievements(
+        portfolioValue: portfolioController.totalValue,
+        totalInvested: portfolioController.totalInvested,
+        assetCount: portfolioController.positions.length,
+        hasSimulatedDCA: false,
+        readLexicon: false,
+      );
     });
   }
 
@@ -104,9 +150,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   void _openDetailScreen(Asset asset) async {
     final result = await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => AssetDetailScreen(asset: asset),
-      ),
+      MaterialPageRoute(builder: (context) => AssetDetailScreen(asset: asset)),
     );
     if (result == 'open_portfolio') {
       setState(() {
@@ -115,51 +159,58 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  Widget _buildHomeView(DataController dataController, Map<String, Asset> loadedAssets) {
+  Widget _buildHomeView(
+    DataController dataController,
+    Map<String, Asset> loadedAssets,
+  ) {
     // Récupération de l'actif vedette depuis le cache/API ou instance par défaut
-    final Asset heroAsset = loadedAssets[_heroSymbol] ?? Asset(
-      symbol: _heroSymbol,
-      name: dataController.state == DataState.error 
-          ? 'Erreur API' 
-          : 'Apple Inc.',
-      currentPrice: 0.0,
-      type: 'Stock',
-      description: dataController.state == DataState.error 
-          ? dataController.errorMessage 
-          : 'Chargement ou attente des données...',
-      marketOpen: true,
-      timezone: 'US/Eastern',
-      timeSeries: {},
-    );
+    final Asset heroAsset =
+        loadedAssets[_heroSymbol] ??
+        Asset(
+          symbol: _heroSymbol,
+          name: dataController.state == DataState.error
+              ? 'Erreur API'
+              : 'Apple Inc.',
+          currentPrice: 0.0,
+          type: 'Stock',
+          description: dataController.state == DataState.error
+              ? dataController.errorMessage
+              : 'Chargement ou attente des données...',
+          marketOpen: true,
+          timezone: 'US/Eastern',
+          timeSeries: {},
+        );
 
     // Extraction des actifs réels de la liste à surveiller
     final List<Asset> watchListAssets = _watchListConfigs.map((item) {
       final sym = item['symbol']!;
-      return loadedAssets[sym] ?? Asset(
-        symbol: sym,
-        name: item['name']!,
-        currentPrice: 0.0,
-        type: item['type']!,
-        description: item['desc']!,
-        marketOpen: true,
-        timezone: 'US/Eastern',
-        timeSeries: {},
-      );
+      return loadedAssets[sym] ??
+          Asset(
+            symbol: sym,
+            name: item['name']!,
+            currentPrice: 0.0,
+            type: item['type']!,
+            description: item['desc']!,
+            marketOpen: true,
+            timezone: 'US/Eastern',
+            timeSeries: {},
+          );
     }).toList();
 
     // Extraction des actifs réels des Market Movers
     final List<Asset> marketMoversAssets = _marketMoversConfigs.map((item) {
       final sym = item['symbol']!;
-      return loadedAssets[sym] ?? Asset(
-        symbol: sym,
-        name: item['name']!,
-        currentPrice: 0.0,
-        type: item['type']!,
-        description: item['desc']!,
-        marketOpen: true,
-        timezone: 'US/Eastern',
-        timeSeries: {},
-      );
+      return loadedAssets[sym] ??
+          Asset(
+            symbol: sym,
+            name: item['name']!,
+            currentPrice: 0.0,
+            type: item['type']!,
+            description: item['desc']!,
+            marketOpen: true,
+            timezone: 'US/Eastern',
+            timeSeries: {},
+          );
     }).toList();
 
     return Consumer2<PortfolioController, AuthController>(
@@ -171,10 +222,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             final dataCtrl = context.read<DataController>();
 
             await portfolioController.loadPositions();
-            await dataCtrl.refreshAll(
-              [_heroSymbol, ..._watchListConfigs.map((e) => e['symbol']!), ..._marketMoversConfigs.map((e) => e['symbol']!)],
-              force: true,
-            );
+            await dataCtrl.refreshAll([
+              _heroSymbol,
+              ..._watchListConfigs.map((e) => e['symbol']!),
+              ..._marketMoversConfigs.map((e) => e['symbol']!),
+            ], force: true);
           },
           color: AppTheme.primaryColor,
           child: SingleChildScrollView(
@@ -182,32 +234,67 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (dataController.state == DataState.error || dataController.state == DataState.offline)
+                Consumer<GamificationController>(
+                  builder: (context, gamification, child) {
+                    if (gamification.newlyUnlockedQueue.isNotEmpty) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (gamification.newlyUnlockedQueue.isNotEmpty) {
+                          final newlyUnlocked = List.from(
+                            gamification.newlyUnlockedQueue,
+                          );
+                          gamification.clearNewlyUnlockedQueue();
+                          for (var ach in newlyUnlocked) {
+                            AchievementUnlockDialog.show(context, ach);
+                          }
+                        }
+                      });
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
+
+                if (dataController.state == DataState.error ||
+                    dataController.state == DataState.offline)
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(12),
-                    margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16, top: 16),
+                    margin: const EdgeInsets.only(
+                      left: 16,
+                      right: 16,
+                      bottom: 16,
+                      top: 16,
+                    ),
                     decoration: BoxDecoration(
-                      color: dataController.state == DataState.error ? Colors.red.shade50 : Colors.orange.shade50,
+                      color: dataController.state == DataState.error
+                          ? Colors.red.shade50
+                          : Colors.orange.shade50,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: dataController.state == DataState.error ? Colors.red.shade200 : Colors.orange.shade200,
+                        color: dataController.state == DataState.error
+                            ? Colors.red.shade200
+                            : Colors.orange.shade200,
                       ),
                     ),
                     child: Row(
                       children: [
                         Icon(
-                          dataController.state == DataState.error ? Icons.error_outline : Icons.wifi_off,
-                          color: dataController.state == DataState.error ? Colors.red : Colors.orange,
+                          dataController.state == DataState.error
+                              ? Icons.error_outline
+                              : Icons.wifi_off,
+                          color: dataController.state == DataState.error
+                              ? Colors.red
+                              : Colors.orange,
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            dataController.errorMessage.isNotEmpty 
-                                ? dataController.errorMessage 
+                            dataController.errorMessage.isNotEmpty
+                                ? dataController.errorMessage
                                 : 'Problème de connexion aux données.',
                             style: TextStyle(
-                              color: dataController.state == DataState.error ? Colors.red.shade900 : Colors.orange.shade900,
+                              color: dataController.state == DataState.error
+                                  ? Colors.red.shade900
+                                  : Colors.orange.shade900,
                               fontSize: 13,
                             ),
                           ),
@@ -234,9 +321,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Builder(
                   builder: (context) {
                     WidgetsBinding.instance.addPostFrameCallback((_) {
-                      context.read<AuthController>().updateHighestPortfolioValue(
-                        portfolio.totalValue + portfolio.cashBalance
-                      );
+                      context
+                          .read<AuthController>()
+                          .updateHighestPortfolioValue(
+                            portfolio.totalValue + portfolio.cashBalance,
+                          );
                     });
                     return const SizedBox.shrink();
                   },
@@ -282,7 +371,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           );
                         },
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 16,
+                          ),
                           child: Row(
                             children: [
                               Container(
@@ -385,6 +477,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             },
           ),
           const PortfolioScreen(),
+          const LeaderboardScreen(),
           const ProfileScreen(),
         ],
       ),
@@ -412,22 +505,42 @@ class _DashboardScreenState extends State<DashboardScreen> {
           destinations: const [
             NavigationDestination(
               icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home_rounded, color: AppTheme.primaryColor),
+              selectedIcon: Icon(
+                Icons.home_rounded,
+                color: AppTheme.primaryColor,
+              ),
               label: 'Accueil',
             ),
             NavigationDestination(
               icon: Icon(Icons.search_outlined),
-              selectedIcon: Icon(Icons.search_rounded, color: AppTheme.primaryColor),
+              selectedIcon: Icon(
+                Icons.search_rounded,
+                color: AppTheme.primaryColor,
+              ),
               label: 'Explorer',
             ),
             NavigationDestination(
               icon: Icon(Icons.pie_chart_outline_rounded),
-              selectedIcon: Icon(Icons.pie_chart_rounded, color: AppTheme.primaryColor),
+              selectedIcon: Icon(
+                Icons.pie_chart_rounded,
+                color: AppTheme.primaryColor,
+              ),
               label: 'Portefeuille',
             ),
             NavigationDestination(
+              icon: Icon(Icons.leaderboard_outlined),
+              selectedIcon: Icon(
+                Icons.leaderboard_rounded,
+                color: AppTheme.primaryColor,
+              ),
+              label: 'Classement',
+            ),
+            NavigationDestination(
               icon: Icon(Icons.person_outline_rounded),
-              selectedIcon: Icon(Icons.person_rounded, color: AppTheme.primaryColor),
+              selectedIcon: Icon(
+                Icons.person_rounded,
+                color: AppTheme.primaryColor,
+              ),
               label: 'Profil',
             ),
           ],

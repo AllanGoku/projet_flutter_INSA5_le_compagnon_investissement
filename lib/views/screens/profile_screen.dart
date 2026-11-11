@@ -1,12 +1,16 @@
 // [AI-GENERATED] Issue #5 & Fix, Agent, 2025-02-23
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../controllers/auth_controller.dart';
 import '../../controllers/portfolio_controller.dart';
+import '../../controllers/gamification_controller.dart';
 import '../../models/financial_calculator.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/formatters.dart';
 import 'login_screen.dart';
+import 'achievements_screen.dart';
+import 'leaderboard_screen.dart';
 
 /// Écran de profil utilisateur.
 ///
@@ -34,11 +38,15 @@ class ProfileScreen extends StatelessWidget {
               Navigator.of(ctx).pop();
               final authCtrl = context.read<AuthController>();
               final portCtrl = context.read<PortfolioController>();
+              final gamiCtrl = context.read<GamificationController>();
               await authCtrl.resetAccount();
               await portCtrl.resetPortfolio();
+              await gamiCtrl.resetGamification();
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Compte réinitialisé avec succès.')),
+                  const SnackBar(
+                    content: Text('Compte réinitialisé avec succès.'),
+                  ),
                 );
               }
             },
@@ -92,7 +100,8 @@ class ProfileScreen extends StatelessWidget {
         // XP pour niveau suivant: par simplification (niveau * 1000)
         final xpNextLevel = user.level * 1000;
         final xpCurrentLevelBase = (user.level - 1) * 1000;
-        final progress = (user.xp - xpCurrentLevelBase) / (xpNextLevel - xpCurrentLevelBase);
+        final progress =
+            (user.xp - xpCurrentLevelBase) / (xpNextLevel - xpCurrentLevelBase);
 
         return Scaffold(
           backgroundColor: AppTheme.backgroundColor,
@@ -118,16 +127,19 @@ class ProfileScreen extends StatelessWidget {
                         color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
-                      )
+                      ),
                     ],
                   ),
                   child: Column(
                     children: [
                       CircleAvatar(
                         radius: 40,
-                        backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
+                        backgroundColor: AppTheme.primaryColor.withValues(
+                          alpha: 0.1,
+                        ),
                         child: Text(
-                          user.firstName[0].toUpperCase() + user.lastName[0].toUpperCase(),
+                          user.firstName[0].toUpperCase() +
+                              user.lastName[0].toUpperCase(),
                           style: const TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
@@ -138,7 +150,10 @@ class ProfileScreen extends StatelessWidget {
                       const SizedBox(height: 16),
                       Text(
                         '${user.firstName} ${user.lastName}',
-                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       Text(
                         title,
@@ -152,15 +167,23 @@ class ProfileScreen extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Niveau ${user.level}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                          Text('${user.xp} / $xpNextLevel XP', style: const TextStyle(color: Colors.grey)),
+                          Text(
+                            'Niveau ${user.level}',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            '${user.xp} / $xpNextLevel XP',
+                            style: const TextStyle(color: Colors.grey),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 8),
                       LinearProgressIndicator(
                         value: progress.clamp(0.0, 1.0),
                         backgroundColor: Colors.grey.shade200,
-                        valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          AppTheme.primaryColor,
+                        ),
                         minHeight: 10,
                         borderRadius: BorderRadius.circular(5),
                       ),
@@ -168,14 +191,71 @@ class ProfileScreen extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.local_fire_department, color: Colors.orange, size: 20),
+                          const Icon(
+                            Icons.local_fire_department,
+                            color: Colors.orange,
+                            size: 20,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             'Série de connexion : ${user.streak} jour(s)',
-                            style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.orange),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w500,
+                              color: Colors.orange,
+                            ),
                           ),
                         ],
-                      )
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Gamification (Succès & Classement)
+                const Text(
+                  'Progression & Récompenses',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+                Material(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  clipBehavior: Clip.antiAlias,
+                  elevation: 2,
+                  shadowColor: Colors.black.withValues(alpha: 0.2),
+                  child: Column(
+                    children: [
+                      ListTile(
+                        leading: const Icon(
+                          Icons.emoji_events,
+                          color: Colors.amber,
+                        ),
+                        title: const Text('Mes Succès (Badges)'),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const AchievementsScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: const Icon(
+                          Icons.leaderboard,
+                          color: Colors.blue,
+                        ),
+                        title: const Text('Classement Simulé'),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const LeaderboardScreen(),
+                            ),
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -197,7 +277,7 @@ class ProfileScreen extends StatelessWidget {
                         color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
-                      )
+                      ),
                     ],
                   ),
                   child: Column(
@@ -218,9 +298,21 @@ class ProfileScreen extends StatelessWidget {
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    Expanded(child: _buildRecordCard('Niveau Max', '${user.highestLevelReached}', Icons.star)),
+                    Expanded(
+                      child: _buildRecordCard(
+                        'Niveau Max',
+                        '${user.highestLevelReached}',
+                        Icons.star,
+                      ),
+                    ),
                     const SizedBox(width: 12),
-                    Expanded(child: _buildRecordCard('XP Max', '${user.highestXpReached}', Icons.emoji_events)),
+                    Expanded(
+                      child: _buildRecordCard(
+                        'XP Max',
+                        '${user.highestXpReached}',
+                        Icons.emoji_events,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -247,7 +339,7 @@ class ProfileScreen extends StatelessWidget {
                         color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
-                      )
+                      ),
                     ],
                   ),
                   child: Material(
@@ -256,7 +348,9 @@ class ProfileScreen extends StatelessWidget {
                     clipBehavior: Clip.antiAlias,
                     child: SwitchListTile(
                       title: const Text('Conseils pédagogiques'),
-                      subtitle: const Text('Afficher des astuces sur l\'accueil'),
+                      subtitle: const Text(
+                        'Afficher des astuces sur l\'accueil',
+                      ),
                       value: user.showTips,
                       activeTrackColor: AppTheme.primaryColor,
                       onChanged: (val) {
@@ -277,7 +371,9 @@ class ProfileScreen extends StatelessWidget {
                     backgroundColor: Colors.orange.shade50,
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -290,7 +386,9 @@ class ProfileScreen extends StatelessWidget {
                     backgroundColor: Colors.red.shade50,
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 32),
@@ -311,25 +409,33 @@ class ProfileScreen extends StatelessWidget {
           const SizedBox(width: 16),
           Text(label, style: const TextStyle(color: Colors.grey, fontSize: 14)),
           const Spacer(),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+          Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildRecordCard(String title, String value, IconData icon, {bool isFullWidth = false}) {
+  Widget _buildRecordCard(
+    String title,
+    String value,
+    IconData icon, {
+    bool isFullWidth = false,
+  }) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      )
-                    ],
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -346,11 +452,17 @@ class ProfileScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                Text(
+                  title,
+                  style: const TextStyle(color: Colors.grey, fontSize: 12),
+                ),
                 const SizedBox(height: 4),
                 Text(
                   value,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ],

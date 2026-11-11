@@ -2,7 +2,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../controllers/auth_controller.dart';
+import '../../controllers/portfolio_controller.dart';
+import '../../controllers/gamification_controller.dart';
 import '../../models/user_profile.dart';
 import '../../utils/validators.dart';
 import 'dashboard_screen.dart';
@@ -20,7 +23,7 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-  
+
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -49,10 +52,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
 
       final authController = context.read<AuthController>();
-      final success = await authController.register(user, _passwordController.text);
+      final portfolioController = context.read<PortfolioController>();
+      final gamificationController = context.read<GamificationController>();
+
+      final success = await authController.register(
+        user,
+        _passwordController.text,
+      );
 
       if (success && mounted) {
-        // En cas de succès, l'AuthController connecte aussi l'utilisateur.
+        final email = authController.currentUser?.email ?? user.email;
+        // Charger le portefeuille et les succès propres au nouvel utilisateur
+        await portfolioController.loadPositions(email);
+        await gamificationController.loadData(email);
+
         // On redirige vers le Dashboard en supprimant la pile de navigation.
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const DashboardScreen()),
@@ -61,7 +74,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(authController.error ?? 'Erreur lors de l\'inscription.'),
+            content: Text(
+              authController.error ?? 'Erreur lors de l\'inscription.',
+            ),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -74,9 +89,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final authController = context.watch<AuthController>();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Inscription'),
-      ),
+      appBar: AppBar(title: const Text('Inscription')),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -92,7 +105,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
-                
+
                 // Prénom
                 TextFormField(
                   controller: _firstNameController,
@@ -108,7 +121,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Nom
                 TextFormField(
                   controller: _lastNameController,
@@ -193,7 +206,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     if (value == null || !Validators.isNotEmpty(value)) {
                       return 'Champ requis';
                     }
-                    if (!Validators.passwordsMatch(_passwordController.text, value)) {
+                    if (!Validators.passwordsMatch(
+                      _passwordController.text,
+                      value,
+                    )) {
                       return 'Les mots de passe ne correspondent pas';
                     }
                     return null;
@@ -212,7 +228,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           width: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('S\'inscrire', style: TextStyle(fontSize: 16)),
+                      : const Text(
+                          'S\'inscrire',
+                          style: TextStyle(fontSize: 16),
+                        ),
                 ),
               ],
             ),

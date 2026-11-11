@@ -1,7 +1,9 @@
 // [AI-GENERATED] Migration Twelve Data, Agent, 2025-02-23
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 import '../models/asset.dart';
 
 /// Service gérant les appels réseau à l'API Twelve Data.
@@ -16,13 +18,15 @@ class ApiService {
   String get _apiKey {
     var key = dotenv.env['TWELVEDATA_API_KEY'];
     if (key == null || key.isEmpty) {
-      throw Exception("La clé API Twelve Data n'est pas configurée dans le fichier .env");
+      throw Exception(
+        "La clé API Twelve Data n'est pas configurée dans le fichier .env",
+      );
     }
     return key.replaceAll('"', '').replaceAll("'", '').trim();
   }
 
   /// Récupère les détails et l'historique d'un actif (Action/ETF) depuis Twelve Data.
-  /// 
+  ///
   /// Utilise les endpoints `/time_series` et `/quote` pour obtenir l'historique et le prix courant.
   /// [symbol] : Le symbole boursier de l'actif (ex: 'AAPL').
   Future<Asset> fetchAssetData(
@@ -32,10 +36,10 @@ class ApiService {
     String description = '',
   }) async {
     final timeSeriesUri = Uri.parse(
-      '$_baseUrl/time_series?symbol=$symbol&interval=1day&start_date=2015-01-01&apikey=$_apiKey'
+      '$_baseUrl/time_series?symbol=$symbol&interval=1day&start_date=2015-01-01&apikey=$_apiKey',
     );
     final quoteUri = Uri.parse(
-      '$_baseUrl/quote?symbol=$symbol&apikey=$_apiKey'
+      '$_baseUrl/quote?symbol=$symbol&apikey=$_apiKey',
     );
 
     final responses = await Future.wait([
@@ -60,27 +64,29 @@ class ApiService {
       return 'Code HTTP ${res.statusCode}';
     }
 
-    if (timeSeriesResponse.statusCode == 200 && quoteResponse.statusCode == 200) {
+    if (timeSeriesResponse.statusCode == 200 &&
+        quoteResponse.statusCode == 200) {
       final timeSeriesJson = jsonDecode(timeSeriesResponse.body);
       final quoteJson = jsonDecode(quoteResponse.body);
-      
+
       // Extraction explicite du message d'erreur de l'API Twelve Data (si status == 200 mais error en JSON)
       if (timeSeriesJson['status'] == 'error') {
         final code = timeSeriesJson['code'] ?? 'Inconnu';
         final message = timeSeriesJson['message'] ?? 'Erreur non spécifiée';
-        throw Exception('Erreur API Twelve Data (time_series) - Code $code : $message');
+        throw Exception(
+          'Erreur API Twelve Data (time_series) - Code $code : $message',
+        );
       }
 
       if (quoteJson['status'] == 'error') {
         final code = quoteJson['code'] ?? 'Inconnu';
         final message = quoteJson['message'] ?? 'Erreur non spécifiée';
-        throw Exception('Erreur API Twelve Data (quote) - Code $code : $message');
+        throw Exception(
+          'Erreur API Twelve Data (quote) - Code $code : $message',
+        );
       }
 
-      final combinedJson = {
-        'time_series': timeSeriesJson,
-        'quote': quoteJson,
-      };
+      final combinedJson = {'time_series': timeSeriesJson, 'quote': quoteJson};
 
       return Asset.fromApiJson(
         combinedJson,
@@ -101,12 +107,10 @@ class ApiService {
   }
 
   /// Récupère la liste globale des plus fortes hausses, baisses et volumes du marché US.
-  /// 
+  ///
   /// Endpoint Twelve Data: `/market_movers/stocks`.
   Future<List<Asset>> fetchTopGainersLosers() async {
-    final uri = Uri.parse(
-      '$_baseUrl/market_movers/stocks?apikey=$_apiKey'
-    );
+    final uri = Uri.parse('$_baseUrl/market_movers/stocks?apikey=$_apiKey');
 
     final response = await client.get(uri);
 
@@ -126,23 +130,30 @@ class ApiService {
         if (item is Map<String, dynamic>) {
           final symbol = item['symbol'] as String? ?? '';
           final assetName = item['name'] as String? ?? symbol;
-          final price = double.tryParse(item['last']?.toString() ?? item['close']?.toString() ?? '0') ?? 0.0;
+          final price =
+              double.tryParse(
+                item['last']?.toString() ?? item['close']?.toString() ?? '0',
+              ) ??
+              0.0;
           final changeAmount = item['change']?.toString() ?? '0';
-          final changePercentStr = (item['percent_change']?.toString() ?? '0').replaceAll('%', '');
+          final changePercentStr = (item['percent_change']?.toString() ?? '0')
+              .replaceAll('%', '');
           final changePercent = double.tryParse(changePercentStr) ?? 0.0;
 
           if (symbol.isNotEmpty) {
-            assets.add(Asset(
-              symbol: symbol,
-              name: assetName,
-              currentPrice: price,
-              type: 'Stock',
-              description: 'Actif du marché US (Variation: $changeAmount \$)',
-              marketOpen: true,
-              timezone: 'US/Eastern',
-              timeSeries: {},
-              changePercentage: changePercent,
-            ));
+            assets.add(
+              Asset(
+                symbol: symbol,
+                name: assetName,
+                currentPrice: price,
+                type: 'Stock',
+                description: 'Actif du marché US (Variation: $changeAmount \$)',
+                marketOpen: true,
+                timezone: 'US/Eastern',
+                timeSeries: {},
+                changePercentage: changePercent,
+              ),
+            );
           }
         }
       }
@@ -152,7 +163,8 @@ class ApiService {
       try {
         final json = jsonDecode(response.body);
         if (json is Map && json['status'] == 'error') {
-          errorMessage = 'API Twelve Data (${json['code'] ?? response.statusCode}) : ${json['message'] ?? 'Erreur inconnue'}';
+          errorMessage =
+              'API Twelve Data (${json['code'] ?? response.statusCode}) : ${json['message'] ?? 'Erreur inconnue'}';
         }
       } catch (_) {}
       throw Exception(errorMessage);

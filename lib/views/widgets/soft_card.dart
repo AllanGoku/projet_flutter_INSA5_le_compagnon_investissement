@@ -1,9 +1,10 @@
 // [AI-GENERATED] Issue #0, Agent, 2025-02-23
 import 'package:flutter/material.dart';
+
 import '../../utils/app_theme.dart';
 
 /// Widget de carte avec un style Soft UI / Glassmorphism.
-/// 
+///
 /// Utilisé pour afficher des éléments de contenu avec des bords très arrondis,
 /// un fond blanc, et une ombre douce et diffuse afin d'obtenir un effet
 /// d'élévation léger sans être agressif visuellement.

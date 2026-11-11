@@ -1,10 +1,7 @@
 // [AI-GENERATED] Phase 4, Agent, 2025-02-23
 
 /// Type d'opération de transaction sur le portefeuille.
-enum TransactionType {
-  buy,
-  sell,
-}
+enum TransactionType { buy, sell }
 
 /// Modèle représentant une transaction fictive d'achat ou de revente d'actif.
 ///
@@ -73,7 +70,9 @@ class PortfolioTransaction {
       quantity: (map['quantity'] as num).toDouble(),
       price: (map['price'] as num).toDouble(),
       timestamp: DateTime.fromMillisecondsSinceEpoch(map['timestamp'] as int),
-      realizedGain: map['realizedGain'] != null ? (map['realizedGain'] as num).toDouble() : null,
+      realizedGain: map['realizedGain'] != null
+          ? (map['realizedGain'] as num).toDouble()
+          : null,
     );
   }
 

@@ -1,5 +1,6 @@
 // [AI-GENERATED] Phase 4, Agent, 2025-02-23
 import 'package:flutter/material.dart';
+
 import '../../models/portfolio_position.dart';
 import '../../models/financial_calculator.dart';
 import '../../utils/app_theme.dart';
@@ -26,7 +27,8 @@ class PortfolioPositionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final double currentValue = position.quantity * position.asset.currentPrice;
-    final double investedValue = position.quantity * position.averagePurchasePrice;
+    final double investedValue =
+        position.quantity * position.averagePurchasePrice;
     final double capitalGain = FinancialCalculator.calculateCapitalGain(
       investedAmount: investedValue,
       currentValue: currentValue,
@@ -96,7 +98,10 @@ class PortfolioPositionCard extends StatelessWidget {
                                     ),
                                     const SizedBox(width: 6),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
+                                      ),
                                       decoration: BoxDecoration(
                                         color: Colors.grey.shade100,
                                         borderRadius: BorderRadius.circular(6),
@@ -147,19 +152,31 @@ class PortfolioPositionCard extends StatelessWidget {
                             PerformanceText(
                               value: capitalGain,
                               isCurrency: true,
-                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             Text(
                               ' (',
-                              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade600,
+                              ),
                             ),
                             PerformanceText(
                               value: performance,
-                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             Text(
                               ')',
-                              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade600,
+                              ),
                             ),
                           ],
                         ),
@@ -169,7 +186,11 @@ class PortfolioPositionCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 14),
 
-                const Divider(height: 1, thickness: 0.6, color: Color(0xFFEEEEEE)),
+                const Divider(
+                  height: 1,
+                  thickness: 0.6,
+                  color: Color(0xFFEEEEEE),
+                ),
                 const SizedBox(height: 12),
 
                 // Détails : Quantité, PMPA, Cours actuel + Bouton "Vendre"
@@ -195,7 +216,10 @@ class PortfolioPositionCard extends StatelessWidget {
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.red.shade700,
                         side: BorderSide(color: Colors.red.shade200),
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
                         minimumSize: Size.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         shape: RoundedRectangleBorder(

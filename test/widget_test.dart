@@ -14,17 +14,18 @@ import 'package:le_compagnon_investissement/views/screens/login_screen.dart';
 
 void main() {
   setUp(() {
-    SharedPreferencesAsyncPlatform.instance = InMemorySharedPreferencesAsync.empty();
+    SharedPreferencesAsyncPlatform.instance =
+        InMemorySharedPreferencesAsync.empty();
     FlutterSecureStorage.setMockInitialValues({});
   });
 
-  testWidgets('Smoke test: App starts with LoginScreen by default', (WidgetTester tester) async {
+  testWidgets('Smoke test: App starts with LoginScreen by default', (
+    WidgetTester tester,
+  ) async {
     // Build our app and trigger a frame.
     await tester.pumpWidget(
       MultiProvider(
-        providers: [
-          ChangeNotifierProvider(create: (_) => AuthController()),
-        ],
+        providers: [ChangeNotifierProvider(create: (_) => AuthController())],
         child: const MyApp(),
       ),
     );
@@ -37,7 +38,7 @@ void main() {
 
     // Verify that the login screen is shown because no user is saved in mocks.
     expect(find.byType(LoginScreen), findsOneWidget);
-    
+
     // Verify that the title is present
     expect(find.text('Connexion'), findsWidgets);
   });

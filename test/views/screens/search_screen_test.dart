@@ -25,7 +25,9 @@ class FakeCacheService extends CacheService {
   Future<Asset?> getAsset(String symbol) async => mockAssets[symbol];
 
   @override
-  Future<List<PortfolioPosition>> getPortfolioPositions() async => [];
+  Future<List<PortfolioPosition>> getPortfolioPositions([
+    String userEmail = 'guest@app.local',
+  ]) async => [];
 }
 
 class FakeApiService extends ApiService {
@@ -89,7 +91,9 @@ void main() {
       home: MultiProvider(
         providers: [
           ChangeNotifierProvider<DataController>.value(value: dataController),
-          ChangeNotifierProvider<PortfolioController>.value(value: portfolioController),
+          ChangeNotifierProvider<PortfolioController>.value(
+            value: portfolioController,
+          ),
         ],
         child: child,
       ),
@@ -97,21 +101,26 @@ void main() {
   }
 
   group('SearchScreen - Tests de recherche et filtrage', () {
-    testWidgets('Affiche la barre de recherche, les puces de catégories et tous les actifs au départ', (WidgetTester tester) async {
-      await tester.pumpWidget(buildTestableWidget(const SearchScreen()));
-      await tester.pumpAndSettle();
+    testWidgets(
+      'Affiche la barre de recherche, les puces de catégories et tous les actifs au départ',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(buildTestableWidget(const SearchScreen()));
+        await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('search_text_field')), findsOneWidget);
-      expect(find.byKey(const Key('category_chip_Tous')), findsOneWidget);
-      expect(find.byKey(const Key('category_chip_Actions')), findsOneWidget);
-      expect(find.byKey(const Key('category_chip_ETF')), findsOneWidget);
+        expect(find.byKey(const Key('search_text_field')), findsOneWidget);
+        expect(find.byKey(const Key('category_chip_Tous')), findsOneWidget);
+        expect(find.byKey(const Key('category_chip_Actions')), findsOneWidget);
+        expect(find.byKey(const Key('category_chip_ETF')), findsOneWidget);
 
-      expect(find.text('Apple Inc.'), findsOneWidget);
-      expect(find.text('Microsoft Corp.'), findsOneWidget);
-      expect(find.text('Invesco QQQ Trust'), findsOneWidget);
-    });
+        expect(find.text('Apple Inc.'), findsOneWidget);
+        expect(find.text('Microsoft Corp.'), findsOneWidget);
+        expect(find.text('Invesco QQQ Trust'), findsOneWidget);
+      },
+    );
 
-    testWidgets('Filtre les actifs par saisie textuelle (symbole ou nom)', (WidgetTester tester) async {
+    testWidgets('Filtre les actifs par saisie textuelle (symbole ou nom)', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(buildTestableWidget(const SearchScreen()));
       await tester.pumpAndSettle();
 
@@ -126,7 +135,9 @@ void main() {
       expect(find.text('Invesco QQQ Trust'), findsNothing);
     });
 
-    testWidgets('Filtre les actifs par catégorie (ETF)', (WidgetTester tester) async {
+    testWidgets('Filtre les actifs par catégorie (ETF)', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(buildTestableWidget(const SearchScreen()));
       await tester.pumpAndSettle();
 
@@ -141,15 +152,21 @@ void main() {
       expect(find.text('Microsoft Corp.'), findsNothing);
     });
 
-    testWidgets('Affiche un message si aucun actif ne correspond à la recherche', (WidgetTester tester) async {
-      await tester.pumpWidget(buildTestableWidget(const SearchScreen()));
-      await tester.pumpAndSettle();
+    testWidgets(
+      'Affiche un message si aucun actif ne correspond à la recherche',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(buildTestableWidget(const SearchScreen()));
+        await tester.pumpAndSettle();
 
-      final searchField = find.byKey(const Key('search_text_field'));
-      await tester.enterText(searchField, 'XYZ_INEXISTANT');
-      await tester.pumpAndSettle();
+        final searchField = find.byKey(const Key('search_text_field'));
+        await tester.enterText(searchField, 'XYZ_INEXISTANT');
+        await tester.pumpAndSettle();
 
-      expect(find.text('Aucun actif ne correspond à votre recherche.'), findsOneWidget);
-    });
+        expect(
+          find.text('Aucun actif ne correspond à votre recherche.'),
+          findsOneWidget,
+        );
+      },
+    );
   });
 }
