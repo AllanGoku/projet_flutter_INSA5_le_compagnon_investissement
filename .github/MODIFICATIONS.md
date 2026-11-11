@@ -230,5 +230,45 @@ Ce fichier documente les modifications apportées au projet "Le Compagnon d'Inve
 - Mises à jour des suites de tests existantes et création de **`dca_simulator_screen_test.dart`**.
 - L'ensemble du projet valide à **100% de succès sur `flutter test` (125 tests validés)**.
 
+## [Phase 7 : Gamification - Succès & Classement Multi-Utilisateur] - 2025-02-23
+
+### 1. Modèles de Données & Calculs Métier (`../lib/models/`)
+- **`achievement.dart`** : Création du modèle `Achievement` (id, title, description, iconName, xpReward, isUnlocked, unlockedAt) avec méthodes `toMap`, `fromMap` et `copyWith`.
+- **`leaderboard_entry.dart`** : Création du modèle `LeaderboardEntry` (rank, name, avatarInitials, level, xp, portfolioValue, performancePercentage, isCurrentUser) et énumération `LeaderboardSortCriteria` (`xp`, `portfolioValue`, `performance`).
+- **`financial_calculator.dart`** :
+  - Ajout de `generateMockLeaderboardEntries` pour construire un classement comparatif équitable mêlant l'utilisateur courant, les autres comptes utilisateurs enregistrés sur l'appareil et des investisseurs fictifs PNJ (Warren B., Charlie M., etc.), triés selon le critère choisi (`LeaderboardSortCriteria`).
+  - Ajout de `checkAchievementUnlock` pour évaluer de façon pure et isolée les conditions de déblocage des 8 succès uniques (*Premier Pas*, *L'œil du Lynx*, *Linguiste des marchés*, *Pionnier du DCA*, *Investisseur Diversifié*, *Cap des 5k €*, *Maître du Profit*, *Patience d'Or*).
+
+### 2. Service de Persistance Local & Isolation Multi-Utilisateur (`../lib/services/`)
+- **`cache_service.dart`** :
+  - Création de la table SQLite `achievements` pour conserver l'état et la date d'obtention des badges.
+  - Migration de la base de données vers une **isolation multi-utilisateur complète rattachée à `userEmail`** pour le portefeuille, les liquidités, l'historique de transactions, l'XP et les succès.
+  - Ajout de `migrateLegacyDataIfNeeded` pour migrer automatiquement les données d'un portefeuille existant pré-migration vers le premier compte connecté sans aucune perte d'actifs.
+
+### 3. Contrôleurs d'État & Authentification (`../lib/controllers/` & `../lib/services/`)
+- **`gamification_controller.dart`** : Création du contrôleur centralisant l'attribution d'XP, la vérification réactive des succès et la gestion de la file d'attente de célébration `newlyUnlockedQueue`.
+- **`auth_service.dart` & `auth_controller.dart`** :
+  - Garantie d'unicité stricte de l'e-mail lors de l'inscription (rejet de la création de doublons).
+  - Ajout de `getAllUsers` dans `AuthService` pour récupérer l'ensemble des comptes créés sur l'appareil et les afficher dans le classement.
+  - Ajout de `syncXp` dans `AuthController` pour maintenir une synchronisation parfaite en temps réel de l'XP entre le profil et le classement.
+
+### 4. Composants Visuels & Écrans (`../lib/views/`)
+- **`achievement_badge_card.dart`** : Carte de présentation des badges avec distinction visuelle claire et haut niveau de contraste/lisibilité pour les badges verrouillés (fond grisé, icône de cadenas et textes sombres).
+- **`achievement_unlock_dialog.dart`** : Dialogue de célébration déclenchant une animation de confettis en surimpression via `flutter_confetti`.
+- **`achievements_screen.dart`** : Écran récapitulatif des badges débloqués/verrouillés avec jauge de progression globale.
+- **`leaderboard_screen.dart`** : Écran de classement proposant :
+  - Un sélecteur de critères par onglets/segments (`XP`, `Portefeuille`, `Perf %`).
+  - Un podium visuel pour le Top 3.
+  - Une carte d'utilisateur personnellement épinglée en bas et protégée par `SafeArea` contre les chevauchements avec la barre de navigation système.
+  - Le chargement asynchrone via `FutureBuilder` pour afficher tous les vrais comptes créés sur le téléphone.
+- **`dashboard_screen.dart`** : Intégration du `Classement` dans la barre de navigation principale à 5 destinations (Accueil, Explorer, Portefeuille, Classement, Profil), écoute dynamique de la file d'attente pour déclencher les confettis et vérification automatique des succès au démarrage.
+- **`buy_asset_sheet.dart` & `sell_asset_sheet.dart`** : Déclenchement automatique du gain d'XP et de la vérification instantanée des succès lors des opérations d'achat et de revente d'actifs.
+- **`dca_simulator_screen.dart` & `market_term_help_button.dart` & `asset_detail_screen.dart`** : Déclenchement réactif des succès lors de la simulation DCA (*Pionnier du DCA*), la consultation du lexique (*Linguiste des marchés*) et la consultation d'actifs (*L'œil du Lynx*).
+
+### 5. Validation par les Tests Unitaires & Widgets (`../test/`)
+- Ajout de nouvelles suites de tests : `achievement_test.dart`, `leaderboard_entry_test.dart`, `financial_calculator_gamification_test.dart`, `gamification_controller_test.dart`, `achievement_badge_card_test.dart`, et `leaderboard_screen_test.dart`.
+- Mise à jour des fakes/mocks pour supporter le multi-utilisateur et les signatures de méthodes.
+- L'ensemble du projet valide à **100% de succès sur `flutter test` (142 tests validés)**.
+
 
 
