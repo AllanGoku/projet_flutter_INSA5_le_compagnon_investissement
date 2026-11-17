@@ -112,7 +112,7 @@ le_compagnon_investissement/
     |-- models/                    # Tests des modèles et calculs (achievement, asset, financial_calculator, etc.)
     |-- screens/                   # Tests d'écrans (leaderboard_screen_test.dart)
     |-- services/                  # Tests des services (api_service, auth_service, cache_service)
-    |-- utils/                     # Tests des utilitaires (validators_test.dart)
+    |-- utils/                     # Tests des utilitaires (formatters_test.dart, validators_test.dart)
     |-- views/
     |   |-- screens/               # Tests d'écrans (asset_detail, dashboard, dca_simulator, lexicon, portfolio, profile, search)
     |   `-- widgets/               # Tests de widgets (chart, sheets, cards, buttons, etc.)

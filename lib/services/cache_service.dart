@@ -1,4 +1,4 @@
-// [AI-GENERATED] Phase 2 & Multi-User Isolation, Agent, 2025-02-23
+// [AI-GENERATED] Phase 9, Agent, 2025-02-23
 import 'dart:convert';
 
 import 'package:sqflite/sqflite.dart';
@@ -136,6 +136,9 @@ class CacheService {
   Future<Database> get db async {
     if (_database == null) {
       await initDB();
+    }
+    if (_database == null) {
+      throw Exception('Database not initialized');
     }
     return _database!;
   }
@@ -284,7 +287,7 @@ class CacheService {
       'marketOpen': asset.marketOpen ? 1 : 0,
       'timezone': asset.timezone,
       'timeSeries': jsonEncode(asset.toJson()['timeSeries']),
-      'lastUpdated': lastUpdatedMillis ?? DateTime.now().millisecondsSinceEpoch,
+      'lastUpdated': lastUpdatedMillis ?? asset.lastUpdated?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
       'originalCurrency': asset.originalCurrency,
       'originalPrice': asset.originalPrice,
     };
@@ -302,44 +305,52 @@ class CacheService {
 
   /// Récupère un [Asset] depuis le cache.
   Future<Asset?> getAsset(String symbol) async {
-    final database = await db;
-    final List<Map<String, dynamic>> maps = await database.query(
-      'assets',
-      where: 'symbol = ?',
-      whereArgs: [symbol],
-    );
+    try {
+      final database = await db;
+      final List<Map<String, dynamic>> maps = await database.query(
+        'assets',
+        where: 'symbol = ?',
+        whereArgs: [symbol],
+      );
 
-    if (maps.isNotEmpty) {
-      final data = Map<String, dynamic>.from(maps.first);
-      if (data['timeSeries'] != null) {
-        data['timeSeries'] = jsonDecode(data['timeSeries'] as String);
-      } else {
-        data['timeSeries'] = {};
+      if (maps.isNotEmpty) {
+        final data = Map<String, dynamic>.from(maps.first);
+        if (data['timeSeries'] != null) {
+          data['timeSeries'] = jsonDecode(data['timeSeries'] as String);
+        } else {
+          data['timeSeries'] = {};
+        }
+        data['marketOpen'] = (data['marketOpen'] as int?) == 1;
+        return Asset.fromJson(data);
       }
-      data['marketOpen'] = (data['marketOpen'] as int?) == 1;
-      return Asset.fromJson(data);
+    } catch (e) {
+      // Ignorer les erreurs d'accès DB non initialisée
     }
     return null;
   }
 
   /// Récupère l'ensemble des actifs enregistrés.
   Future<List<Asset>> getAllAssets() async {
-    final database = await db;
-    final List<Map<String, dynamic>> maps = await database.query('assets');
-    final List<Asset> assets = [];
+    try {
+      final database = await db;
+      final List<Map<String, dynamic>> maps = await database.query('assets');
+      final List<Asset> assets = [];
 
-    for (var map in maps) {
-      final data = Map<String, dynamic>.from(map);
-      if (data['timeSeries'] != null) {
-        data['timeSeries'] = jsonDecode(data['timeSeries'] as String);
-      } else {
-        data['timeSeries'] = {};
+      for (var map in maps) {
+        final data = Map<String, dynamic>.from(map);
+        if (data['timeSeries'] != null) {
+          data['timeSeries'] = jsonDecode(data['timeSeries'] as String);
+        } else {
+          data['timeSeries'] = {};
+        }
+        data['marketOpen'] = (data['marketOpen'] as int?) == 1;
+        assets.add(Asset.fromJson(data));
       }
-      data['marketOpen'] = (data['marketOpen'] as int?) == 1;
-      assets.add(Asset.fromJson(data));
-    }
 
-    return assets;
+      return assets;
+    } catch (e) {
+      return [];
+    }
   }
 
   /// Sauvegarde les positions du portefeuille spécifiques à un `userEmail`.
@@ -364,7 +375,7 @@ class CacheService {
           'marketOpen': pos.asset.marketOpen ? 1 : 0,
           'timezone': pos.asset.timezone,
           'timeSeries': jsonEncode(pos.asset.toJson()['timeSeries']),
-          'lastUpdated': DateTime.now().millisecondsSinceEpoch,
+          'lastUpdated': pos.asset.lastUpdated?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
           'originalCurrency': pos.asset.originalCurrency,
           'originalPrice': pos.asset.originalPrice,
         };
@@ -432,19 +443,23 @@ class CacheService {
 
   /// Récupère la date de dernière mise à jour d'un actif.
   Future<DateTime?> getLastUpdated(String symbol) async {
-    final database = await db;
-    final List<Map<String, dynamic>> maps = await database.query(
-      'assets',
-      columns: ['lastUpdated'],
-      where: 'symbol = ?',
-      whereArgs: [symbol],
-    );
+    try {
+      final database = await db;
+      final List<Map<String, dynamic>> maps = await database.query(
+        'assets',
+        columns: ['lastUpdated'],
+        where: 'symbol = ?',
+        whereArgs: [symbol],
+      );
 
-    if (maps.isNotEmpty) {
-      final millis = maps.first['lastUpdated'] as int?;
-      if (millis != null) {
-        return DateTime.fromMillisecondsSinceEpoch(millis);
+      if (maps.isNotEmpty) {
+        final millis = maps.first['lastUpdated'] as int?;
+        if (millis != null) {
+          return DateTime.fromMillisecondsSinceEpoch(millis);
+        }
       }
+    } catch (e) {
+      // Ignorer si la base de données n'est pas initialisée
     }
     return null;
   }

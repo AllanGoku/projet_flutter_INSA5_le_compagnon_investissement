@@ -1,16 +1,18 @@
-// [AI-GENERATED] Phase 3, Agent, 2025-02-23
+// [AI-GENERATED] Phase 9, Agent, 2025-02-23
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../models/asset.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/formatters.dart';
+import '../../controllers/data_controller.dart';
 import 'market_term_help_button.dart';
 
 /// Carte d'actif avec animation de retournement 3D (Flip Card) au tap.
 ///
-/// Recto : Vue synthétique de l'actif (nom, symbole, prix, variation %, bouton d'achat `+`).
+/// Recto : Vue synthétique de l'actif (nom, symbole, prix, variation %, badge fraîcheur, bouton d'achat `+`).
 /// Verso : Métriques clés approfondies et boutons d'action "Voir les détails" & "Acheter".
 /// Séparation UX : Un tap sur la carte déclenche le retournement 3D, tandis qu'un tap
 /// sur le bouton `+` déclenche directement l'achat fictif.
@@ -110,6 +112,12 @@ class _InteractiveFlipAssetCardState extends State<InteractiveFlipAssetCard>
         ? AppTheme.gainColor
         : AppTheme.lossColor;
 
+    bool isRefreshing = false;
+    try {
+      final dataController = context.watch<DataController>();
+      isRefreshing = dataController.isSymbolRefreshing(widget.asset.symbol);
+    } catch (_) {}
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -129,27 +137,42 @@ class _InteractiveFlipAssetCardState extends State<InteractiveFlipAssetCard>
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Ligne d'en-tête (Symbole & Type)
+          // Ligne d'en-tête (Symbole & Type & Micro-Indicateur)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: AppTheme.mint.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  widget.asset.symbol,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.primaryColor,
-                    fontSize: 13,
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.mint.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      widget.asset.symbol,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.primaryColor,
+                        fontSize: 13,
+                      ),
+                    ),
                   ),
-                ),
+                  if (isRefreshing) ...[
+                    const SizedBox(width: 6),
+                    const SizedBox(
+                      width: 12,
+                      height: 12,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppTheme.primaryColor,
+                      ),
+                    ),
+                  ],
+                ],
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -176,6 +199,27 @@ class _InteractiveFlipAssetCardState extends State<InteractiveFlipAssetCard>
               fontWeight: FontWeight.bold,
               color: Colors.black87,
             ),
+          ),
+          const SizedBox(height: 4),
+
+          // Badge de fraîcheur horodaté
+          Row(
+            children: [
+              Icon(
+                Icons.access_time_rounded,
+                size: 12,
+                color: Colors.grey.shade500,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                Formatters.formatRelativeTime(widget.asset.lastUpdated),
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 8),
 
@@ -316,6 +360,26 @@ class _InteractiveFlipAssetCardState extends State<InteractiveFlipAssetCard>
             ],
           ),
           const SizedBox(height: 8),
+
+          // Horodatage complet au verso
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Dernière maj : ',
+                style: TextStyle(fontSize: 12, color: Colors.black54),
+              ),
+              Text(
+                Formatters.formatLastUpdated(widget.asset.lastUpdated),
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
 
           // Ligne Statut marché
           Row(

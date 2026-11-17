@@ -1,4 +1,4 @@
-// [AI-GENERATED] Phase 3, Agent, 2025-02-23
+// [AI-GENERATED] Phase 9, Agent, 2025-02-23
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -13,7 +13,7 @@ import 'asset_detail_screen.dart';
 ///
 /// Permet de filtrer la liste des actifs réels disponibles (en cache SQLite et API)
 /// par mot-clé (symbole ou nom) ainsi que par catégories ("Tous", "Actions", "ETF").
-/// Transmet [onNavigateToPortfolio] lors de la validation d'un achat pour basculer vers l'onglet Portefeuille.
+/// Offre la recherche dynamique à la demande sur l'API Twelve Data pour charger n'importe quel symbole (ex: TSLA, GOOGL).
 class SearchScreen extends StatefulWidget {
   final VoidCallback? onNavigateToPortfolio;
 
@@ -27,6 +27,8 @@ class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   String _selectedCategory = 'Tous';
+  bool _isSearchingApi = false;
+  String? _apiSearchError;
 
   @override
   void initState() {
@@ -49,7 +51,8 @@ class _SearchScreenState extends State<SearchScreen> {
 
   void _onSearchChanged() {
     setState(() {
-      _searchQuery = _searchController.text.trim().toLowerCase();
+      _searchQuery = _searchController.text.trim();
+      _apiSearchError = null;
     });
   }
 
@@ -80,14 +83,54 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
+  /// Convertit les termes courants en symboles boursiers standards.
+  String _resolveQueryToSymbol(String query) {
+    final clean = query.trim().toLowerCase();
+    if (clean == 'google' || clean == 'alphabet') return 'GOOGL';
+    if (clean == 'tesla') return 'TSLA';
+    if (clean == 'nvidia') return 'NVDA';
+    if (clean == 'apple') return 'AAPL';
+    if (clean == 'microsoft') return 'MSFT';
+    if (clean == 'amazon') return 'AMZN';
+    return query.trim().toUpperCase();
+  }
+
+  /// Déclenche le chargement en direct depuis l'API Twelve Data pour le symbole demandé.
+  Future<void> _fetchAssetFromApi(String query) async {
+    final symbol = _resolveQueryToSymbol(query);
+    if (symbol.isEmpty) return;
+
+    setState(() {
+      _isSearchingApi = true;
+      _apiSearchError = null;
+    });
+
+    try {
+      final dataCtrl = context.read<DataController>();
+      await dataCtrl.loadAsset(symbol, isHot: true);
+      setState(() {
+        _isSearchingApi = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isSearchingApi = false;
+        _apiSearchError =
+            "Impossible de charger l'actif $symbol : ${e.toString().replaceAll('Exception: ', '')}";
+      });
+    }
+  }
+
   /// Algorithme de filtrage réactif selon la saisie textuelle et la catégorie sélectionnée.
   List<Asset> _getFilteredAssets(List<Asset> allAssets) {
+    final q = _searchQuery.toLowerCase();
     return allAssets.where((asset) {
-      // 1. Filtrage par texte (symbole ou nom)
-      final matchesSearch =
-          _searchQuery.isEmpty ||
-          asset.symbol.toLowerCase().contains(_searchQuery) ||
-          asset.name.toLowerCase().contains(_searchQuery);
+      // 1. Filtrage par texte (symbole ou nom ou correspondances d'alias)
+      final matchesSearch = q.isEmpty ||
+          asset.symbol.toLowerCase().contains(q) ||
+          asset.name.toLowerCase().contains(q) ||
+          (q == 'google' && asset.symbol == 'GOOGL') ||
+          (q == 'tesla' && asset.symbol == 'TSLA') ||
+          (q == 'nvidia' && asset.symbol == 'NVDA');
 
       // 2. Filtrage par catégorie ("Tous", "Actions", "ETF")
       bool matchesCategory = true;
@@ -109,6 +152,7 @@ class _SearchScreenState extends State<SearchScreen> {
     final dataController = context.watch<DataController>();
     final List<Asset> allAssets = dataController.assets.values.toList();
     final List<Asset> filteredAssets = _getFilteredAssets(allAssets);
+    final String targetSymbol = _resolveQueryToSymbol(_searchQuery);
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
@@ -132,7 +176,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 key: const Key('search_text_field'),
                 controller: _searchController,
                 decoration: InputDecoration(
-                  hintText: 'Rechercher par symbole ou nom (ex: AAPL, Apple)',
+                  hintText: 'Rechercher (ex: TSLA, GOOGL, Tesla, Google)',
                   prefixIcon: const Icon(
                     Icons.search_rounded,
                     color: AppTheme.secondaryColor,
@@ -202,30 +246,88 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
               const SizedBox(height: 16),
 
-              // 3. Liste des résultats
+              // 3. Liste des résultats ou bouton de recherche en direct API
               Expanded(
                 child: filteredAssets.isEmpty
                     ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.search_off_rounded,
-                              size: 60,
-                              color: Colors.grey.shade400,
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              allAssets.isEmpty
-                                  ? 'Chargement des actifs en cours...'
-                                  : 'Aucun actif ne correspond à votre recherche.',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                          ],
+                        child: SingleChildScrollView(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              if (_isSearchingApi) ...[
+                                const CircularProgressIndicator(
+                                  color: AppTheme.primaryColor,
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Recherche de $targetSymbol sur les marchés en cours...',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.primaryColor,
+                                  ),
+                                ),
+                              ] else ...[
+                                Icon(
+                                  Icons.search_off_rounded,
+                                  size: 50,
+                                  color: Colors.grey.shade400,
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  _searchQuery.isEmpty
+                                      ? 'Saisissez un symbole ou le nom d\'une entreprise.'
+                                      : 'Aucun actif ne correspond à votre recherche.',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                                if (_apiSearchError != null) ...[
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    _apiSearchError!,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.red.shade700,
+                                    ),
+                                  ),
+                                ],
+                                if (_searchQuery.isNotEmpty) ...[
+                                  const SizedBox(height: 20),
+                                  ElevatedButton.icon(
+                                    key: const Key('fetch_api_search_button'),
+                                    onPressed: () =>
+                                        _fetchAssetFromApi(_searchQuery),
+                                    icon: const Icon(
+                                      Icons.cloud_download_outlined,
+                                    ),
+                                    label: Text(
+                                      'Rechercher "$targetSymbol" sur les marchés réels',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppTheme.primaryColor,
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 20,
+                                        vertical: 14,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(
+                                          16,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ],
+                          ),
                         ),
                       )
                     : ListView.builder(

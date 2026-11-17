@@ -1,15 +1,17 @@
-// [AI-GENERATED] Phase 2, Agent, 2025-02-23
+// [AI-GENERATED] Phase 9, Agent, 2025-02-23
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../models/asset.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/formatters.dart';
+import '../../controllers/data_controller.dart';
 
 /// Widget mettant en valeur l'actif phare ("Actif à la loupe") sur le tableau de bord.
 ///
 /// Utilise le dégradé de marque [AppTheme.primaryGradient] (menthe vers azur) avec
 /// des effets visuels doux pour attirer l'attention de l'utilisateur débutant
-/// sur un actif pédagogique clé.
+/// sur un actif pédagogique clé, et affiche un badge de fraîcheur horodaté.
 class HeroAssetCard extends StatelessWidget {
   final Asset asset;
   final VoidCallback? onBuyPressed;
@@ -24,6 +26,12 @@ class HeroAssetCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    bool isRefreshing = false;
+    try {
+      final dataController = context.watch<DataController>();
+      isRefreshing = dataController.isSymbolRefreshing(asset.symbol);
+    } catch (_) {}
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
@@ -64,7 +72,7 @@ class HeroAssetCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // En-tête : Badge "À LA LOUPE" et symbole
+                    // En-tête : Badge "À LA LOUPE" et symbole + fraîcheur
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -87,13 +95,28 @@ class HeroAssetCard extends StatelessWidget {
                             ),
                           ),
                         ),
-                        Text(
-                          asset.symbol,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                          ),
+                        Row(
+                          children: [
+                            if (isRefreshing) ...[
+                              const SizedBox(
+                                width: 12,
+                                height: 12,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                            ],
+                            Text(
+                              asset.symbol,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -120,7 +143,28 @@ class HeroAssetCard extends StatelessWidget {
                         ),
                       ),
                     ],
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 12),
+
+                    // Badge d'horodatage & fraîcheur des données
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.access_time_rounded,
+                          size: 13,
+                          color: Colors.white.withValues(alpha: 0.85),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          Formatters.formatRelativeTime(asset.lastUpdated),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white.withValues(alpha: 0.85),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
 
                     // Prix et bouton d'action d'achat
                     Row(

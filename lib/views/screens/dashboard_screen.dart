@@ -1,4 +1,4 @@
-// [AI-GENERATED] Phase 3 & 6, Agent, 2025-02-23
+// [AI-GENERATED] Phase 9, Agent, 2025-02-23
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -37,7 +37,7 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   int _currentNavIndex = 0;
 
-  // Liste d'actifs pour alimenter le tableau de bord
+  // Liste d'actifs pour alimenter le tableau de bord (5 actifs au total : AAPL + MSFT, AMZN, NVDA, IBM)
   static const _heroSymbol = 'AAPL';
   static const _watchListConfigs = [
     {
@@ -51,6 +51,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       'name': 'Amazon.com Inc.',
       'type': 'Stock',
       'desc': 'E-commerce & Cloud AWS',
+    },
+    {
+      'symbol': 'NVDA',
+      'name': 'NVIDIA Corp.',
+      'type': 'Stock',
+      'desc': 'Puces IA & Graphiques',
     },
     {
       'symbol': 'IBM',
@@ -79,7 +85,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       // 2. Chargement immédiat de l'ensemble des données déjà en cache dans SQLite
       await dataController.loadAllCachedAssets();
 
-      // 3. Récupération des cours réels du jour auprès de l'API
+      // 3. Récupération des cours réels du jour avec file d'attente échelonnée
       dataController.loadAsset(
         _heroSymbol,
         isHot: true,
@@ -91,7 +97,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       for (var item in _watchListConfigs) {
         dataController.loadAsset(
           item['symbol']!,
-          isHot: true,
+          isHot: false,
           name: item['name'],
           type: item['type'],
           description: item['desc'],
@@ -253,8 +259,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   },
                 ),
 
-                if (dataController.state == DataState.error ||
-                    dataController.state == DataState.offline)
+                if ((dataController.state == DataState.error ||
+                        dataController.state == DataState.offline) &&
+                    loadedAssets.isEmpty)
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(12),

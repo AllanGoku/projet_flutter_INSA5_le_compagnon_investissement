@@ -1,4 +1,4 @@
-// [AI-GENERATED] Phase 3, Agent, 2025-02-23
+// [AI-GENERATED] Phase 9, Agent, 2025-02-23
 import 'price_point.dart';
 
 /// Modèle représentant un actif financier (Action, ETF, etc.).
@@ -20,6 +20,9 @@ class Asset {
 
   /// Historique complet des cours (open, high, low, close, volume) associés aux horodatages.
   final Map<String, PricePoint> timeSeries;
+
+  /// Horodatage de la dernière synchronisation/mise à jour des données de l'actif.
+  final DateTime? lastUpdated;
 
   /// Variation en pourcentage (%) optionnelle ou explicite de l'actif.
   final double? changePercentage;
@@ -63,6 +66,7 @@ class Asset {
     required this.marketOpen,
     required this.timezone,
     required this.timeSeries,
+    this.lastUpdated,
     this.changePercentage,
     this.originalCurrency = 'EUR',
     this.originalPrice = 0.0,
@@ -250,6 +254,7 @@ class Asset {
       marketOpen: marketOpen,
       timezone: timezone,
       timeSeries: timeSeries,
+      lastUpdated: DateTime.now(),
       changePercentage: computedChange,
       originalCurrency: originalCurrency,
       originalPrice: currentOriginalPrice,
@@ -286,6 +291,16 @@ class Asset {
       });
     }
 
+    DateTime? parsedLastUpdated;
+    final rawLastUpdated = json['lastUpdated'];
+    if (rawLastUpdated != null) {
+      if (rawLastUpdated is int) {
+        parsedLastUpdated = DateTime.fromMillisecondsSinceEpoch(rawLastUpdated);
+      } else if (rawLastUpdated is String) {
+        parsedLastUpdated = DateTime.tryParse(rawLastUpdated);
+      }
+    }
+
     return Asset(
       symbol: json['symbol'] as String,
       name: json['name'] as String,
@@ -295,6 +310,7 @@ class Asset {
       marketOpen: json['marketOpen'] as bool,
       timezone: json['timezone'] as String? ?? 'UTC',
       timeSeries: parsedTimeSeries,
+      lastUpdated: parsedLastUpdated,
       changePercentage: (json['changePercentage'] as num?)?.toDouble(),
       originalCurrency: json['originalCurrency'] as String? ?? 'EUR',
       originalPrice:
@@ -327,8 +343,12 @@ class Asset {
       'originalCurrency': originalCurrency,
       'originalPrice': originalPrice,
     };
-    if (changePercentage != null)
+    if (lastUpdated != null) {
+      jsonMap['lastUpdated'] = lastUpdated!.millisecondsSinceEpoch;
+    }
+    if (changePercentage != null) {
       jsonMap['changePercentage'] = changePercentage;
+    }
     if (marketCap != null) jsonMap['marketCap'] = marketCap;
     if (peRatio != null) jsonMap['peRatio'] = peRatio;
     if (dividendYield != null) jsonMap['dividendYield'] = dividendYield;

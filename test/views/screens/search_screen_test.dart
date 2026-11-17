@@ -40,7 +40,7 @@ void main() {
   late DataController dataController;
   late PortfolioController portfolioController;
 
-  setUp(() {
+  setUp(() async {
     testAssets = {
       'AAPL': Asset(
         symbol: 'AAPL',
@@ -81,7 +81,7 @@ void main() {
     );
 
     // Pré-chargement manuel des actifs dans le dataController
-    dataController.loadAllCachedAssets();
+    await dataController.loadAllCachedAssets();
 
     portfolioController = PortfolioController(cacheService: fakeCache);
   });
@@ -114,6 +114,9 @@ void main() {
 
         expect(find.text('Apple Inc.'), findsOneWidget);
         expect(find.text('Microsoft Corp.'), findsOneWidget);
+        
+        await tester.drag(find.byType(ListView), const Offset(0, -300));
+        await tester.pumpAndSettle();
         expect(find.text('Invesco QQQ Trust'), findsOneWidget);
       },
     );

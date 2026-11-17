@@ -1,4 +1,4 @@
-// [AI-GENERATED] Phase 3 & 6, Agent, 2025-02-23
+// [AI-GENERATED] Phase 9, Agent, 2025-02-23
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -7,6 +7,7 @@ import '../../utils/app_theme.dart';
 import '../../utils/formatters.dart';
 import '../../controllers/portfolio_controller.dart';
 import '../../controllers/gamification_controller.dart';
+import '../../controllers/data_controller.dart';
 import '../widgets/asset_historical_chart.dart';
 import '../widgets/market_term_help_button.dart';
 import '../widgets/buy_asset_sheet.dart';
@@ -318,6 +319,48 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
                 ],
               ),
               const SizedBox(height: 20),
+
+              // Horodatage & Fraîcheur des données
+              Row(
+                children: [
+                  Icon(
+                    Icons.access_time_rounded,
+                    size: 14,
+                    color: Colors.grey.shade600,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    Formatters.formatLastUpdated(asset.lastUpdated),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                  Builder(
+                    builder: (context) {
+                      try {
+                        final dataController = context.watch<DataController>();
+                        if (dataController.isSymbolRefreshing(asset.symbol)) {
+                          return const Padding(
+                            padding: EdgeInsets.only(left: 8.0),
+                            child: SizedBox(
+                              width: 12,
+                              height: 12,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppTheme.primaryColor,
+                              ),
+                            ),
+                          );
+                        }
+                      } catch (_) {}
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
 
               // 2. Prix Actuel & Variation
               Container(

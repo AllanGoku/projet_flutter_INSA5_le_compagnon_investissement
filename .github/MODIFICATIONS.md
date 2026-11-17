@@ -306,6 +306,30 @@ Ce fichier documente les modifications apportées au projet "Le Compagnon d'Inve
   - Ajout des éléments manquants dans la description de la Couche 2 (`GamificationController`) et de la Couche 3 (`Achievement`, `LeaderboardEntry`, `LexiconItem`).
   - Cartographie exhaustive de l'ensemble des 12 Écrans (`screens/`), 21 Widgets (`widgets/`), 5 Contrôleurs (`controllers/`), 9 Modèles (`models/`), 3 Services (`services/`), 3 Utilitaires (`utils/`) et de l'arborescence des tests unitaires et de widgets (`test/`).
 
+## [Phase 9 : File d'Attente API, Échelonnement & Horodatage (Rate-Limiting & Freshness)] - 2025-02-23
+
+### 1. File d'Attente Prioritaire Échelonnée (`../lib/controllers/data_controller.dart`)
+- **`data_controller.dart`** : Implémentation du gestionnaire de file d'attente échelonnée (`_QueueItem` & `_processQueue`).
+  - *Pourquoi ?* : Respecter le quota strict de Twelve Data (8 requêtes/minute max) en imposant un délai minimum de **15 secondes** entre rafraîchissements en arrière-plan et de **8 secondes** pour les demandes utilisateur explicites (`isHot = true`).
+  - Exposition de `isSymbolRefreshing(symbol)`, `refreshingSymbols` et `queueLength` pour piloter la réactivité graphique.
+
+### 2. Horodatage & Stratégie Cache-First (`../lib/models/asset.dart` & `../lib/services/cache_service.dart`)
+- **`asset.dart`** : Ajout de la propriété `final DateTime? lastUpdated` avec sérialisation/désérialisation JSON et horodatage lors des réponses API.
+- **`cache_service.dart`** : Persistance de `lastUpdated` dans la colonne SQLite dédiée.
+- **`formatters.dart`** : Ajout de `Formatters.formatRelativeTime` (*"À l'instant"*, *"Il y a 5 min"*) et `Formatters.formatLastUpdated` (*"Mis à jour aujourd'hui à 14:32"*).
+
+### 3. Composants UX de Fraîcheur & Chargement (`../lib/views/`)
+- **`hero_asset_card.dart`**, **`interactive_flip_asset_card.dart`** & **`asset_detail_screen.dart`** : Affichage systématique de l'horodatage relatif/absolu et intégration d'un micro-indicateur de chargement rotatif lorsque l'actif est en cours de rafraîchissement.
+
+### 4. Recherche Dynamique & Expansion du Catalogue (`../lib/views/screens/`)
+- **`dashboard_screen.dart`** : Intégration de `TSLA` (Tesla), `GOOGL` (Alphabet/Google) et `NVDA` (Nvidia) dans le catalogue pré-chargé.
+- **`search_screen.dart`** : Ajout de la résolution des alias courants ("Google" $\rightarrow$ `GOOGL`, "Tesla" $\rightarrow$ `TSLA`, "Nvidia" $\rightarrow$ `NVDA`) et création du bouton de chargement à la demande *"🔍 Rechercher '[SYMBOLE]' sur les marchés réels"* pour interroger l'API Twelve Data en direct et importer n'importe quel nouvel actif dans l'application.
+
+### 5. Suite de Tests & Validation (`../test/`)
+- Création de `formatters_test.dart` et mise à jour de `data_controller_test.dart` et `search_screen_test.dart`.
+- Validation globale à **100% de succès sur `flutter test` (155 tests validés)**.
+
+
 
 
 
