@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../utils/app_theme.dart';
 import '../../controllers/portfolio_controller.dart';
 import '../../controllers/gamification_controller.dart';
+import '../screens/lexicon_screen.dart';
 
 /// Composant réutilisable affichant une bulle d'aide pédagogique ("?").
 ///
@@ -148,6 +149,21 @@ class MarketTermHelpButton extends StatelessWidget {
           ],
         ),
         actions: [
+          TextButton(
+            key: const Key('help_modal_open_lexicon_button'),
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => LexiconScreen(initialSearchQuery: term),
+                ),
+              );
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: AppTheme.secondaryColor,
+            ),
+            child: const Text('Voir le Lexique'),
+          ),
           TextButton(
             key: const Key('help_modal_close_button'),
             onPressed: () => Navigator.of(ctx).pop(),

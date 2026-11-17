@@ -312,7 +312,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   user: user,
                   onProfileTap: () {
                     setState(() {
-                      _currentNavIndex = 3;
+                      _currentNavIndex = 4;
                     });
                   },
                 ),

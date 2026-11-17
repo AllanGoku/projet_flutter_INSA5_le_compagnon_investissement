@@ -11,6 +11,7 @@ import '../../utils/formatters.dart';
 import 'login_screen.dart';
 import 'achievements_screen.dart';
 import 'leaderboard_screen.dart';
+import 'lexicon_screen.dart';
 
 /// Écran de profil utilisateur.
 ///
@@ -252,6 +253,27 @@ class ProfileScreen extends StatelessWidget {
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (_) => const LeaderboardScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        key: const Key('profile_lexicon_tile'),
+                        leading: const Icon(
+                          Icons.menu_book_rounded,
+                          color: AppTheme.secondaryColor,
+                        ),
+                        title: const Text('Lexique & Aide Financière'),
+                        subtitle: const Text(
+                          'Définitions, formules et calculs de l\'app',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const LexiconScreen(),
                             ),
                           );
                         },

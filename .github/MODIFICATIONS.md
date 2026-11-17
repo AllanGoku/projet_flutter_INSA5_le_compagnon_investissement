@@ -270,5 +270,43 @@ Ce fichier documente les modifications apportées au projet "Le Compagnon d'Inve
 - Mise à jour des fakes/mocks pour supporter le multi-utilisateur et les signatures de méthodes.
 - L'ensemble du projet valide à **100% de succès sur `flutter test` (142 tests validés)**.
 
+## [Phase 8 : Aide, Lexique Financier & Calculs Métier] - 2025-02-23
+
+### 1. Modèle de Données & Dictionnaire Centralisé (`../lib/models/lexicon_item.dart`)
+- **`lexicon_item.dart`** :
+  - Création du modèle `LexiconItem` avec les champs `id`, `term`, `category`, `shortDefinition`, `detailedDefinition`, `aliases`, `example`, `formula`, `actionRoute` et `actionLabel`.
+  - Création de l'énumération `LexiconCategory` (`market`, `portfolio`, `strategy`, `formulas`).
+  - Implémentation du dictionnaire répertoriant 21 termes et formules métier (`LexiconRepository.defaultItems`), enrichi d'un système d'alias et synonymes (ex: `"Cap. Boursière"` $\rightarrow$ **Capitalisation Boursière**, `"PER (P/E)"` $\rightarrow$ **PER**, `"BPA"` $\rightarrow$ **BPA (EPS)**).
+
+### 2. Écran Dédié du Lexique (`../lib/views/screens/lexicon_screen.dart`)
+- **`lexicon_screen.dart`** :
+  - Barre de recherche interactive avec normalisation textuelle (tolérance aux accents, tirets, points et minuscules).
+  - Puces de sélections (`ChoiceChip`) pour le filtrage rapide par thématique (*Tous*, *Marché*, *Portefeuille*, *DCA & Stratégies*, *Formules App*).
+  - Cartes accordéons Soft UI dépliables avec définition courte, explication détaillée, exemple concret chiffré et formule mathématique.
+  - Boutons d'action contextuels ouvrant directement l'outil concerné (ex: `DcaSimulatorScreen`, `PortfolioScreen`, etc.).
+  - **Dépliement automatique intelligent** : Lorsqu'un utilisateur accède au lexique à partir d'une bulle d'aide, la fiche correspondante s'ouvre automatiquement dépliée pour un accès direct sans clic supplémentaire.
+  - Déclenchement réactif de `GamificationController.checkAchievements(readLexicon: true)` à l'ouverture pour attribuer le succès *Linguiste des marchés* (+150 XP).
+
+### 3. Intégrations & Correctifs UI (`../lib/views/`)
+- **`market_term_help_button.dart`** : Ajout du bouton d'action *"Voir le Lexique"* dans la modale d'aide redirigeant dynamiquement vers `LexiconScreen(initialSearchQuery: term)`.
+- **`profile_screen.dart`** : Ajout de l'entrée *"Lexique & Aide Financière"* dans le menu Profil.
+- **`flip_gain_counter.dart` & `dashboard_screen.dart`** :
+  - Encapsulation du titre de l'en-tête dans un `Expanded` avec ellipses (`TextOverflow.ellipsis`) pour corriger l'erreur de rendu `RenderFlex overflow`.
+  - Correction de l'index de navigation du bouton de profil vers `_currentNavIndex = 4` (Profil).
+
+### 4. Validation par les Tests Unitaires & Widgets (`../test/views/screens/lexicon_screen_test.dart`)
+- Création de la suite de tests de widgets `lexicon_screen_test.dart` couvrant le filtrage par mot-clé, les alias de termes (ex: `"Cap. Boursière"`), les chips de catégorie, l'ouverture des cartes accordéons, l'état vide et la gamification.
+- Validation à **100% de succès sur `flutter test` (148 tests validés)**.
+
+## [Mise à jour et vérification de la cartographie de l'architecture] - 2025-02-23
+
+### 1. Audit et révision de la documentation d'architecture (`.github/RULES/ARCHITECTURE.md`)
+- **`ARCHITECTURE.md`** :
+  - Vérification complète de la structure des répertoires `lib/` (54 fichiers source) et `test/` (40+ fichiers de test).
+  - Ajout des éléments manquants dans la description de la Couche 2 (`GamificationController`) et de la Couche 3 (`Achievement`, `LeaderboardEntry`, `LexiconItem`).
+  - Cartographie exhaustive de l'ensemble des 12 Écrans (`screens/`), 21 Widgets (`widgets/`), 5 Contrôleurs (`controllers/`), 9 Modèles (`models/`), 3 Services (`services/`), 3 Utilitaires (`utils/`) et de l'arborescence des tests unitaires et de widgets (`test/`).
+
+
+
 
 

@@ -5,6 +5,7 @@ import 'package:animated_flip_counter/animated_flip_counter.dart';
 import '../../models/user_profile.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/formatters.dart';
+import '../screens/lexicon_screen.dart';
 
 /// Widget d'en-tête affichant la synthèse globale du portefeuille fictif et des liquidités.
 ///
@@ -95,43 +96,88 @@ class _FlipGainCounterState extends State<FlipGainCounter> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Bonjour, $_displayName',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey.shade600,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Bonjour, $_displayName',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey.shade600,
+                      ),
                     ),
+                    const SizedBox(height: 2),
+                    const Text(
+                      'Ton Portefeuille Fictif',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    key: const Key('header_lexicon_button'),
+                    tooltip: 'Lexique & Aide',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    icon: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.06),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.menu_book_rounded,
+                        size: 18,
+                        color: AppTheme.primaryColor,
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const LexiconScreen(),
+                        ),
+                      );
+                    },
                   ),
-                  const SizedBox(height: 2),
-                  const Text(
-                    'Ton Portefeuille Fictif',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                  const SizedBox(width: 8),
+                  InkWell(
+                    onTap: widget.onProfileTap,
+                    borderRadius: BorderRadius.circular(21),
+                    child: CircleAvatar(
+                      radius: 21,
+                      backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                      child: Text(
+                        _initials,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.primaryColor,
+                        ),
+                      ),
                     ),
                   ),
                 ],
-              ),
-              InkWell(
-                onTap: widget.onProfileTap,
-                borderRadius: BorderRadius.circular(21),
-                child: CircleAvatar(
-                  radius: 21,
-                  backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
-                  child: Text(
-                    _initials,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.primaryColor,
-                    ),
-                  ),
-                ),
               ),
             ],
           ),
